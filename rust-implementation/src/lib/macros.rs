@@ -3,7 +3,7 @@ use crate::lib::util as utils;
 /// Convert a Civil Time (hours,minutes,seconds) to Decimal Hours
 ///
 /// Original macro name: HMSDH
-pub fn hms_dh(hours: u32, minutes: u32, seconds: f64) -> f64 {
+pub fn hms_dh(hours: f64, minutes: f64, seconds: f64) -> f64 {
     let f_hours = hours as f64;
     let f_minutes = minutes as f64;
     let f_seconds = seconds as f64;
@@ -190,4 +190,259 @@ pub fn f_dow(julian_date: f64) -> String {
     }
 
     return return_value.to_string();
+}
+
+/// Convert Right Ascension to Hour Angle
+///
+/// Original macro name: RAHA
+pub fn ra_ha(
+    ra_hours: f64,
+    ra_minutes: f64,
+    ra_seconds: f64,
+    lct_hours: f64,
+    lct_minutes: f64,
+    lct_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+    geographical_longitude: f64,
+) -> f64 {
+    let a = lct_ut(
+        lct_hours,
+        lct_minutes,
+        lct_seconds,
+        daylight_saving,
+        zone_correction,
+        local_day,
+        local_month,
+        local_year,
+    );
+    let b = lct_gday(
+        lct_hours,
+        lct_minutes,
+        lct_seconds,
+        daylight_saving,
+        zone_correction,
+        local_day,
+        local_month,
+        local_year,
+    );
+    let c = lct_gmonth(
+        lct_hours,
+        lct_minutes,
+        lct_seconds,
+        daylight_saving,
+        zone_correction,
+        local_day,
+        local_month,
+        local_year,
+    );
+    let d = lct_gyear(
+        lct_hours,
+        lct_minutes,
+        lct_seconds,
+        daylight_saving,
+        zone_correction,
+        local_day,
+        local_month,
+        local_year,
+    );
+    let e = ut_gst(a, 0.0, 0.0, b, c, d);
+    let f = gst_lst(e, 0.0, 0.0, geographical_longitude);
+    let g = hms_dh(ra_hours, ra_minutes, ra_seconds);
+    let h = f - g;
+
+    return if h < 0.0 { 24.0 + h } else { h };
+}
+
+/// Convert Hour Angle to Right Ascension
+///
+/// Original macro name: HARA
+pub fn ha_ra(
+    hour_angle_hours: f64,
+    hour_angle_minutes: f64,
+    hour_angle_seconds: f64,
+    lct_hours: f64,
+    lct_minutes: f64,
+    lct_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+    geographical_longitude: f64,
+) -> f64 {
+    let a = lct_ut(
+        lct_hours,
+        lct_minutes,
+        lct_seconds,
+        daylight_saving,
+        zone_correction,
+        local_day,
+        local_month,
+        local_year,
+    );
+    let b = lct_gday(
+        lct_hours,
+        lct_minutes,
+        lct_seconds,
+        daylight_saving,
+        zone_correction,
+        local_day,
+        local_month,
+        local_year,
+    );
+    let c = lct_gmonth(
+        lct_hours,
+        lct_minutes,
+        lct_seconds,
+        daylight_saving,
+        zone_correction,
+        local_day,
+        local_month,
+        local_year,
+    );
+    let d = lct_gyear(
+        lct_hours,
+        lct_minutes,
+        lct_seconds,
+        daylight_saving,
+        zone_correction,
+        local_day,
+        local_month,
+        local_year,
+    );
+    let e = ut_gst(a, 0.0, 0.0, b, c, d);
+    let f = gst_lst(e, 0.0, 0.0, geographical_longitude);
+    let g = hms_dh(hour_angle_hours, hour_angle_minutes, hour_angle_seconds);
+    let h = f - g;
+
+    return if h < 0.0 { 24.0 + h } else { h };
+}
+
+/// Convert Local Civil Time to Universal Time
+///
+/// Original macro name: LctUT
+pub fn lct_ut(
+    lct_hours: f64,
+    lct_minutes: f64,
+    lct_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+) -> f64 {
+    let a = hms_dh(lct_hours, lct_minutes, lct_seconds as f64);
+    let b = a - daylight_saving as f64 - zone_correction as f64;
+    let c = local_day as f64 + (b / 24.0);
+    let d = cd_jd(c, local_month, local_year);
+    let e = jdc_day(d);
+    let e1 = e.floor();
+
+    return 24.0 * (e - e1);
+}
+
+/// Determine Greenwich Day for Local Time
+///
+/// Original macro name: LctGDay
+pub fn lct_gday(
+    lct_hours: f64,
+    lct_minutes: f64,
+    lct_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+) -> f64 {
+    let a = hms_dh(lct_hours, lct_minutes, lct_seconds as f64);
+    let b = a - daylight_saving as f64 - zone_correction as f64;
+    let c = local_day as f64 + (b / 24.0);
+    let d = cd_jd(c, local_month, local_year);
+    let e = jdc_day(d);
+
+    return e.floor();
+}
+
+/// Determine Greenwich Month for Local Time
+///
+/// Original macro name: LctGMonth
+pub fn lct_gmonth(
+    lct_hours: f64,
+    lct_minutes: f64,
+    lct_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+) -> u32 {
+    let a = hms_dh(lct_hours, lct_minutes, lct_seconds as f64);
+    let b = a - daylight_saving as f64 - zone_correction as f64;
+    let c = local_day as f64 + (b / 24.0);
+    let d = cd_jd(c, local_month, local_year);
+
+    return jdc_month(d);
+}
+
+/// Determine Greenwich Year for Local Time
+///
+/// Original macro name: LctGYear
+pub fn lct_gyear(
+    lct_hours: f64,
+    lct_minutes: f64,
+    lct_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+) -> u32 {
+    let a = hms_dh(lct_hours, lct_minutes, lct_seconds as f64);
+    let b = a - daylight_saving as f64 - zone_correction as f64;
+    let c = local_day as f64 + (b / 24.0);
+    let d = cd_jd(c, local_month, local_year);
+
+    return jdc_year(d);
+}
+
+/// Convert Universal Time to Greenwich Sidereal Time
+///
+/// Original macro name: UTGST
+pub fn ut_gst(
+    u_hours: f64,
+    u_minutes: f64,
+    u_seconds: f64,
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) -> f64 {
+    let a = cd_jd(greenwich_day as f64, greenwich_month, greenwich_year);
+    let b = a - 2451545.0;
+    let c = b / 36525.0;
+    let d = 6.697374558 + (2400.051336 * c) + (0.000025862 * c * c);
+    let e = d - (24.0 * (d / 24.0).floor());
+    let f = hms_dh(u_hours, u_minutes, u_seconds);
+    let g = f * 1.002737909;
+    let h = e + g;
+    return h - (24.0 * (h / 24.0).floor());
+}
+
+/// Convert Greenwich Sidereal Time to Local Sidereal Time
+///
+/// Original macro name: GSTLST
+pub fn gst_lst(
+    greenwich_hours: f64,
+    greenwich_minutes: f64,
+    greenwich_seconds: f64,
+    geographical_longitude: f64,
+) -> f64 {
+    let a = hms_dh(greenwich_hours, greenwich_minutes, greenwich_seconds);
+    let b = geographical_longitude / 15.0;
+    let c = a + b;
+
+    return c - (24.0 * (c / 24.0).floor());
 }

@@ -65,7 +65,7 @@ pub fn civil_date_to_day_number(mut month: u32, day: u32, year: u32) -> u32 {
 }
 
 /// Convert a Civil Time (hours,minutes,seconds) to Decimal Hours
-pub fn civil_time_to_decimal_hours(hours: u32, minutes: u32, seconds: u32) -> f64 {
+pub fn civil_time_to_decimal_hours(hours: f64, minutes: f64, seconds: f64) -> f64 {
     return macros::hms_dh(hours, minutes, seconds as f64);
 }
 
@@ -74,12 +74,12 @@ pub fn civil_time_to_decimal_hours(hours: u32, minutes: u32, seconds: u32) -> f6
 /// ## Returns
 ///
 /// hours (u32), minutes (u32), seconds (u32)
-pub fn decimal_hours_to_civil_time(decimal_hours: f64) -> (u32, u32, u32) {
+pub fn decimal_hours_to_civil_time(decimal_hours: f64) -> (f64, f64, f64) {
     let hours = macros::dh_hour(decimal_hours);
     let minutes = macros::dh_min(decimal_hours);
     let seconds = macros::dh_sec(decimal_hours);
 
-    return (hours, minutes, seconds as u32);
+    return (hours as f64, minutes as f64, seconds as f64);
 }
 
 /// Convert local Civil Time to Universal Time
@@ -88,12 +88,12 @@ pub fn decimal_hours_to_civil_time(decimal_hours: f64) -> (u32, u32, u32) {
 ///
 /// UT hours, UT mins, UT secs, GW day, GW month, GW year
 pub fn local_civil_time_to_universal_time(
-    lct_hours: u32,
-    lct_minutes: u32,
-    lct_seconds: u32,
+    lct_hours: f64,
+    lct_minutes: f64,
+    lct_seconds: f64,
     is_daylight_savings: bool,
     zone_correction: i32,
-    local_day: u32,
+    local_day: f64,
     local_month: u32,
     local_year: u32,
 ) -> (u32, u32, u32, u32, u32, u32) {
@@ -128,9 +128,9 @@ pub fn local_civil_time_to_universal_time(
 ///
 /// LCT hours, LCT minutes, LCT seconds, day, month, year
 pub fn universal_time_to_local_civil_time(
-    ut_hours: u32,
-    ut_minutes: u32,
-    ut_seconds: u32,
+    ut_hours: f64,
+    ut_minutes: f64,
+    ut_seconds: f64,
     is_daylight_savings: bool,
     zone_correction: i32,
     gw_day: u32,
@@ -138,7 +138,7 @@ pub fn universal_time_to_local_civil_time(
     gw_year: u32,
 ) -> (u32, u32, u32, u32, u32, u32) {
     let dst_value = if is_daylight_savings == true { 1 } else { 0 };
-    let ut = macros::hms_dh(ut_hours, ut_minutes, ut_seconds as f64);
+    let ut = macros::hms_dh(ut_hours, ut_minutes, ut_seconds);
     let zone_time = ut + zone_correction as f64;
     let local_time = zone_time + dst_value as f64;
     let local_jd_plus_local_time =
@@ -165,10 +165,10 @@ pub fn universal_time_to_local_civil_time(
 /// ## Returns
 /// GST hours, GST minutes, GST seconds
 pub fn universal_time_to_greenwich_sidereal_time(
-    ut_hours: u32,
-    ut_minutes: u32,
+    ut_hours: f64,
+    ut_minutes: f64,
     ut_seconds: f64,
-    gw_day: u32,
+    gw_day: f64,
     gw_month: u32,
     gw_year: u32,
 ) -> (u32, u32, f64) {
@@ -194,14 +194,14 @@ pub fn universal_time_to_greenwich_sidereal_time(
 /// ## Returns
 /// UT hours, UT minutes, UT seconds, Warning Flag
 pub fn greenwich_sidereal_time_to_universal_time(
-    gst_hours: u32,
-    gst_minutes: u32,
+    gst_hours: f64,
+    gst_minutes: f64,
     gst_seconds: f64,
-    gw_day: u32,
+    gw_day: f64,
     gw_month: u32,
     gw_year: u32,
 ) -> (u32, u32, f64, String) {
-    let jd = macros::cd_jd(gw_day as f64, gw_month, gw_year);
+    let jd = macros::cd_jd(gw_day, gw_month, gw_year);
     let s = jd - 2451545.0;
     let t = s / 36525.0;
     let t01 = 6.697374558 + (2400.051336 * t) + (0.000025862 * t * t);
@@ -225,8 +225,8 @@ pub fn greenwich_sidereal_time_to_universal_time(
 /// ## Returns
 /// LST hours, LST minutes, LST seconds
 pub fn greenwich_sidereal_time_to_local_sidereal_time(
-    gst_hour: u32,
-    gst_minutes: u32,
+    gst_hour: f64,
+    gst_minutes: f64,
     gst_seconds: f64,
     geographical_longitude: f64,
 ) -> (u32, u32, f64) {
@@ -247,8 +247,8 @@ pub fn greenwich_sidereal_time_to_local_sidereal_time(
 /// ## Returns
 /// GST hours, GST minutes, GST seconds
 pub fn local_sidereal_time_to_greenwich_sidereal_time(
-    lst_hours: u32,
-    lst_minutes: u32,
+    lst_hours: f64,
+    lst_minutes: f64,
     lst_seconds: f64,
     geographical_longitude: f64,
 ) -> (u32, u32, f64) {

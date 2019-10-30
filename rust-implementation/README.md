@@ -19,3 +19,4 @@ Calculate | Day of Week for Julian Date
 Type | Description
 -----|------------
 Convert | Angle <-> Decimal Degrees
+Convert | Right Ascension <-> Hour Angle

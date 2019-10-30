@@ -52,9 +52,9 @@ fn test_day_number(input_month: u32, input_day: u32, input_year: u32, expected_r
 
 /// Civil Time tests.
 pub struct TestCivilTimeScaffold {
-    pub civil_hours: u32,
-    pub civil_minutes: u32,
-    pub civil_seconds: u32,
+    pub civil_hours: f64,
+    pub civil_minutes: f64,
+    pub civil_seconds: f64,
 }
 
 impl TestCivilTimeScaffold {
@@ -115,20 +115,20 @@ impl TestCivilTimeScaffold {
 			decimal_hours, hour_part, minutes_part, seconds_part
 		);
 
-        assert_eq!(hour_part, self.civil_hours, "Hour Part");
-        assert_eq!(minutes_part, self.civil_minutes, "Minutes Part");
+        assert_eq!(hour_part as f64, self.civil_hours, "Hour Part");
+        assert_eq!(minutes_part as f64, self.civil_minutes, "Minutes Part");
         assert_eq!(seconds_part, self.civil_seconds as f64, "Seconds Part");
     }
 }
 
 /// Local Civil Time tests.
 pub struct TestLocalCivilTimeScaffold {
-    pub lct_hours: u32,
-    pub lct_minutes: u32,
-    pub lct_seconds: u32,
+    pub lct_hours: f64,
+    pub lct_minutes: f64,
+    pub lct_seconds: f64,
     pub is_daylight_savings: bool,
     pub zone_correction: i32,
-    pub local_day: u32,
+    pub local_day: f64,
     pub local_month: u32,
     pub local_year: u32,
 }
@@ -199,9 +199,9 @@ impl TestLocalCivilTimeScaffold {
             revert_month,
             revert_year,
         ) = DT::universal_time_to_local_civil_time(
-            ut_hours,
-            ut_minutes,
-            ut_seconds,
+            ut_hours as f64,
+            ut_minutes as f64,
+            ut_seconds as f64,
             self.is_daylight_savings,
             self.zone_correction,
             gw_day,
@@ -238,10 +238,10 @@ impl TestLocalCivilTimeScaffold {
 
 /// Universal Time <-> Sidereal Time tests.
 pub struct TestUniversalTimeSiderealTimeScaffold {
-    pub ut_hours: u32,
-    pub ut_minutes: u32,
+    pub ut_hours: f64,
+    pub ut_minutes: f64,
     pub ut_seconds: f64,
-    pub gw_day: u32,
+    pub gw_day: f64,
     pub gw_month: u32,
     pub gw_year: u32,
 }
@@ -289,8 +289,8 @@ impl TestUniversalTimeSiderealTimeScaffold {
 
         let (ut_hours, ut_minutes, ut_seconds, warning_flag) =
             DT::greenwich_sidereal_time_to_universal_time(
-                gst_hours,
-                gst_minutes,
+                gst_hours as f64,
+                gst_minutes as f64,
                 gst_seconds,
                 self.gw_day,
                 self.gw_month,
@@ -320,8 +320,8 @@ impl TestUniversalTimeSiderealTimeScaffold {
 
 /// Universal Time <-> Sidereal Time tests.
 pub struct TestGreenwichSiderealLocalSiderealScaffold {
-    pub gst_hours: u32,
-    pub gst_minutes: u32,
+    pub gst_hours: f64,
+    pub gst_minutes: f64,
     pub gst_seconds: f64,
     pub geographical_longitude: f64,
 }
@@ -363,8 +363,8 @@ impl TestGreenwichSiderealLocalSiderealScaffold {
 
         let (gst_hours, gst_minutes, gst_seconds) =
             DT::local_sidereal_time_to_greenwich_sidereal_time(
-                lst_hours,
-                lst_minutes,
+                lst_hours as f64,
+                lst_minutes as f64,
                 lst_seconds,
                 self.geographical_longitude,
             );

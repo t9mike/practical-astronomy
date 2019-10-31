@@ -446,3 +446,55 @@ pub fn gst_lst(
 
     return c - (24.0 * (c / 24.0).floor());
 }
+
+/// Convert Equatorial Coordinates to Azimuth (in decimal degrees)
+///
+/// Original macro name: EQAz
+pub fn eq_az(
+    hour_angle_hours: f64,
+    hour_angle_minutes: f64,
+    hour_angle_seconds: f64,
+    declination_degrees: f64,
+    declination_minutes: f64,
+    declination_seconds: f64,
+    geographical_latitude: f64,
+) -> f64 {
+    let a = hms_dh(hour_angle_hours, hour_angle_minutes, hour_angle_seconds);
+    let b = a * 15.0;
+    let c = b.to_radians();
+    let d = dms_dd(
+        declination_degrees,
+        declination_minutes,
+        declination_seconds,
+    );
+    let e = d.to_radians();
+    let f = geographical_latitude.to_radians();
+    let g = e.sin() * f.sin() + e.cos() * f.cos() * c.cos();
+    let h = -e.cos() * f.cos() * c.sin();
+    let i = e.sin() - (f.sin() * g);
+    let j = degrees(h.atan2(i));
+
+    return j - 360.0 * (j / 360.0).floor();
+}
+
+/// Convert Degrees Minutes Seconds to Decimal Degrees
+///
+/// Original macro name: DMSDD
+pub fn dms_dd(degrees: f64, minutes: f64, seconds: f64) -> f64 {
+    let a = seconds.abs() / 60.0;
+    let b = (minutes.abs() + a) / 60.0;
+    let c = degrees.abs() + b;
+
+    return if degrees < 0.0 || minutes < 0.0 || seconds < 0.0 {
+        -c
+    } else {
+        c
+    };
+}
+
+/// Convert W to Degrees
+///
+/// Original macro name: Degrees
+pub fn degrees(w: f64) -> f64 {
+    return w * 57.29577951;
+}

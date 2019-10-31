@@ -477,6 +477,33 @@ pub fn eq_az(
     return j - 360.0 * (j / 360.0).floor();
 }
 
+/// Convert Equatorial Coordinates to Altitude (in decimal degrees)
+///
+/// Original macro name: EQAlt
+pub fn eq_alt(
+    hour_angle_hours: f64,
+    hour_angle_minutes: f64,
+    hour_angle_seconds: f64,
+    declination_degrees: f64,
+    declination_minutes: f64,
+    declination_seconds: f64,
+    geographical_latitude: f64,
+) -> f64 {
+    let a = hms_dh(hour_angle_hours, hour_angle_minutes, hour_angle_seconds);
+    let b = a * 15.0;
+    let c = b.to_radians();
+    let d = dms_dd(
+        declination_degrees,
+        declination_minutes,
+        declination_seconds,
+    );
+    let e = d.to_radians();
+    let f = geographical_latitude.to_radians();
+    let g = e.sin() * f.sin() + e.cos() * f.cos() * c.cos();
+
+    return degrees(g.asin());
+}
+
 /// Convert Degrees Minutes Seconds to Decimal Degrees
 ///
 /// Original macro name: DMSDD
@@ -497,4 +524,107 @@ pub fn dms_dd(degrees: f64, minutes: f64, seconds: f64) -> f64 {
 /// Original macro name: Degrees
 pub fn degrees(w: f64) -> f64 {
     return w * 57.29577951;
+}
+
+/// Return Degrees part of Decimal Degrees
+///
+/// Original macro name: DDDeg
+pub fn dd_deg(decimal_degrees: f64) -> f64 {
+    let a = decimal_degrees.abs();
+    let b = a * 3600.0;
+    let c = utils::round_f64(b - 60.0 * (b / 60.0).floor(), 2);
+    let _d = if c == 60.0 { 0.0 } else { c };
+    let e = if c == 60.0 { 60.0 } else { b };
+
+    return if decimal_degrees < 0.0 {
+        -(e / 3600.0).floor()
+    } else {
+        (e / 3600.0).floor()
+    };
+}
+
+/// Return Minutes part of Decimal Degrees
+///
+/// Original macro name: DDMin
+pub fn dd_min(decimal_degrees: f64) -> f64 {
+    let a = decimal_degrees.abs();
+    let b = a * 3600.0;
+    let c = utils::round_f64(b - 60.0 * (b / 60.0).floor(), 2);
+    let _d = if c == 60.0 { 0.0 } else { c };
+    let e = if c == 60.0 { b + 60.0 } else { b };
+
+    return (e / 60.0).floor() % 60.0;
+}
+
+/// Return Seconds part of Decimal Degrees
+///
+/// Original macro name: DDSec
+pub fn dd_sec(decimal_degrees: f64) -> f64 {
+    let a = decimal_degrees.abs();
+    let b = a * 3600.0;
+    let c = utils::round_f64(b - 60.0 * (b / 60.0).floor(), 2);
+    let d = if c == 60.0 { 0.0 } else { c };
+
+    return d;
+}
+
+/// Convert Decimal Degrees to Degree-Hours
+///
+/// Original macro name: DDDH
+pub fn dd_dh(decimal_degrees: f64) -> f64 {
+    return decimal_degrees / 15.0;
+}
+
+/// Convert Degree-Hours to Decimal Degrees
+///
+/// Original macro name: DHDD
+pub fn dh_dd(degree_hours: f64) -> f64 {
+    return degree_hours * 15.0;
+}
+
+/// Convert Horizon Coordinates to Declination (in decimal degrees)
+///
+/// Original macro name: HORDec
+pub fn hor_dec(
+    azimuth_degrees: f64,
+    azimuth_minutes: f64,
+    azimuth_seconds: f64,
+    altitude_degrees: f64,
+    altitude_minutes: f64,
+    altitude_seconds: f64,
+    geographical_latitude: f64,
+) -> f64 {
+    let a = dms_dd(azimuth_degrees, azimuth_minutes, azimuth_seconds);
+    let b = dms_dd(altitude_degrees, altitude_minutes, altitude_seconds);
+    let c = a.to_radians();
+    let d = b.to_radians();
+    let e = geographical_latitude.to_radians();
+    let f = d.sin() * e.sin() + d.cos() * e.cos() * c.cos();
+
+    return degrees(f.asin());
+}
+
+/// Convert Horizon Coordinates to Hour Angle (in decimal degrees)
+///
+/// Original macro name: HORHa
+pub fn hor_ha(
+    azimuth_degrees: f64,
+    azimuth_minutes: f64,
+    azimuth_seconds: f64,
+    altitude_degrees: f64,
+    altitude_minutes: f64,
+    altitude_seconds: f64,
+    geographical_latitude: f64,
+) -> f64 {
+    let a = dms_dd(azimuth_degrees, azimuth_minutes, azimuth_seconds);
+    let b = dms_dd(altitude_degrees, altitude_minutes, altitude_seconds);
+    let c = a.to_radians();
+    let d = b.to_radians();
+    let e = geographical_latitude.to_radians();
+    let f = d.sin() * e.sin() + d.cos() * e.cos() * c.cos();
+    let g = -d.cos() * e.cos() * c.sin();
+    let h = d.sin() - e.sin() * f;
+    let i = dd_dh(degrees(g.atan2(h)));
+
+    return i - 24.0 * (i / 24.0).floor();
 }

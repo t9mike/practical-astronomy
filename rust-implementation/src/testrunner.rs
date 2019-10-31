@@ -83,4 +83,16 @@ pub fn run_coordinate_tests() {
     };
     test_right_ascension_hour_angle.test_right_ascension_to_hour_angle();
     test_right_ascension_hour_angle.test_hour_angle_to_right_ascension();
+
+    let mut test_equatorial_horizon = CST::TestEquatorialHorizonScaffold {
+        hour_angle_hours: 5.0,
+        hour_angle_minutes: 51.0,
+        hour_angle_seconds: 44.0,
+        declination_degrees: 23.0,
+        declination_minutes: 13.0,
+        declination_seconds: 10.0,
+        geographical_latitude: 52.0,
+    };
+    test_equatorial_horizon.test_equatorial_coordinates_to_horizon_coordinates();
+    test_equatorial_horizon.test_horizon_coordinates_to_equatorial_coordinates();
 }

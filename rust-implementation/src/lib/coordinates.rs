@@ -129,3 +129,99 @@ pub fn hour_angle_to_right_ascension(
         right_ascension_seconds,
     );
 }
+
+/// Convert Equatorial Coordinates to Horizon Coordinates
+pub fn equatorial_coordinates_to_horizon_coordinates(
+    hour_angle_hours: f64,
+    hour_angle_minutes: f64,
+    hour_angle_seconds: f64,
+    declination_degrees: f64,
+    declination_minutes: f64,
+    declination_seconds: f64,
+    geographical_latitude: f64,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let azimuth_in_decimal_degrees = macros::eq_az(
+        hour_angle_hours,
+        hour_angle_minutes,
+        hour_angle_seconds,
+        declination_degrees,
+        declination_minutes,
+        declination_seconds,
+        geographical_latitude,
+    );
+
+    let altitude_in_decimal_degrees = macros::eq_alt(
+        hour_angle_hours,
+        hour_angle_minutes,
+        hour_angle_seconds,
+        declination_degrees,
+        declination_minutes,
+        declination_seconds,
+        geographical_latitude,
+    );
+
+    let azimuth_degrees = macros::dd_deg(azimuth_in_decimal_degrees);
+    let azimuth_minutes = macros::dd_min(azimuth_in_decimal_degrees);
+    let azimuth_seconds = macros::dd_sec(azimuth_in_decimal_degrees);
+
+    let altitude_degrees = macros::dd_deg(altitude_in_decimal_degrees);
+    let altitude_minutes = macros::dd_min(altitude_in_decimal_degrees);
+    let altitude_seconds = macros::dd_sec(altitude_in_decimal_degrees);
+
+    return (
+        azimuth_degrees,
+        azimuth_minutes,
+        azimuth_seconds,
+        altitude_degrees,
+        altitude_minutes,
+        altitude_seconds,
+    );
+}
+
+/// Convert Horizon Coordinates to Equatorial Coordinates
+pub fn horizon_coordinates_to_equatorial_coordinates(
+    azimuth_degrees: f64,
+    azimuth_minutes: f64,
+    azimuth_seconds: f64,
+    altitude_degrees: f64,
+    altitude_minutes: f64,
+    altitude_seconds: f64,
+    geographical_latitude: f64,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let hour_angle_in_decimal_degrees = macros::hor_ha(
+        azimuth_degrees,
+        azimuth_minutes,
+        azimuth_seconds,
+        altitude_degrees,
+        altitude_minutes,
+        altitude_seconds,
+        geographical_latitude,
+    );
+
+    let declination_in_decimal_degrees = macros::hor_dec(
+        azimuth_degrees,
+        azimuth_minutes,
+        azimuth_seconds,
+        altitude_degrees,
+        altitude_minutes,
+        altitude_seconds,
+        geographical_latitude,
+    );
+
+    let hour_angle_hours = macros::dh_hour(hour_angle_in_decimal_degrees);
+    let hour_angle_minutes = macros::dh_min(hour_angle_in_decimal_degrees);
+    let hour_angle_seconds = macros::dh_sec(hour_angle_in_decimal_degrees);
+
+    let declination_degrees = macros::dd_deg(declination_in_decimal_degrees);
+    let declination_minutes = macros::dd_min(declination_in_decimal_degrees);
+    let declination_seconds = macros::dd_sec(declination_in_decimal_degrees);
+
+    return (
+        hour_angle_hours as f64,
+        hour_angle_minutes as f64,
+        hour_angle_seconds,
+        declination_degrees,
+        declination_minutes,
+        declination_seconds,
+    );
+}

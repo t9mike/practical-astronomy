@@ -154,3 +154,118 @@ impl TestRightAscensionHourAngleScaffold {
         assert_eq!(right_ascension_seconds, 21.0, "Right Ascension Seconds");
     }
 }
+
+pub struct TestEquatorialHorizonScaffold {
+    pub hour_angle_hours: f64,
+    pub hour_angle_minutes: f64,
+    pub hour_angle_seconds: f64,
+    pub declination_degrees: f64,
+    pub declination_minutes: f64,
+    pub declination_seconds: f64,
+    pub geographical_latitude: f64,
+}
+
+impl TestEquatorialHorizonScaffold {
+    pub fn test_equatorial_coordinates_to_horizon_coordinates(&mut self) {
+        let (
+            azimuth_degrees,
+            azimuth_minutes,
+            azimuth_seconds,
+            altitude_degrees,
+            altitude_minutes,
+            altitude_seconds,
+        ) = CS::equatorial_coordinates_to_horizon_coordinates(
+            self.hour_angle_hours,
+            self.hour_angle_minutes,
+            self.hour_angle_seconds,
+            self.declination_degrees,
+            self.declination_minutes,
+            self.declination_seconds,
+            self.geographical_latitude,
+        );
+
+        println!(
+			"Equatorial coordinates to horizon coordinates: [HA] {}:{}:{} [Declination] {}d {}m {}s [Geographical Latitude] {} = [Azimuth] {}d {}m {}s [Altitude] {}d {}m {}s",
+			self.hour_angle_hours,
+			self.hour_angle_minutes,
+			self.hour_angle_seconds,
+			self.declination_degrees,
+			self.declination_minutes,
+			self.declination_seconds,
+			self.geographical_latitude,
+			azimuth_degrees,
+			azimuth_minutes,
+			azimuth_seconds,
+			altitude_degrees,
+			altitude_minutes,
+			altitude_seconds
+		);
+
+        assert_eq!(azimuth_degrees, 283.0, "Azimuth Degrees");
+        assert_eq!(azimuth_minutes, 16.0, "Azimuth Minutes");
+        assert_eq!(azimuth_seconds, 15.7, "Azimuth Seconds");
+        assert_eq!(altitude_degrees, 19.0, "Altitude Degrees");
+        assert_eq!(altitude_minutes, 20.0, "Altitude Minutes");
+        assert_eq!(altitude_seconds, 3.64, "Altitude Seconds");
+    }
+
+    pub fn test_horizon_coordinates_to_equatorial_coordinates(&mut self) {
+        let (
+            azimuth_degrees,
+            azimuth_minutes,
+            azimuth_seconds,
+            altitude_degrees,
+            altitude_minutes,
+            altitude_seconds,
+        ) = CS::equatorial_coordinates_to_horizon_coordinates(
+            self.hour_angle_hours,
+            self.hour_angle_minutes,
+            self.hour_angle_seconds,
+            self.declination_degrees,
+            self.declination_minutes,
+            self.declination_seconds,
+            self.geographical_latitude,
+        );
+
+        let (
+            hour_angle_hours,
+            hour_angle_minutes,
+            hour_angle_seconds,
+            declination_degrees,
+            declination_minutes,
+            declination_seconds,
+        ) = CS::horizon_coordinates_to_equatorial_coordinates(
+            azimuth_degrees,
+            azimuth_minutes,
+            azimuth_seconds,
+            altitude_degrees,
+            altitude_minutes,
+            altitude_seconds,
+            self.geographical_latitude,
+        );
+
+        println!(
+			"Horizon coordinates to equatorial coordinates: [Azimuth] {}d {}m {}s [Altitude] {}d {}m {}s [Geographical Latitude] {} = [HA] {}:{}:{} [Declination] {}d {}m {}s",
+			azimuth_degrees,
+			azimuth_minutes,
+			azimuth_seconds,
+			altitude_degrees,
+			altitude_minutes,
+			altitude_seconds,
+			self.geographical_latitude,
+			hour_angle_hours,
+			hour_angle_minutes,
+			hour_angle_seconds,
+			declination_degrees,
+			declination_minutes,
+			declination_seconds,
+		);
+
+        assert_eq!(hour_angle_hours, 5.0, "Hour Angle Hours");
+        assert_eq!(hour_angle_minutes, 51.0, "Hour Angle Minutes");
+        assert_eq!(hour_angle_seconds, 44.0, "Hour Angle Seconds");
+        assert_eq!(declination_degrees, 23.0, "Declination Degrees");
+        assert_eq!(declination_minutes, 13.0, "Declination Minutes");
+        assert_eq!(declination_seconds, 10.0, "Declination Seconds");
+    }
+}

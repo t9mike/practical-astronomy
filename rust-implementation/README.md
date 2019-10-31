@@ -20,3 +20,4 @@ Type | Description
 -----|------------
 Convert | Angle <-> Decimal Degrees
 Convert | Right Ascension <-> Hour Angle
+Convert | Equatorial Coordinates <-> Horizon Coordinates

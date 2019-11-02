@@ -395,3 +395,93 @@ impl TestEclipticScaffold {
         assert_eq!(ecl_lat_sec, 30.99, "Ecliptic Latitude Seconds");
     }
 }
+
+pub struct TestGalacticScaffold {
+    pub ra_hours: f64,
+    pub ra_minutes: f64,
+    pub ra_seconds: f64,
+    pub dec_degrees: f64,
+    pub dec_minutes: f64,
+    pub dec_seconds: f64,
+}
+impl TestGalacticScaffold {
+    pub fn test_equatorial_coordinate_to_galactic_coordinate(&mut self) {
+        let (gal_long_deg, gal_long_min, gal_long_sec, gal_lat_deg, gal_lat_min, gal_lat_sec) =
+            CS::equatorial_coordinate_to_galactic_coordinate(
+                self.ra_hours,
+                self.ra_minutes,
+                self.ra_seconds,
+                self.dec_degrees,
+                self.dec_minutes,
+                self.dec_seconds,
+            );
+
+        println!(
+			"Equatorial coordinate to galactic coordinate: [RA] {}:{}:{} [Dec] {}d {}m {}s = [Galactic] [Long] {}d {}m {}s [Lat] {}d {}m {}s",
+			self.ra_hours,
+			self.ra_minutes,
+			self.ra_seconds,
+			self.dec_degrees,
+			self.dec_minutes,
+			self.dec_seconds,
+			gal_long_deg,
+			gal_long_min,
+			gal_long_sec,
+			gal_lat_deg,
+			gal_lat_min,
+			gal_lat_sec
+		);
+
+        assert_eq!(gal_long_deg, 232.0, "Galactic Longitude Degrees");
+        assert_eq!(gal_long_min, 14.0, "Galactic Longitude Minutes");
+        assert_eq!(gal_long_sec, 52.38, "Galactic Longitude Seconds");
+        assert_eq!(gal_lat_deg, 51.0, "Galactic Latitude Degrees");
+        assert_eq!(gal_lat_min, 7.0, "Galactic Latitude Minutes");
+        assert_eq!(gal_lat_sec, 20.16, "Galactic Latitude Seconds");
+    }
+
+    pub fn test_galactic_coordinate_to_equatorial_coordinate(&mut self) {
+        let (gal_long_deg, gal_long_min, gal_long_sec, gal_lat_deg, gal_lat_min, gal_lat_sec) =
+            CS::equatorial_coordinate_to_galactic_coordinate(
+                self.ra_hours,
+                self.ra_minutes,
+                self.ra_seconds,
+                self.dec_degrees,
+                self.dec_minutes,
+                self.dec_seconds,
+            );
+
+        let (ra_hours, ra_minutes, ra_seconds, dec_degrees, dec_minutes, dec_seconds) =
+            CS::galactic_coordinate_to_equatorial_coordinate(
+                gal_long_deg,
+                gal_long_min,
+                gal_long_sec,
+                gal_lat_deg,
+                gal_lat_min,
+                gal_lat_sec,
+            );
+
+        println!(
+			"Galactic coordinate to equatorial coordinate: [Galactic] [Long] {}d {}m {}s [Lat] {}d {}m {}s = [RA] {}:{}:{} [Dec] {}d {}m {}s", 
+			gal_long_deg,
+			gal_long_min,
+			gal_long_sec,
+			gal_lat_deg,
+			gal_lat_min,
+			gal_lat_sec,
+			ra_hours,
+			ra_minutes,
+			ra_seconds,
+			dec_degrees,
+			dec_minutes,
+			dec_seconds,
+		);
+
+        assert_eq!(ra_hours, 10.0, "Right Ascension Hours");
+        assert_eq!(ra_minutes, 21.0, "Right Ascension Minutes");
+        assert_eq!(ra_seconds, 0.0, "Right Ascension Seconds");
+        assert_eq!(dec_degrees, 10.0, "Declination Degrees");
+        assert_eq!(dec_minutes, 3.0, "Declination Degrees");
+        assert_eq!(dec_seconds, 11.0, "Declination Seconds");
+    }
+}

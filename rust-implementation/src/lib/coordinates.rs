@@ -339,3 +339,92 @@ pub fn equatorial_coordinate_to_ecliptic_coordinate(
         out_ecl_lat_sec,
     );
 }
+
+/// Convert Equatorial Coordinates to Galactic Coordinates
+pub fn equatorial_coordinate_to_galactic_coordinate(
+    ra_hours: f64,
+    ra_minutes: f64,
+    ra_seconds: f64,
+    dec_degrees: f64,
+    dec_minutes: f64,
+    dec_seconds: f64,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let ra_deg = macros::dh_dd(macros::hms_dh(ra_hours, ra_minutes, ra_seconds));
+    let dec_deg = macros::dms_dd(dec_degrees, dec_minutes, dec_seconds);
+    let ra_rad = ra_deg.to_radians();
+    let dec_rad = dec_deg.to_radians();
+    let sin_b = dec_rad.cos()
+        * (27.4 as f64).to_radians().cos()
+        * (ra_rad - (192.25 as f64).to_radians()).cos()
+        + dec_rad.sin() * (27.4 as f64).to_radians().sin();
+    let b_radians = sin_b.asin();
+    let b_deg = macros::degrees(b_radians);
+    let y = dec_rad.sin() - sin_b * (27.4 as f64).to_radians().sin();
+    let x = dec_rad.cos()
+        * (ra_rad - (192.25 as f64).to_radians()).sin()
+        * (27.4 as f64).to_radians().cos();
+    let long_deg1 = macros::degrees(y.atan2(x)) + 33.0;
+    let long_deg2 = long_deg1 - 360.0 * (long_deg1 / 360.0).floor();
+
+    let gal_long_deg = macros::dd_deg(long_deg2);
+    let gal_long_min = macros::dd_min(long_deg2);
+    let gal_long_sec = macros::dd_sec(long_deg2);
+    let gal_lat_deg = macros::dd_deg(b_deg);
+    let gal_lat_min = macros::dd_min(b_deg);
+    let gal_lat_sec = macros::dd_sec(b_deg);
+
+    return (
+        gal_long_deg,
+        gal_long_min,
+        gal_long_sec,
+        gal_lat_deg,
+        gal_lat_min,
+        gal_lat_sec,
+    );
+}
+
+/// Convert Galactic Coordinates to Equatorial Coordinates
+pub fn galactic_coordinate_to_equatorial_coordinate(
+    gal_long_deg: f64,
+    gal_long_min: f64,
+    gal_long_sec: f64,
+    gal_lat_deg: f64,
+    gal_lat_min: f64,
+    gal_lat_sec: f64,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let glong_deg = macros::dms_dd(gal_long_deg, gal_long_min, gal_long_sec);
+    let glat_deg = macros::dms_dd(gal_lat_deg, gal_lat_min, gal_lat_sec);
+    let glong_rad = glong_deg.to_radians();
+    let glat_rad = glat_deg.to_radians();
+    let sin_dec = glat_rad.cos()
+        * (27.4 as f64).to_radians().cos()
+        * (glong_rad - (33 as f64).to_radians()).sin()
+        + glat_rad.sin() * (27.4 as f64).to_radians().sin();
+    let dec_radians = sin_dec.asin();
+    let dec_deg = macros::degrees(dec_radians);
+    let y = glat_rad.cos() * (glong_rad - (33 as f64).to_radians()).cos();
+    let x = glat_rad.sin() * ((27.4 as f64).to_radians()).cos()
+        - (glat_rad).cos()
+            * ((27.4 as f64).to_radians()).sin()
+            * (glong_rad - (33 as f64).to_radians()).sin();
+
+    let ra_deg1 = macros::degrees(y.atan2(x)) + 192.25;
+    let ra_deg2 = ra_deg1 - 360.0 * (ra_deg1 / 360.0).floor();
+    let ra_hours1 = macros::dd_dh(ra_deg2);
+
+    let ra_hours = macros::dh_hour(ra_hours1);
+    let ra_minutes = macros::dh_min(ra_hours1);
+    let ra_seconds = macros::dh_sec(ra_hours1);
+    let dec_degrees = macros::dd_deg(dec_deg);
+    let dec_minutes = macros::dd_min(dec_deg);
+    let dec_seconds = macros::dd_sec(dec_deg);
+
+    return (
+        ra_hours as f64,
+        ra_minutes as f64,
+        ra_seconds,
+        dec_degrees,
+        dec_minutes,
+        dec_seconds,
+    );
+}

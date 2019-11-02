@@ -110,4 +110,15 @@ pub fn run_coordinate_tests() {
     test_ecliptic.test_mean_obliquity_of_the_ecliptic();
     test_ecliptic.test_ecliptic_coordinate_to_equatorial_coordinate();
     test_ecliptic.test_equatorial_coordinate_to_ecliptic_coordinate();
+
+    let mut test_galactic = CST::TestGalacticScaffold {
+        ra_hours: 10.0,
+        ra_minutes: 21.0,
+        ra_seconds: 0.0,
+        dec_degrees: 10.0,
+        dec_minutes: 3.0,
+        dec_seconds: 11.0,
+    };
+    test_galactic.test_equatorial_coordinate_to_galactic_coordinate();
+    test_galactic.test_galactic_coordinate_to_equatorial_coordinate();
 }

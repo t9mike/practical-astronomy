@@ -225,3 +225,117 @@ pub fn horizon_coordinates_to_equatorial_coordinates(
         declination_seconds,
     );
 }
+
+/// Calculate Mean Obliquity of the Ecliptic for a Greenwich Date
+pub fn mean_obliquity_of_the_ecliptic(
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) -> f64 {
+    let jd = macros::cd_jd(greenwich_day, greenwich_month, greenwich_year);
+    let mjd = jd - 2451545.0;
+    let t = mjd / 36525.0;
+    let de1 = t * (46.815 + t * (0.0006 - (t * 0.00181)));
+    let de2 = de1 / 3600.0;
+
+    return 23.439292 - de2;
+}
+
+/// Convert Ecliptic Coordinates to Equatorial Coordinates
+pub fn ecliptic_coordinate_to_equatorial_coordinate(
+    ecliptic_longitude_degrees: f64,
+    ecliptic_longitude_minutes: f64,
+    ecliptic_longitude_seconds: f64,
+    ecliptic_latitude_degrees: f64,
+    ecliptic_latitude_minutes: f64,
+    ecliptic_latitude_seconds: f64,
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let eclon_deg = macros::dms_dd(
+        ecliptic_longitude_degrees,
+        ecliptic_longitude_minutes,
+        ecliptic_longitude_seconds,
+    );
+    let eclat_deg = macros::dms_dd(
+        ecliptic_latitude_degrees,
+        ecliptic_latitude_minutes,
+        ecliptic_latitude_seconds,
+    );
+    let eclon_rad = eclon_deg.to_radians();
+    let eclat_rad = eclat_deg.to_radians();
+    let obliq_deg = macros::obliq(greenwich_day, greenwich_month, greenwich_year);
+    let obliq_rad = obliq_deg.to_radians();
+    let sin_dec =
+        eclat_rad.sin() * obliq_rad.cos() + eclat_rad.cos() * obliq_rad.sin() * eclon_rad.sin();
+    let dec_rad = sin_dec.asin();
+    let dec_deg = macros::degrees(dec_rad);
+    let y = eclon_rad.sin() * obliq_rad.cos() - eclat_rad.tan() * obliq_rad.sin();
+    let x = eclon_rad.cos();
+    let ra_rad = y.atan2(x);
+    let ra_deg1 = macros::degrees(ra_rad);
+    let ra_deg2 = ra_deg1 - 360.0 * (ra_deg1 / 360.0).floor();
+    let ra_hours = macros::dd_dh(ra_deg2);
+
+    let out_ra_hours = macros::dh_hour(ra_hours);
+    let out_ra_minutes = macros::dh_min(ra_hours);
+    let out_ra_seconds = macros::dh_sec(ra_hours);
+    let out_dec_degrees = macros::dd_deg(dec_deg);
+    let out_dec_minutes = macros::dd_min(dec_deg);
+    let out_dec_seconds = macros::dd_sec(dec_deg);
+
+    return (
+        out_ra_hours as f64,
+        out_ra_minutes as f64,
+        out_ra_seconds,
+        out_dec_degrees,
+        out_dec_minutes,
+        out_dec_seconds,
+    );
+}
+
+/// Convert Equatorial Coordinates to Ecliptic Coordinates
+pub fn equatorial_coordinate_to_ecliptic_coordinate(
+    ra_hours: f64,
+    ra_minutes: f64,
+    ra_seconds: f64,
+    dec_degrees: f64,
+    dec_minutes: f64,
+    dec_seconds: f64,
+    gw_day: f64,
+    gw_month: u32,
+    gw_year: u32,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let ra_deg = macros::dh_dd(macros::hms_dh(ra_hours, ra_minutes, ra_seconds));
+    let dec_deg = macros::dms_dd(dec_degrees, dec_minutes, dec_seconds);
+    let ra_rad = ra_deg.to_radians();
+    let dec_rad = dec_deg.to_radians();
+    let obliq_deg = macros::obliq(gw_day, gw_month, gw_year);
+    let obliq_rad = obliq_deg.to_radians();
+    let sin_ecl_lat =
+        dec_rad.sin() * obliq_rad.cos() - dec_rad.cos() * obliq_rad.sin() * ra_rad.sin();
+    let ecl_lat_rad = sin_ecl_lat.asin();
+    let ecl_lat_deg = macros::degrees(ecl_lat_rad);
+    let y = ra_rad.sin() * obliq_rad.cos() + dec_rad.tan() * obliq_rad.sin();
+    let x = ra_rad.cos();
+    let ecl_long_rad = y.atan2(x);
+    let ecl_long_deg1 = macros::degrees(ecl_long_rad);
+    let ecl_long_deg2 = ecl_long_deg1 - 360.0 * (ecl_long_deg1 / 360.0).floor();
+
+    let out_ecl_long_deg = macros::dd_deg(ecl_long_deg2);
+    let out_ecl_long_min = macros::dd_min(ecl_long_deg2);
+    let out_ecl_long_sec = macros::dd_sec(ecl_long_deg2);
+    let out_ecl_lat_deg = macros::dd_deg(ecl_lat_deg);
+    let out_ecl_lat_min = macros::dd_min(ecl_lat_deg);
+    let out_ecl_lat_sec = macros::dd_sec(ecl_lat_deg);
+
+    return (
+        out_ecl_long_deg,
+        out_ecl_long_min,
+        out_ecl_long_sec,
+        out_ecl_lat_deg,
+        out_ecl_lat_min,
+        out_ecl_lat_sec,
+    );
+}

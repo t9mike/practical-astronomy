@@ -95,4 +95,19 @@ pub fn run_coordinate_tests() {
     };
     test_equatorial_horizon.test_equatorial_coordinates_to_horizon_coordinates();
     test_equatorial_horizon.test_horizon_coordinates_to_equatorial_coordinates();
+
+    let mut test_ecliptic = CST::TestEclipticScaffold {
+        ecliptic_longitude_degrees: 139.0,
+        ecliptic_longitude_minutes: 41.0,
+        ecliptic_longitude_seconds: 10.0,
+        ecliptic_latitude_degrees: 4.0,
+        ecliptic_latitude_minutes: 52.0,
+        ecliptic_latitude_seconds: 31.0,
+        greenwich_day: 6.0,
+        greenwich_month: 7,
+        greenwich_year: 2009,
+    };
+    test_ecliptic.test_mean_obliquity_of_the_ecliptic();
+    test_ecliptic.test_ecliptic_coordinate_to_equatorial_coordinate();
+    test_ecliptic.test_equatorial_coordinate_to_ecliptic_coordinate();
 }

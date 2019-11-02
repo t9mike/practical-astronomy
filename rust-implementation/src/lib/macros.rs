@@ -628,3 +628,65 @@ pub fn hor_ha(
 
     return i - 24.0 * (i / 24.0).floor();
 }
+
+/// Nutation of Obliquity
+///
+/// Original macro name: NutatObl
+pub fn nutat_obl(greenwich_day: f64, greenwich_month: u32, greenwich_year: u32) -> f64 {
+    let dj = cd_jd(greenwich_day, greenwich_month, greenwich_year) - 2415020.0;
+    let t = dj / 36525.0;
+    let t2 = t * t;
+
+    let a = 100.0021358 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let l1 = 279.6967 + 0.000303 * t2 + b;
+    let l2 = 2.0 * l1.to_radians();
+
+    let a = 1336.855231 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let d1 = 270.4342 - 0.001133 * t2 + b;
+    let d2 = 2.0 * d1.to_radians();
+
+    let a = 99.99736056 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let m1 = (358.4758 - 0.00015 * t2 + b).to_radians();
+    //M1 = math.radians(M1)
+
+    let a = 1325.552359 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let m2 = (296.1046 + 0.009192 * t2 + b).to_radians();
+    // M2 = math.radians(M2)
+
+    let a = 5.372616667 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let n1 = (259.1833 + 0.002078 * t2 - b).to_radians();
+    //	N1 = math.radians(N1)
+
+    let n2 = 2.0 * n1;
+
+    let ddo = ((9.21 + 0.00091 * t) * n1.cos())
+        + ((0.5522 - 0.00029 * t) * l2.cos() - 0.0904 * n2.cos())
+        + (0.0884 * d2.cos() + 0.0216 * (l2 + m1).cos())
+        + (0.0183 * (d2 - n1).cos() + 0.0113 * (d2 + m2).cos())
+        - (0.0093 * (l2 - m1).cos() - 0.0066 * (l2 - n1).cos());
+
+    return ddo / 3600.0;
+}
+
+/// Obliquity of the Ecliptic for a Greenwich Date
+///
+/// Original macro name: Obliq
+pub fn obliq(greenwich_day: f64, greenwich_month: u32, greenwich_year: u32) -> f64 {
+    let a = cd_jd(greenwich_day, greenwich_month, greenwich_year);
+    let b = a - 2415020.0;
+    let c = (b / 36525.0) - 1.0;
+    let d = c * (46.815 + c * (0.0006 - (c * 0.00181)));
+    let e = d / 3600.0;
+
+    return 23.43929167 - e + nutat_obl(greenwich_day, greenwich_month, greenwich_year);
+}

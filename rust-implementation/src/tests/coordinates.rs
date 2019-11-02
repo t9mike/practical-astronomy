@@ -269,3 +269,129 @@ impl TestEquatorialHorizonScaffold {
         assert_eq!(declination_seconds, 10.0, "Declination Seconds");
     }
 }
+
+pub struct TestEclipticScaffold {
+    pub ecliptic_longitude_degrees: f64,
+    pub ecliptic_longitude_minutes: f64,
+    pub ecliptic_longitude_seconds: f64,
+    pub ecliptic_latitude_degrees: f64,
+    pub ecliptic_latitude_minutes: f64,
+    pub ecliptic_latitude_seconds: f64,
+    pub greenwich_day: f64,
+    pub greenwich_month: u32,
+    pub greenwich_year: u32,
+}
+impl TestEclipticScaffold {
+    pub fn test_mean_obliquity_of_the_ecliptic(&mut self) {
+        let obliquity = util::round_f64(
+            CS::mean_obliquity_of_the_ecliptic(
+                self.greenwich_day,
+                self.greenwich_month,
+                self.greenwich_year,
+            ),
+            8,
+        );
+
+        println!(
+            "Mean obliquity of the ecliptic: [Greenwich Date] {}/{}/{} = [Obliquity] {}",
+            self.greenwich_month, self.greenwich_day, self.greenwich_year, obliquity
+        );
+
+        assert_eq!(obliquity, 23.43805531, "Obliquity");
+    }
+
+    pub fn test_ecliptic_coordinate_to_equatorial_coordinate(&mut self) {
+        let (ra_hours, ra_minutes, ra_seconds, dec_degrees, dec_minutes, dec_seconds) =
+            CS::ecliptic_coordinate_to_equatorial_coordinate(
+                self.ecliptic_longitude_degrees,
+                self.ecliptic_longitude_minutes,
+                self.ecliptic_longitude_seconds,
+                self.ecliptic_latitude_degrees,
+                self.ecliptic_latitude_minutes,
+                self.ecliptic_latitude_seconds,
+                self.greenwich_day,
+                self.greenwich_month,
+                self.greenwich_year,
+            );
+
+        println!(
+			"Ecliptic coordinates to equatorial coordinates: [Ecliptic] [Longitude] {}d {}m {}s [Latitude] {}d {}m {}s [Greenwich Date] {}/{}/{} = [Right Ascension] {}:{}:{} [Declination] {}d {}m {}s",
+			self.ecliptic_longitude_degrees,
+			self.ecliptic_longitude_minutes,
+			self.ecliptic_longitude_seconds,
+			self.ecliptic_latitude_degrees,
+			self.ecliptic_latitude_minutes,
+			self.ecliptic_latitude_seconds,
+			self.greenwich_month,
+			self.greenwich_day,
+			self.greenwich_year,
+			ra_hours,
+			ra_minutes,
+			ra_seconds,
+			dec_degrees,
+			dec_minutes,
+			dec_seconds
+		);
+
+        assert_eq!(ra_hours, 9.0, "RA Hours");
+        assert_eq!(ra_minutes, 34.0, "RA Minutes");
+        assert_eq!(ra_seconds, 53.4, "RA Seconds");
+        assert_eq!(dec_degrees, 19.0, "Dec Degrees");
+        assert_eq!(dec_minutes, 32.0, "Dec Minutes");
+        assert_eq!(dec_seconds, 8.52, "Dec Seconds");
+    }
+
+    pub fn test_equatorial_coordinate_to_ecliptic_coordinate(&mut self) {
+        let (ra_hours, ra_minutes, ra_seconds, dec_degrees, dec_minutes, dec_seconds) =
+            CS::ecliptic_coordinate_to_equatorial_coordinate(
+                self.ecliptic_longitude_degrees,
+                self.ecliptic_longitude_minutes,
+                self.ecliptic_longitude_seconds,
+                self.ecliptic_latitude_degrees,
+                self.ecliptic_latitude_minutes,
+                self.ecliptic_latitude_seconds,
+                self.greenwich_day,
+                self.greenwich_month,
+                self.greenwich_year,
+            );
+
+        let (ecl_long_deg, ecl_long_min, ecl_long_sec, ecl_lat_deg, ecl_lat_min, ecl_lat_sec) =
+            CS::equatorial_coordinate_to_ecliptic_coordinate(
+                ra_hours,
+                ra_minutes,
+                ra_seconds,
+                dec_degrees,
+                dec_minutes,
+                dec_seconds,
+                self.greenwich_day,
+                self.greenwich_month,
+                self.greenwich_year,
+            );
+
+        println!(
+			"Equatorial coordinates to ecliptic coordinates: [Right Ascension] {}:{}:{} [Declination] {}d {}m {}s [Greenwich Date] {}/{}/{} = [Ecliptic] [Longitude] {}d {}m {}s [Latitude] {}d {}m {}s",
+			ra_hours,
+			ra_minutes,
+			ra_seconds,
+			dec_degrees,
+			dec_minutes,
+			dec_seconds,
+			self.greenwich_month,
+			self.greenwich_day,
+			self.greenwich_year,
+			ecl_long_deg,
+			ecl_long_min,
+			ecl_long_sec,
+			ecl_lat_deg,
+			ecl_lat_min,
+			ecl_lat_sec
+		);
+
+        assert_eq!(ecl_long_deg, 139.0, "Ecliptic Longitude Degrees");
+        assert_eq!(ecl_long_min, 41.0, "Ecliptic Longitude Minutes");
+        assert_eq!(ecl_long_sec, 9.97, "Ecliptic Longitude Seconds");
+        assert_eq!(ecl_lat_deg, 4.0, "Ecliptic Latitude Degrees");
+        assert_eq!(ecl_lat_min, 52.0, "Ecliptic Latitude Minutes");
+        assert_eq!(ecl_lat_sec, 30.99, "Ecliptic Latitude Seconds");
+    }
+}

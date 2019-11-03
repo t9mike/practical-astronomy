@@ -690,3 +690,52 @@ pub fn nutation_in_ecliptic_longitude_and_obliquity(
 
     return (nut_in_long_deg, nut_in_obl_deg);
 }
+
+/// Correct ecliptic coordinates for the effects of aberration.
+///
+/// ## Returns
+/// * apparent ecliptic longitude (degrees, minutes, seconds)
+/// * apparent ecliptic latitude (degrees, minutes, seconds)
+pub fn correct_for_aberration(
+    ut_hour: f64,
+    ut_minutes: f64,
+    ut_seconds: f64,
+    gw_day: f64,
+    gw_month: u32,
+    gw_year: u32,
+    true_ecl_long_deg: f64,
+    true_ecl_long_min: f64,
+    true_ecl_long_sec: f64,
+    true_ecl_lat_deg: f64,
+    true_ecl_lat_min: f64,
+    true_ecl_lat_sec: f64,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let true_long_deg = macros::dms_dd(true_ecl_long_deg, true_ecl_long_min, true_ecl_long_sec);
+    let true_lat_deg = macros::dms_dd(true_ecl_lat_deg, true_ecl_lat_min, true_ecl_lat_sec);
+    let sun_true_long_deg = macros::sun_long(
+        ut_hour, ut_minutes, ut_seconds, 0, 0, gw_day, gw_month, gw_year,
+    );
+    let dlong_arcsec = -20.5 * ((sun_true_long_deg - true_long_deg).to_radians()).cos()
+        / ((true_lat_deg).to_radians()).cos();
+    let dlat_arcsec = -20.5
+        * ((sun_true_long_deg - true_long_deg).to_radians()).sin()
+        * ((true_lat_deg).to_radians()).sin();
+    let apparent_long_deg = true_long_deg + (dlong_arcsec / 3600.0);
+    let apparent_lat_deg = true_lat_deg + (dlat_arcsec / 3600.0);
+
+    let apparent_ecl_long_deg = macros::dd_deg(apparent_long_deg);
+    let apparent_ecl_long_min = macros::dd_min(apparent_long_deg);
+    let apparent_ecl_long_sec = macros::dd_sec(apparent_long_deg);
+    let apparent_ecl_lat_deg = macros::dd_deg(apparent_lat_deg);
+    let apparent_ecl_lat_min = macros::dd_min(apparent_lat_deg);
+    let apparent_ecl_lat_sec = macros::dd_sec(apparent_lat_deg);
+
+    return (
+        apparent_ecl_long_deg,
+        apparent_ecl_long_min,
+        apparent_ecl_long_sec,
+        apparent_ecl_lat_deg,
+        apparent_ecl_lat_min,
+        apparent_ecl_lat_sec,
+    );
+}

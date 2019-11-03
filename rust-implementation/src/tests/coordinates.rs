@@ -707,3 +707,87 @@ pub fn test_nutation_in_ecliptic_longitude_and_obliquity(
     );
     assert_eq!(nut_in_obl_deg, 0.0025671, "Nutation in Obliquity (degrees)");
 }
+
+pub fn test_correct_for_aberration(
+    ut_hour: f64,
+    ut_minutes: f64,
+    ut_seconds: f64,
+    gw_day: f64,
+    gw_month: u32,
+    gw_year: u32,
+    true_ecl_long_deg: f64,
+    true_ecl_long_min: f64,
+    true_ecl_long_sec: f64,
+    true_ecl_lat_deg: f64,
+    true_ecl_lat_min: f64,
+    true_ecl_lat_sec: f64,
+) {
+    let (
+        apparent_ecl_long_deg,
+        apparent_ecl_long_min,
+        apparent_ecl_long_sec,
+        apparent_ecl_lat_deg,
+        apparent_ecl_lat_min,
+        apparent_ecl_lat_sec,
+    ) = CS::correct_for_aberration(
+        ut_hour,
+        ut_minutes,
+        ut_seconds,
+        gw_day,
+        gw_month,
+        gw_year,
+        true_ecl_long_deg,
+        true_ecl_long_min,
+        true_ecl_long_sec,
+        true_ecl_lat_deg,
+        true_ecl_lat_min,
+        true_ecl_lat_sec,
+    );
+
+    println!(
+		"Correct for aberration: [UT] {}:{}:{} [Greenwich Date] {}/{}/{} [True Ecliptic] [Longitude] {}d {}m {}s [Latitude] {}d {}m {}s = [Apparent Ecliptic] [Longitude] {}d {}m {}s [Latitude] {}d {}m {}s",
+		ut_hour,
+		ut_minutes,
+		ut_seconds,
+		gw_month,
+		gw_day,
+		gw_year,
+		true_ecl_long_deg,
+		true_ecl_long_min,
+		true_ecl_long_sec,
+		true_ecl_lat_deg,
+		true_ecl_lat_min,
+		true_ecl_lat_sec,
+		apparent_ecl_long_deg,
+		apparent_ecl_long_min,
+		apparent_ecl_long_sec,
+		apparent_ecl_lat_deg,
+		apparent_ecl_lat_min,
+		apparent_ecl_lat_sec
+	);
+
+    assert_eq!(
+        apparent_ecl_long_deg, 352.0,
+        "Apparent Ecliptic Longitude Degrees"
+    );
+    assert_eq!(
+        apparent_ecl_long_min, 37.0,
+        "Apparent Ecliptic Longitude Minutes"
+    );
+    assert_eq!(
+        apparent_ecl_long_sec, 30.45,
+        "Apparent Ecliptic Longitude Seconds"
+    );
+    assert_eq!(
+        apparent_ecl_lat_deg, -1.0,
+        "Apparent Ecliptic Latitude Degrees"
+    );
+    assert_eq!(
+        apparent_ecl_lat_min, 32.0,
+        "Apparent Ecliptic Latitude Minutes"
+    );
+    assert_eq!(
+        apparent_ecl_lat_sec, 56.33,
+        "Apparent Ecliptic Latitude Seconds"
+    );
+}

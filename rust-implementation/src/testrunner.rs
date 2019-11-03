@@ -147,4 +147,8 @@ pub fn run_coordinate_tests() {
     );
 
     CST::test_nutation_in_ecliptic_longitude_and_obliquity(1.0, 9, 1988);
+
+    CST::test_correct_for_aberration(
+        0.0, 0.0, 0.0, 8.0, 9, 1988, 352.0, 37.0, 10.1, -1.0, 32.0, 56.4,
+    );
 }

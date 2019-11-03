@@ -726,3 +726,107 @@ pub fn gst_ut(
     let h = g - (24.0 * (g / 24.0).floor());
     return h * 0.9972695663;
 }
+
+/// Calculate Sun's ecliptic longitude
+///
+/// Original macro name: SunLong
+pub fn sun_long(lch: f64, lcm: f64, lcs: f64, ds: i32, zc: i32, ld: f64, lm: u32, ly: u32) -> f64 {
+    let aa = lct_gday(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let bb = lct_gmonth(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let cc = lct_gyear(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let ut = lct_ut(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let dj = cd_jd(aa, bb, cc) - 2415020.0;
+    let t = (dj / 36525.0) + (ut / 876600.0);
+    let t2 = t * t;
+    let a = 100.0021359 * t;
+    let b = 360.0 * (a - (a).floor());
+
+    let l = 279.69668 + 0.0003025 * t2 + b;
+    let a = 99.99736042 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let m1 = 358.47583 - (0.00015 + 0.0000033 * t) * t2 + b;
+    let ec = 0.01675104 - 0.0000418 * t - 0.000000126 * t2;
+
+    let am = m1.to_radians();
+    let at = true_anomaly(am, ec);
+    let _ae = eccentric_anomaly(am, ec);
+
+    let a = 62.55209472 * t;
+    let b = 360.0 * (a - (a).floor());
+
+    let a1 = (153.23 + b).to_radians();
+    let a = 125.1041894 * t;
+    let _b = 360.0 * (a - (a).floor());
+
+    let b1 = (216.57 + t).to_radians();
+    let a = 91.56766028 * t;
+    let b = 360.0 * (a - (a).floor());
+
+    let c1 = (312.69 + b).to_radians();
+    let a = 1236.853095 * t;
+    let b = 360.0 * (a - (a).floor());
+
+    let d1 = (350.74 - 0.00144 * t2 + b).to_radians();
+    let e1 = (231.19 + 20.2 * t).to_radians();
+    let a = 183.1353208 * t;
+    let b = 360.0 * (a - (a).floor());
+    let h1 = (353.4 + b).to_radians();
+
+    let d2 = 0.00134 * a1.cos() + 0.00154 * b1.cos() + 0.002 * c1.cos();
+    let d2 = d2 + 0.00179 * d1.sin() + 0.00178 * e1.sin();
+    let d3 = 0.00000543 * a1.sin() + 0.00001575 * b1.sin();
+    let d3 = d3 + 0.00001627 * c1.sin() + 0.00003076 * d1.cos();
+    let _d3 = d3 + 0.00000927 * h1.sin();
+
+    let sr = at + (l - m1 + d2).to_radians();
+    let tp = 6.283185308;
+
+    let sr = sr - tp * (sr / tp).floor();
+    return degrees(sr);
+}
+
+/// Solve Kepler's equation, and return value of the true anomaly in radians
+///
+/// Original macro name: TrueAnomaly
+pub fn true_anomaly(am: f64, ec: f64) -> f64 {
+    let tp = 6.283185308;
+    let m = am - tp * (am / tp).floor();
+    let mut ae = m;
+
+    while 1 == 1 {
+        let d = ae - (ec * (ae).sin()) - m;
+        if d.abs() < 0.000001 {
+            break;
+        }
+        let d = d / (1.0 - (ec * (ae).cos()));
+        ae = ae - d;
+    }
+
+    let a = ((1.0 + ec) / (1.0 - ec)).sqrt() * (ae / 2.0).tan();
+    let at = 2.0 * a.atan();
+
+    return at;
+}
+
+/// Solve Kepler's equation, and return value of the eccentric anomaly in radians
+///
+/// Original macro name: EccentricAnomaly
+pub fn eccentric_anomaly(am: f64, ec: f64) -> f64 {
+    let tp = 6.283185308;
+    let m = am - tp * (am / tp).floor();
+    let mut ae = m;
+
+    while 1 == 1 {
+        let d = ae - (ec * (ae).sin()) - m;
+
+        if d.abs() < 0.000001 {
+            break;
+        }
+
+        let d = d / (1.0 - (ec * (ae).cos()));
+        ae = ae - d;
+    }
+
+    return ae;
+}

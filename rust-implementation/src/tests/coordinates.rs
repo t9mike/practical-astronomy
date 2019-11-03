@@ -605,3 +605,75 @@ pub fn test_rising_and_setting(
     assert_eq!(az_rise, 64.36, "AZ Rise");
     assert_eq!(az_set, 295.64, "AZ Set");
 }
+
+pub fn test_correct_for_precession(
+    ra_hour: f64,
+    ra_minutes: f64,
+    ra_seconds: f64,
+    dec_deg: f64,
+    dec_minutes: f64,
+    dec_seconds: f64,
+    epoch1_day: f64,
+    epoch1_month: u32,
+    epoch1_year: u32,
+    epoch2_day: f64,
+    epoch2_month: u32,
+    epoch2_year: u32,
+) {
+    let (
+        corrected_ra_hour,
+        corrected_ra_minutes,
+        corrected_ra_seconds,
+        corrected_dec_deg,
+        corrected_dec_minutes,
+        corrected_dec_seconds,
+    ) = CS::correct_for_precession(
+        ra_hour,
+        ra_minutes,
+        ra_seconds,
+        dec_deg,
+        dec_minutes,
+        dec_seconds,
+        epoch1_day,
+        epoch1_month,
+        epoch1_year,
+        epoch2_day,
+        epoch2_month,
+        epoch2_year,
+    );
+
+    println!(
+		"Correct for precession: [RA] {}h {}m {}s [Dec] {}d {}m {}s [Epoch 1] {}/{}/{} [Epoch 2] {}/{}/{} = [Corrected Values] [RA] {}h {}m {}s [Dec] {}d {}m {}s",
+		ra_hour,
+		ra_minutes,
+		ra_seconds,
+		dec_deg,
+		dec_minutes,
+		dec_seconds,
+		epoch1_month,
+		epoch1_day,
+		epoch1_year,
+		epoch2_month,
+		epoch2_day,
+		epoch2_year,
+		corrected_ra_hour,
+		corrected_ra_minutes,
+		corrected_ra_seconds,
+		corrected_dec_deg,
+		corrected_dec_minutes,
+		corrected_dec_seconds
+	);
+
+    assert_eq!(corrected_ra_hour, 9.0, "Corrected Right Ascension Hour");
+    assert_eq!(
+        corrected_ra_minutes, 12.0,
+        "Corrected Right Ascension Minutes"
+    );
+    assert_eq!(
+        corrected_ra_seconds, 20.18,
+        "Corrected Right Ascension Seconds"
+    );
+    assert_eq!(corrected_dec_deg, 14.0, "Corrected Declination Hour");
+    assert_eq!(corrected_dec_minutes, 16.0, "Corrected Declination Minutes");
+    assert_eq!(corrected_dec_seconds, 9.12, "Corrected Declination Seconds");
+}

@@ -26,3 +26,4 @@ Convert | Ecliptic Coordinates <-> Equatorial Coordinates
 Convert | Equatorial Coordinates <-> Galactic Coordinates
 Calculate | Angle between two objects
 Calculate | Rising and Setting times for an object
+Calculate | Precession (corrected coordinates between two epochs)

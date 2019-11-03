@@ -141,4 +141,8 @@ pub fn run_coordinate_tests() {
     CST::test_rising_and_setting(
         23.0, 39.0, 20.0, 21.0, 42.0, 0.0, 24.0, 8, 2010, 64.0, 30.0, 0.5667,
     );
+
+    CST::test_correct_for_precession(
+        9.0, 10.0, 43.0, 14.0, 23.0, 25.0, 0.923, 1, 1950, 1.0, 6, 1979,
+    );
 }

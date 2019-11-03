@@ -606,3 +606,57 @@ pub fn rising_and_setting(
         az_set,
     );
 }
+
+/// Calculate precession (corrected coordinates between two epochs)
+///
+/// ## Returns
+/// * corrected RA hour
+/// * corrected RA minutes
+/// * corrected RA seconds
+/// * corrected Declination degrees
+/// * corrected Declination minutes
+/// * corrected Declination seconds
+pub fn correct_for_precession(
+    ra_hour: f64,
+    ra_minutes: f64,
+    ra_seconds: f64,
+    dec_deg: f64,
+    dec_minutes: f64,
+    dec_seconds: f64,
+    epoch1_day: f64,
+    epoch1_month: u32,
+    epoch1_year: u32,
+    epoch2_day: f64,
+    epoch2_month: u32,
+    epoch2_year: u32,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let ra_1_rad = (macros::dh_dd(macros::hms_dh(ra_hour, ra_minutes, ra_seconds))).to_radians();
+    let dec_1_rad = (macros::dms_dd(dec_deg, dec_minutes, dec_seconds)).to_radians();
+    let t_centuries = (macros::cd_jd(epoch1_day, epoch1_month, epoch1_year) - 2415020.0) / 36525.0;
+    let m_sec = 3.07234 + (0.00186 * t_centuries);
+    let n_arcsec = 20.0468 - (0.0085 * t_centuries);
+    let n_years = (macros::cd_jd(epoch2_day, epoch2_month, epoch2_year)
+        - macros::cd_jd(epoch1_day, epoch1_month, epoch1_year))
+        / 365.25;
+    let s1_hours =
+        ((m_sec + (n_arcsec * (ra_1_rad).sin() * (dec_1_rad).tan() / 15.0)) * n_years) / 3600.0;
+    let ra_2_hours = macros::hms_dh(ra_hour, ra_minutes, ra_seconds) + s1_hours;
+    let s2_deg = (n_arcsec * (ra_1_rad).cos() * n_years) / 3600.0;
+    let dec_2_deg = macros::dms_dd(dec_deg, dec_minutes, dec_seconds) + s2_deg;
+
+    let corrected_ra_hour = macros::dh_hour(ra_2_hours);
+    let corrected_ra_minutes = macros::dh_min(ra_2_hours);
+    let corrected_ra_seconds = macros::dh_sec(ra_2_hours);
+    let corrected_dec_deg = macros::dd_deg(dec_2_deg);
+    let corrected_dec_minutes = macros::dd_min(dec_2_deg);
+    let corrected_dec_seconds = macros::dd_sec(dec_2_deg);
+
+    return (
+        corrected_ra_hour as f64,
+        corrected_ra_minutes as f64,
+        corrected_ra_seconds,
+        corrected_dec_deg,
+        corrected_dec_minutes,
+        corrected_dec_seconds,
+    );
+}

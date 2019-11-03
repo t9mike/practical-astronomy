@@ -739,3 +739,120 @@ pub fn correct_for_aberration(
         apparent_ecl_lat_sec,
     );
 }
+
+/// Calculate corrected RA/Dec, accounting for atmospheric refraction.
+///
+/// NOTE: Valid values for coordinate_type are "TRUE" and "APPARENT".
+///
+/// ## Returns
+/// * corrected RA hours,minutes,seconds
+/// * corrected Declination degrees,minutes,seconds
+pub fn atmospheric_refraction(
+    true_ra_hour: f64,
+    true_ra_min: f64,
+    true_ra_sec: f64,
+    true_dec_deg: f64,
+    true_dec_min: f64,
+    true_dec_sec: f64,
+    coordinate_type: String,
+    geog_long_deg: f64,
+    geog_lat_deg: f64,
+    daylight_saving_hours: i32,
+    timezone_hours: i32,
+    lcd_day: f64,
+    lcd_month: u32,
+    lcd_year: u32,
+    lct_hour: f64,
+    lct_min: f64,
+    lct_sec: f64,
+    atmospheric_pressure_mbar: f64,
+    atmospheric_temperature_celsius: f64,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let ha_hour = macros::ra_ha(
+        true_ra_hour,
+        true_ra_min,
+        true_ra_sec,
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving_hours,
+        timezone_hours,
+        lcd_day,
+        lcd_month,
+        lcd_year,
+        geog_long_deg,
+    );
+    let azimuth_deg = macros::eq_az(
+        ha_hour,
+        0.0,
+        0.0,
+        true_dec_deg,
+        true_dec_min,
+        true_dec_sec,
+        geog_lat_deg,
+    );
+    let altitude_deg = macros::eq_alt(
+        ha_hour,
+        0.0,
+        0.0,
+        true_dec_deg,
+        true_dec_min,
+        true_dec_sec,
+        geog_lat_deg,
+    );
+    let corrected_altitude_deg = macros::refract(
+        altitude_deg,
+        coordinate_type,
+        atmospheric_pressure_mbar,
+        atmospheric_temperature_celsius,
+    );
+
+    let corrected_ha_hour = macros::hor_ha(
+        azimuth_deg,
+        0.0,
+        0.0,
+        corrected_altitude_deg,
+        0.0,
+        0.0,
+        geog_lat_deg,
+    );
+    let corrected_ra_hour1 = macros::ha_ra(
+        corrected_ha_hour,
+        0.0,
+        0.0,
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving_hours,
+        timezone_hours,
+        lcd_day,
+        lcd_month,
+        lcd_year,
+        geog_long_deg,
+    );
+    let corrected_dec_deg1 = macros::hor_dec(
+        azimuth_deg,
+        0.0,
+        0.0,
+        corrected_altitude_deg,
+        0.0,
+        0.0,
+        geog_lat_deg,
+    );
+
+    let corrected_ra_hour = macros::dh_hour(corrected_ra_hour1);
+    let corrected_ra_min = macros::dh_min(corrected_ra_hour1);
+    let corrected_ra_sec = macros::dh_sec(corrected_ra_hour1);
+    let corrected_dec_deg = macros::dd_deg(corrected_dec_deg1);
+    let corrected_dec_min = macros::dd_min(corrected_dec_deg1);
+    let corrected_dec_sec = macros::dd_sec(corrected_dec_deg1);
+
+    return (
+        corrected_ra_hour as f64,
+        corrected_ra_min as f64,
+        corrected_ra_sec,
+        corrected_dec_deg,
+        corrected_dec_min,
+        corrected_dec_sec,
+    );
+}

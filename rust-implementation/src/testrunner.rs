@@ -151,4 +151,26 @@ pub fn run_coordinate_tests() {
     CST::test_correct_for_aberration(
         0.0, 0.0, 0.0, 8.0, 9, 1988, 352.0, 37.0, 10.1, -1.0, 32.0, 56.4,
     );
+
+    CST::test_atmospheric_refraction(
+        23.0,
+        14.0,
+        0.0,
+        40.0,
+        10.0,
+        0.0,
+        "TRUE".to_string(),
+        0.17,
+        51.2036110,
+        0,
+        0,
+        23.0,
+        3,
+        1987,
+        1.0,
+        1.0,
+        24.0,
+        1012.0,
+        21.7,
+    );
 }

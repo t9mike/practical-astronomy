@@ -830,3 +830,66 @@ pub fn eccentric_anomaly(am: f64, ec: f64) -> f64 {
 
     return ae;
 }
+
+/// Calculate effects of refraction
+///
+/// Original macro name: Refract
+pub fn refract(y2: f64, sw: String, pr: f64, tr: f64) -> f64 {
+    let y = y2.to_radians();
+
+    let d = if &sw[..1].to_string().to_lowercase() == "t" {
+        -1.0
+    } else {
+        1.0
+    };
+
+    if d == -1.0 {
+        let y3 = y;
+        let y1 = y;
+        let mut r1 = 0.0;
+
+        while 1 == 1 {
+            let y = y1 + r1;
+            let _q = y;
+            let rf = refract_l3035(pr, tr, y, d);
+            if y < -0.087 {
+                return 0.0;
+            }
+            let r2 = rf;
+
+            if (r2 == 0.0) || ((r2 - r1).abs() < 0.000001) {
+                let q = y3;
+                return degrees(q + rf);
+            }
+
+            r1 = r2;
+        }
+    }
+
+    let rf = refract_l3035(pr, tr, y, d);
+
+    if y < -0.087 {
+        return 0.0;
+    }
+
+    let q = y;
+
+    return degrees(q + rf);
+}
+
+/// Helper function for refract
+pub fn refract_l3035(pr: f64, tr: f64, y: f64, d: f64) -> f64 {
+    if y < 0.2617994 {
+        if y < -0.087 {
+            return 0.0;
+        }
+
+        let yd = degrees(y);
+        let a = ((0.00002 * yd + 0.0196) * yd + 0.1594) * pr;
+        let b = (273.0 + tr) * ((0.0845 * yd + 0.505) * yd + 1.0);
+
+        return (-(a / b) * d).to_radians();
+    }
+
+    return -d * 0.00007888888 * pr / ((273.0 + tr) * (y).tan());
+}

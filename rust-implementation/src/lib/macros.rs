@@ -690,3 +690,39 @@ pub fn obliq(greenwich_day: f64, greenwich_month: u32, greenwich_year: u32) -> f
 
     return 23.43929167 - e + nutat_obl(greenwich_day, greenwich_month, greenwich_year);
 }
+
+/// Convert Local Sidereal Time to Greenwich Sidereal Time
+///
+/// Original macro name: LSTGST
+pub fn lst_gst(local_hours: f64, local_minutes: f64, local_seconds: f64, longitude: f64) -> f64 {
+    let a = hms_dh(local_hours, local_minutes, local_seconds);
+    let b = longitude / 15.0;
+    let c = a - b;
+    return c - (24.0 * (c / 24.0).floor());
+}
+
+/// Convert Greenwich Sidereal Time to Universal Time
+///
+/// Original macro name: GSTUT
+pub fn gst_ut(
+    greenwich_sidereal_hours: f64,
+    greenwich_sidereal_minutes: f64,
+    greenwich_sidereal_seconds: f64,
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) -> f64 {
+    let a = cd_jd(greenwich_day, greenwich_month, greenwich_year);
+    let b = a - 2451545.0;
+    let c = b / 36525.0;
+    let d = 6.697374558 + (2400.051336 * c) + (0.000025862 * c * c);
+    let e = d - (24.0 * (d / 24.0).floor());
+    let f = hms_dh(
+        greenwich_sidereal_hours,
+        greenwich_sidereal_minutes,
+        greenwich_sidereal_seconds,
+    );
+    let g = f - e;
+    let h = g - (24.0 * (g / 24.0).floor());
+    return h * 0.9972695663;
+}

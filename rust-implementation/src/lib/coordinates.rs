@@ -483,3 +483,126 @@ pub fn angle_between_two_objects(
 
     return (angle_deg, angle_min, angle_sec);
 }
+
+/// Rising and setting times
+///
+/// ## Arguments
+/// * `ra_hours` -- Right Ascension, in hours.
+/// * `ra_minutes` -- Right Ascension, in minutes.
+/// * `ra_seconds` -- Right Ascension, in seconds.
+/// * `dec_deg` -- Declination, in degrees.
+/// * `dec_min` -- Declination, in minutes.
+/// * `dec_sec` -- Declination, in seconds.
+/// * `gw_date_day` -- Greenwich Date, day part.
+/// * `gw_date_month` -- Greenwich Date, month part.
+/// * `gw_date_year` -- Greenwich Date, year part.
+/// * `geog_long_deg` -- Geographical Longitude, in degrees.
+/// * `geog_lat_deg` -- Geographical Latitude, in degrees.
+/// * `vert_shift_deg` -- Vertical Shift, in degrees.
+///
+/// ## Returns
+/// * `rise_set_status` -- "Never Rises", "Circumpolar", or "OK".
+/// * `ut_rise_hour` -- Rise time, UT, hour part.
+/// * `ut_rise_min` -- Rise time, UT, minute part.
+/// * `ut_set_hour` -- Set time, UT, hour part.
+/// * `ut_set_min` -- Set time, UT, minute part.
+/// * `az_rise` -- Azimuth angle, at rise.
+/// * `az_set` -- Azimuth angle, at set.
+pub fn rising_and_setting(
+    ra_hours: f64,
+    ra_minutes: f64,
+    ra_seconds: f64,
+    dec_deg: f64,
+    dec_min: f64,
+    dec_sec: f64,
+    gw_date_day: f64,
+    gw_date_month: u32,
+    gw_date_year: u32,
+    geog_long_deg: f64,
+    geog_lat_deg: f64,
+    vert_shift_deg: f64,
+) -> (String, f64, f64, f64, f64, f64, f64) {
+    let ra_hours1 = macros::hms_dh(ra_hours, ra_minutes, ra_seconds);
+    let dec_rad = (macros::dms_dd(dec_deg, dec_min, dec_sec)).to_radians();
+    let vertical_displ_radians = (vert_shift_deg).to_radians();
+    let geo_lat_radians = (geog_lat_deg).to_radians();
+    let cos_h = -((vertical_displ_radians).sin() + (geo_lat_radians).sin() * (dec_rad).sin())
+        / ((geo_lat_radians).cos() * (dec_rad).cos());
+    let h_hours = macros::dd_dh(macros::degrees((cos_h).acos()));
+    let lst_rise_hours = (ra_hours1 - h_hours) - 24.0 * ((ra_hours1 - h_hours) / 24.0).floor();
+    let lst_set_hours = (ra_hours1 + h_hours) - 24.0 * ((ra_hours1 + h_hours) / 24.0).floor();
+    let a_deg = macros::degrees(
+        (((dec_rad).sin() + (vertical_displ_radians).sin() * (geo_lat_radians).sin())
+            / ((vertical_displ_radians).cos() * (geo_lat_radians).cos()))
+        .acos(),
+    );
+    let az_rise_deg = a_deg - 360.0 * (a_deg / 360.0).floor();
+    let az_set_deg = (360.0 - a_deg) - 360.0 * ((360.0 - a_deg) / 360.0).floor();
+    let ut_rise_hours1 = macros::gst_ut(
+        macros::lst_gst(lst_rise_hours, 0.0, 0.0, geog_long_deg),
+        0.0,
+        0.0,
+        gw_date_day,
+        gw_date_month,
+        gw_date_year,
+    );
+    let ut_set_hours1 = macros::gst_ut(
+        macros::lst_gst(lst_set_hours, 0.0, 0.0, geog_long_deg),
+        0.0,
+        0.0,
+        gw_date_day,
+        gw_date_month,
+        gw_date_year,
+    );
+    let ut_rise_adjusted_hours = ut_rise_hours1 + 0.008333;
+    let ut_set_adjusted_hours = ut_set_hours1 + 0.008333;
+
+    let rise_set_status = "OK";
+    if cos_h > 1.0 {
+        let rise_set_status = "never rises";
+    }
+    if cos_h < -1.0 {
+        let rise_set_status = "circumpolar";
+    }
+
+    let ut_rise_hour = if rise_set_status == "OK" {
+        macros::dh_hour(ut_rise_adjusted_hours) as f64
+    } else {
+        0.0
+    };
+    let ut_rise_min = if rise_set_status == "OK" {
+        macros::dh_min(ut_rise_adjusted_hours) as f64
+    } else {
+        0.0
+    };
+    let ut_set_hour = if rise_set_status == "OK" {
+        macros::dh_hour(ut_set_adjusted_hours) as f64
+    } else {
+        0.0
+    };
+    let ut_set_min = if rise_set_status == "OK" {
+        macros::dh_min(ut_set_adjusted_hours) as f64
+    } else {
+        0.0
+    };
+    let az_rise = if rise_set_status == "OK" {
+        utils::round_f64(az_rise_deg, 2)
+    } else {
+        0.0
+    };
+    let az_set = if rise_set_status == "OK" {
+        utils::round_f64(az_set_deg, 2)
+    } else {
+        0.0
+    };
+
+    return (
+        rise_set_status.to_string(),
+        ut_rise_hour,
+        ut_rise_min,
+        ut_set_hour,
+        ut_set_min,
+        az_rise,
+        az_set,
+    );
+}

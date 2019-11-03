@@ -543,3 +543,65 @@ pub fn test_angle_between_two_objects(
     assert_eq!(angle_min, 40.0, "Angle Minutes");
     assert_eq!(angle_sec, 25.86, "Angle Seconds");
 }
+
+pub fn test_rising_and_setting(
+    ra_hours: f64,
+    ra_minutes: f64,
+    ra_seconds: f64,
+    dec_deg: f64,
+    dec_min: f64,
+    dec_sec: f64,
+    gw_date_day: f64,
+    gw_date_month: u32,
+    gw_date_year: u32,
+    geog_long_deg: f64,
+    geog_lat_deg: f64,
+    vert_shift_deg: f64,
+) {
+    let (rise_set_status, ut_rise_hour, ut_rise_min, ut_set_hour, ut_set_min, az_rise, az_set) =
+        CS::rising_and_setting(
+            ra_hours,
+            ra_minutes,
+            ra_seconds,
+            dec_deg,
+            dec_min,
+            dec_sec,
+            gw_date_day,
+            gw_date_month,
+            gw_date_year,
+            geog_long_deg,
+            geog_lat_deg,
+            vert_shift_deg,
+        );
+
+    println!(
+		"Rising and setting: [RA] {}h {}m {}s [Dec] {}d {}m {}s, [Greenwich Date] {}/{}/{} [Geog Long/Lat] {}/{} [Vertical Shift] {}d = [Status] {} [Rise] {}:{} ut [Set] {}:{} ut [AZ Rise/Set] {}/{}",
+		ra_hours,
+		ra_minutes,
+		ra_seconds,
+		dec_deg,
+		dec_min,
+		dec_sec,
+		gw_date_month,
+		gw_date_day,
+		gw_date_year,
+		geog_long_deg,
+		geog_lat_deg,
+		vert_shift_deg,
+		rise_set_status.to_string(),
+		ut_rise_hour,
+		ut_rise_min,
+		ut_set_hour,
+		ut_set_min,
+		az_rise,
+		az_set
+	);
+
+    assert_eq!(rise_set_status, "OK", "Rise/Set Status");
+    assert_eq!(ut_rise_hour, 14.0, "UT Rise Hour");
+    assert_eq!(ut_rise_min, 16.0, "UT Rise Minute");
+    assert_eq!(ut_set_hour, 4.0, "UT Set Hour");
+    assert_eq!(ut_set_min, 10.0, "UT Set Minute");
+    assert_eq!(az_rise, 64.36, "AZ Rise");
+    assert_eq!(az_set, 295.64, "AZ Set");
+}

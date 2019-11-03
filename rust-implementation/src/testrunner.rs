@@ -137,4 +137,8 @@ pub fn run_coordinate_tests() {
         11.0,
         "H".to_string(),
     );
+
+    CST::test_rising_and_setting(
+        23.0, 39.0, 20.0, 21.0, 42.0, 0.0, 24.0, 8, 2010, 64.0, 30.0, 0.5667,
+    );
 }

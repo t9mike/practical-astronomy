@@ -660,3 +660,33 @@ pub fn correct_for_precession(
         corrected_dec_seconds,
     );
 }
+
+/// Calculate nutation for two values: ecliptic longitude and obliquity, for a Greenwich date.
+///
+/// ## Returns
+/// * nutation in ecliptic longitude (degrees)
+/// * nutation in obliquity (degrees)
+pub fn nutation_in_ecliptic_longitude_and_obliquity(
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) -> (f64, f64) {
+    let jd_days = macros::cd_jd(greenwich_day, greenwich_month, greenwich_year);
+    let t_centuries = (jd_days - 2415020.0) / 36525.0;
+    let a_deg = 100.0021358 * t_centuries;
+    let l_1_deg = 279.6967 + (0.000303 * t_centuries * t_centuries);
+    let l_deg1 = l_1_deg + 360.0 * (a_deg - (a_deg).floor());
+    let l_deg2 = l_deg1 - 360.0 * (l_deg1 / 360.0).floor();
+    let l_rad = (l_deg2).to_radians();
+    let b_deg = 5.372617 * t_centuries;
+    let n_deg1 = 259.1833 - 360.0 * (b_deg - (b_deg).floor());
+    let n_deg2 = n_deg1 - 360.0 * ((n_deg1 / 360.0).floor());
+    let n_rad = (n_deg2).to_radians();
+    let nut_in_long_arcsec = -17.2 * (n_rad).sin() - 1.3 * (2.0 * l_rad).sin();
+    let nut_in_obl_arcsec = 9.2 * (n_rad).cos() + 0.5 * (2.0 * l_rad).cos();
+
+    let nut_in_long_deg = nut_in_long_arcsec / 3600.0;
+    let nut_in_obl_deg = nut_in_obl_arcsec / 3600.0;
+
+    return (nut_in_long_deg, nut_in_obl_deg);
+}

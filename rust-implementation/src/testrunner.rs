@@ -145,4 +145,6 @@ pub fn run_coordinate_tests() {
     CST::test_correct_for_precession(
         9.0, 10.0, 43.0, 14.0, 23.0, 25.0, 0.923, 1, 1950, 1.0, 6, 1979,
     );
+
+    CST::test_nutation_in_ecliptic_longitude_and_obliquity(1.0, 9, 1988);
 }

@@ -677,3 +677,33 @@ pub fn test_correct_for_precession(
     assert_eq!(corrected_dec_minutes, 16.0, "Corrected Declination Minutes");
     assert_eq!(corrected_dec_seconds, 9.12, "Corrected Declination Seconds");
 }
+
+pub fn test_nutation_in_ecliptic_longitude_and_obliquity(
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) {
+    let (nut_in_long_deg, nut_in_obl_deg) = CS::nutation_in_ecliptic_longitude_and_obliquity(
+        greenwich_day,
+        greenwich_month,
+        greenwich_year,
+    );
+
+    let nut_in_long_deg = util::round_f64(nut_in_long_deg, 9);
+    let nut_in_obl_deg = util::round_f64(nut_in_obl_deg, 7);
+
+    println!(
+		"Nutation in ecliptic longitude and obliquity: [Greenwich Date] {}/{}/{} = [Nutation] [Longitude] {}d [Obliquity] {}d",
+		greenwich_month,
+		greenwich_day,
+		greenwich_year,
+		nut_in_long_deg,
+		nut_in_obl_deg
+	);
+
+    assert_eq!(
+        nut_in_long_deg, 0.001525808,
+        "Nutation in Longitude (degrees)"
+    );
+    assert_eq!(nut_in_obl_deg, 0.0025671, "Nutation in Obliquity (degrees)");
+}

@@ -485,3 +485,61 @@ impl TestGalacticScaffold {
         assert_eq!(dec_seconds, 11.0, "Declination Seconds");
     }
 }
+
+pub fn test_angle_between_two_objects(
+    ra_long_1_hour_deg: f64,
+    ra_long_1_min: f64,
+    ra_long_1_sec: f64,
+    dec_lat_1_deg: f64,
+    dec_lat_1_min: f64,
+    dec_lat_1_sec: f64,
+    ra_long_2_hour_deg: f64,
+    ra_long_2_min: f64,
+    ra_long_2_sec: f64,
+    dec_lat_2_deg: f64,
+    dec_lat_2_min: f64,
+    dec_lat_2_sec: f64,
+    hour_or_degree: String,
+) {
+    let (angle_deg, angle_min, angle_sec) = CS::angle_between_two_objects(
+        ra_long_1_hour_deg,
+        ra_long_1_min,
+        ra_long_1_sec,
+        dec_lat_1_deg,
+        dec_lat_1_min,
+        dec_lat_1_sec,
+        ra_long_2_hour_deg,
+        ra_long_2_min,
+        ra_long_2_sec,
+        dec_lat_2_deg,
+        dec_lat_2_min,
+        dec_lat_2_sec,
+        hour_or_degree.to_string(),
+    );
+
+    println!(
+		"Angle between two objects: [Object 1] [RA Long] {}{} {}m {}s [Dec Lat] {}d {}m {}s [Object 2] [RA Long] {}{} {}m {}s [Dec Lat] {}d {}m {}s [Hour or Degree?] {} = [Angle] {}d {}m {}s",
+		ra_long_1_hour_deg,
+		if hour_or_degree == "H" {"h"} else {"d"},
+		ra_long_1_min,
+		ra_long_1_sec,
+		dec_lat_1_deg,
+		dec_lat_1_min,
+		dec_lat_1_sec,
+		ra_long_2_hour_deg,
+		if hour_or_degree == "H" {"h"} else {"d"},
+		ra_long_2_min,
+		ra_long_2_sec,
+		dec_lat_2_deg,
+		dec_lat_2_min,
+		dec_lat_2_sec,
+		hour_or_degree,
+		angle_deg,
+		angle_min,
+		angle_sec
+	);
+
+    assert_eq!(angle_deg, 23.0, "Angle Degrees");
+    assert_eq!(angle_min, 40.0, "Angle Minutes");
+    assert_eq!(angle_sec, 25.86, "Angle Seconds");
+}

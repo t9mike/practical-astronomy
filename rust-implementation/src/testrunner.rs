@@ -121,4 +121,20 @@ pub fn run_coordinate_tests() {
     };
     test_galactic.test_equatorial_coordinate_to_galactic_coordinate();
     test_galactic.test_galactic_coordinate_to_equatorial_coordinate();
+
+    CST::test_angle_between_two_objects(
+        5.0,
+        13.0,
+        31.7,
+        -8.0,
+        13.0,
+        30.0,
+        6.0,
+        44.0,
+        13.4,
+        -16.0,
+        41.0,
+        11.0,
+        "H".to_string(),
+    );
 }

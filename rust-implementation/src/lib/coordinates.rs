@@ -428,3 +428,58 @@ pub fn galactic_coordinate_to_equatorial_coordinate(
         dec_seconds,
     );
 }
+
+/// Calculate the angle between two celestial objects
+pub fn angle_between_two_objects(
+    ra_long_1_hour_deg: f64,
+    ra_long_1_min: f64,
+    ra_long_1_sec: f64,
+    dec_lat_1_deg: f64,
+    dec_lat_1_min: f64,
+    dec_lat_1_sec: f64,
+    ra_long_2_hour_deg: f64,
+    ra_long_2_min: f64,
+    ra_long_2_sec: f64,
+    dec_lat_2_deg: f64,
+    dec_lat_2_min: f64,
+    dec_lat_2_sec: f64,
+    hour_or_degree: String,
+) -> (f64, f64, f64) {
+    let ra_long_1_decimal = if hour_or_degree == "H" {
+        macros::hms_dh(ra_long_1_hour_deg, ra_long_1_min, ra_long_1_sec)
+    } else {
+        macros::dms_dd(ra_long_1_hour_deg, ra_long_1_min, ra_long_1_sec)
+    };
+    let ra_long_1_deg = if hour_or_degree == "H" {
+        macros::dh_dd(ra_long_1_decimal)
+    } else {
+        ra_long_1_decimal
+    };
+    let ra_long_1_rad = ra_long_1_deg.to_radians();
+    let dec_lat_1_deg1 = macros::dms_dd(dec_lat_1_deg, dec_lat_1_min, dec_lat_1_sec);
+    let dec_lat_1_rad = dec_lat_1_deg1.to_radians();
+    let ra_long_2_decimal = if hour_or_degree == "H" {
+        macros::hms_dh(ra_long_2_hour_deg, ra_long_2_min, ra_long_2_sec)
+    } else {
+        macros::dms_dd(ra_long_2_hour_deg, ra_long_2_min, ra_long_2_sec)
+    };
+    let ra_long_2_deg = if hour_or_degree == "H" {
+        macros::dh_dd(ra_long_2_decimal)
+    } else {
+        ra_long_2_decimal
+    };
+    let ra_long_2_rad = ra_long_2_deg.to_radians();
+    let dec_lat_2_deg1 = macros::dms_dd(dec_lat_2_deg, dec_lat_2_min, dec_lat_2_sec);
+    let dec_lat_2_rad = dec_lat_2_deg1.to_radians();
+
+    let cos_d = dec_lat_1_rad.sin() * dec_lat_2_rad.sin()
+        + dec_lat_1_rad.cos() * dec_lat_2_rad.cos() * (ra_long_1_rad - ra_long_2_rad).cos();
+    let d_rad = cos_d.acos();
+    let d_deg = macros::degrees(d_rad);
+
+    let angle_deg = macros::dd_deg(d_deg);
+    let angle_min = macros::dd_min(d_deg);
+    let angle_sec = macros::dd_sec(d_deg);
+
+    return (angle_deg, angle_min, angle_sec);
+}

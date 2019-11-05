@@ -8,6 +8,8 @@ If you're interested in this topic, please buy the book!  It provides far more d
 
 All spreadsheets and macros from the book, implemented in Python 3.  (See details in lib/README.md)
 
+The only Python 3 dependency is [Numpy](https://numpy.org/).
+
 ## Roadmap
 
 The Python 3 implementation is intended as a learning tool.  The code is easier to read and understand, but won't hold up as well where speed is required.  So, the next step will be re-implementing the Python code in [Rust](https://www.rust-lang.org/).  You can follow that work in the [rust-implementation branch](https://github.com/jfcarr-astronomy/practical-astronomy/tree/rust-implementation/rust-implementation).

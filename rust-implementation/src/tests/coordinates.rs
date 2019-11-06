@@ -878,3 +878,90 @@ pub fn test_atmospheric_refraction(
     assert_eq!(corrected_dec_min, 19.0, "Corrected Declination Minutes");
     assert_eq!(corrected_dec_sec, 45.76, "Corrected Declination Seconds");
 }
+
+pub fn test_corrections_for_geocentric_parallax(
+    ra_hour: f64,
+    ra_min: f64,
+    ra_sec: f64,
+    dec_deg: f64,
+    dec_min: f64,
+    dec_sec: f64,
+    coordinate_type: String,
+    equatorial_hor_parallax_deg: f64,
+    geog_long_deg: f64,
+    geog_lat_deg: f64,
+    height_m: f64,
+    daylight_saving: i32,
+    timezone_hours: i32,
+    lcd_day: f64,
+    lcd_month: u32,
+    lcd_year: u32,
+    lct_hour: f64,
+    lct_min: f64,
+    lct_sec: f64,
+) {
+    let (
+        corrected_ra_hour,
+        corrected_ra_min,
+        corrected_ra_sec,
+        corrected_dec_deg,
+        corrected_dec_min,
+        corrected_dec_sec,
+    ) = CS::corrections_for_geocentric_parallax(
+        ra_hour,
+        ra_min,
+        ra_sec,
+        dec_deg,
+        dec_min,
+        dec_sec,
+        coordinate_type.to_string(),
+        equatorial_hor_parallax_deg,
+        geog_long_deg,
+        geog_lat_deg,
+        height_m,
+        daylight_saving,
+        timezone_hours,
+        lcd_day,
+        lcd_month,
+        lcd_year,
+        lct_hour,
+        lct_min,
+        lct_sec,
+    );
+
+    println!(
+		"Corrections for geocentric parallax: [RA] {}h {}m {}s [Dec] {}d {}m {}s [Coordinate Type] {} [Eq Hor Parallax] {}d [Geog Long/Lat] {}/{} [Height] {}m [DST] {}h [TZ] {}h [Local Civil Date] {}/{}/{} [Local Civil Time] {}:{}:{} = [Corrected] [RA] {}h {}m {}s [Dec] {}h {}m {}s",
+		ra_hour,
+		ra_min,
+		ra_sec,
+		dec_deg,
+		dec_min,
+		dec_sec,
+		coordinate_type.to_string(),
+		equatorial_hor_parallax_deg,
+		geog_long_deg,
+		geog_lat_deg,
+		height_m,
+		daylight_saving,
+		timezone_hours,
+		lcd_month,
+		lcd_day,
+		lcd_year,
+		lct_hour,
+		lct_min,
+		lct_sec,
+		corrected_ra_hour,
+		corrected_ra_min,
+		corrected_ra_sec,
+		corrected_dec_deg,
+		corrected_dec_min,
+		corrected_dec_sec
+	);
+
+    assert_eq!(corrected_ra_hour, 22.0, "Corrected RA Hours");
+    assert_eq!(corrected_ra_min, 36.0, "Corrected RA Minutes");
+    assert_eq!(corrected_ra_sec, 43.22, "Corrected RA Seconds");
+    assert_eq!(corrected_dec_deg, -8.0, "Corrected Declination Degrees");
+    assert_eq!(corrected_dec_min, 32.0, "Corrected Declination Minutes");
+    assert_eq!(corrected_dec_sec, 17.4, "Corrected Declination Seconds");
+}

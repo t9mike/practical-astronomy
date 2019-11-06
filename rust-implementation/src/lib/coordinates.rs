@@ -856,3 +856,104 @@ pub fn atmospheric_refraction(
         corrected_dec_sec,
     );
 }
+
+/// Calculate corrected RA/Dec, accounting for geocentric parallax.
+///
+/// NOTE: Valid values for coordinate_type are "TRUE" and "APPARENT".
+///
+/// ## Returns
+/// * corrected RA hours,minutes,seconds
+/// * corrected Declination degrees,minutes,seconds
+pub fn corrections_for_geocentric_parallax(
+    ra_hour: f64,
+    ra_min: f64,
+    ra_sec: f64,
+    dec_deg: f64,
+    dec_min: f64,
+    dec_sec: f64,
+    coordinate_type: String,
+    equatorial_hor_parallax_deg: f64,
+    geog_long_deg: f64,
+    geog_lat_deg: f64,
+    height_m: f64,
+    daylight_saving: i32,
+    timezone_hours: i32,
+    lcd_day: f64,
+    lcd_month: u32,
+    lcd_year: u32,
+    lct_hour: f64,
+    lct_min: f64,
+    lct_sec: f64,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let ha_hours = macros::ra_ha(
+        ra_hour,
+        ra_min,
+        ra_sec,
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        timezone_hours,
+        lcd_day,
+        lcd_month,
+        lcd_year,
+        geog_long_deg,
+    );
+
+    let corrected_ha_hours = macros::parallax_ha(
+        ha_hours,
+        0.0,
+        0.0,
+        dec_deg,
+        dec_min,
+        dec_sec,
+        coordinate_type.to_string(),
+        geog_lat_deg,
+        height_m,
+        equatorial_hor_parallax_deg,
+    );
+
+    let corrected_ra_hours = macros::ha_ra(
+        corrected_ha_hours,
+        0.0,
+        0.0,
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        timezone_hours,
+        lcd_day,
+        lcd_month,
+        lcd_year,
+        geog_long_deg,
+    );
+
+    let corrected_dec_deg1 = macros::parallax_dec(
+        ha_hours,
+        0.0,
+        0.0,
+        dec_deg,
+        dec_min,
+        dec_sec,
+        coordinate_type.to_string(),
+        geog_lat_deg,
+        height_m,
+        equatorial_hor_parallax_deg,
+    );
+
+    let corrected_ra_hour = macros::dh_hour(corrected_ra_hours);
+    let corrected_ra_min = macros::dh_min(corrected_ra_hours);
+    let corrected_ra_sec = macros::dh_sec(corrected_ra_hours);
+    let corrected_dec_deg = macros::dd_deg(corrected_dec_deg1);
+    let corrected_dec_min = macros::dd_min(corrected_dec_deg1);
+    let corrected_dec_sec = macros::dd_sec(corrected_dec_deg1);
+
+    return (
+        corrected_ra_hour as f64,
+        corrected_ra_min as f64,
+        corrected_ra_sec,
+        corrected_dec_deg,
+        corrected_dec_min,
+        corrected_dec_sec,
+    );
+}

@@ -893,3 +893,189 @@ pub fn refract_l3035(pr: f64, tr: f64, y: f64, d: f64) -> f64 {
 
     return -d * 0.00007888888 * pr / ((273.0 + tr) * (y).tan());
 }
+
+/// Calculate corrected hour angle in decimal hours
+///
+/// Original macro name: ParallaxHA
+pub fn parallax_ha(
+    hh: f64,
+    hm: f64,
+    hs: f64,
+    dd: f64,
+    dm: f64,
+    ds: f64,
+    sw: String,
+    gp: f64,
+    ht: f64,
+    hp: f64,
+) -> f64 {
+    let a = gp.to_radians();
+    let c1 = a.cos();
+    let s1 = a.sin();
+
+    let u = (0.996647 * s1 / c1).atan();
+    let c2 = u.cos();
+    let s2 = u.sin();
+    let b = ht / 6378160.0;
+
+    let rs = (0.996647 * s2) + (b * s1);
+
+    let rc = c2 + (b * c1);
+    let tp = 6.283185308;
+
+    let rp = 1.0 / hp.to_radians().sin();
+
+    let x = (dh_dd(hms_dh(hh, hm, hs))).to_radians();
+    let x1 = x;
+    let y = (dms_dd(dd, dm, ds)).to_radians();
+    let y1 = y;
+
+    let d = if &sw[..1].to_string().to_lowercase() == "t" {
+        1.0
+    } else {
+        -1.0
+    };
+
+    if d == 1.0 {
+        let (p, _q) = parallax_ha_l2870(x, y, rc, rp, rs, tp);
+        return dd_dh(degrees(p));
+    }
+
+    let mut p1 = 0.0;
+    let mut q1 = 0.0;
+    let mut x_loop = x;
+    let mut y_loop = y;
+    while 1 == 1 {
+        let (p, q) = parallax_ha_l2870(x_loop, y_loop, rc, rp, rs, tp);
+        let p2 = p - x_loop;
+        let q2 = q - y_loop;
+
+        let aa = (p2 - p1).abs();
+        let bb = (q2 - q1).abs();
+
+        if (aa < 0.000001) && (bb < 0.000001) {
+            let p = x1 - p2;
+            let _q = y1 - q2;
+            let _x_loop = x1;
+            let _y_loop = y1;
+
+            return dd_dh(degrees(p));
+        }
+        x_loop = x1 - p2;
+        y_loop = y1 - q2;
+        p1 = p2;
+        q1 = q2;
+    }
+
+    return dd_dh(degrees(0.0));
+}
+
+/// Helper function for parallax_ha
+pub fn parallax_ha_l2870(x: f64, y: f64, rc: f64, rp: f64, rs: f64, tp: f64) -> (f64, f64) {
+    let cx = x.cos();
+    let sy = y.sin();
+    let cy = y.cos();
+
+    let aa = (rc * x.sin()) / ((rp * cy) - (rc * cx));
+
+    let dx = aa.atan();
+    let p = x + dx;
+    let cp = p.cos();
+
+    let p = p - tp * (p / tp).floor();
+    let q = (cp * (rp * sy - rs) / (rp * cy * cx - rc)).atan();
+
+    return (p, q);
+}
+
+/// Calculate corrected declination in decimal degrees
+///
+/// Original macro name: ParallaxDec
+/// HH,HM,HS,DD,DM,DS,SW,GP,HT,HP
+pub fn parallax_dec(
+    hh: f64,
+    hm: f64,
+    hs: f64,
+    dd: f64,
+    dm: f64,
+    ds: f64,
+    sw: String,
+    gp: f64,
+    ht: f64,
+    hp: f64,
+) -> f64 {
+    let a = gp.to_radians();
+    let c1 = a.cos();
+    let s1 = a.sin();
+
+    let u = (0.996647 * s1 / c1).atan();
+
+    let c2 = u.cos();
+    let s2 = u.sin();
+    let b = ht / 6378160.0;
+    let rs = (0.996647 * s2) + (b * s1);
+
+    let rc = c2 + (b * c1);
+    let tp = 6.283185308;
+
+    let rp = 1.0 / hp.to_radians().sin();
+
+    let x = (dh_dd(hms_dh(hh, hm, hs))).to_radians();
+    let x1 = x;
+
+    let y = (dms_dd(dd, dm, ds)).to_radians();
+    let y1 = y;
+    let d = if &sw[..1].to_string().to_lowercase() == "t" {
+        1.0
+    } else {
+        -1.0
+    };
+
+    if d == 1.0 {
+        let (_p, q) = parallax_dec_l2870(x, y, rc, rp, rs, tp);
+        return degrees(q);
+    }
+
+    let mut p1 = 0.0;
+    let mut q1 = 0.0;
+
+    let mut x_loop = x;
+    let mut y_loop = y;
+    while 1 == 1 {
+        let (p, q) = parallax_dec_l2870(x_loop, y_loop, rc, rp, rs, tp);
+        let p2 = p - x_loop;
+        let q2 = q - y_loop;
+        let aa = (p2 - p1).abs();
+        let _bb = (q2 - q1).abs();
+        if (aa < 0.000001) && (b < 0.000001) {
+            let _p = x1 - p2;
+            let q = y1 - q2;
+            let _x_loop = x1;
+            let _y_loop = y1;
+            return degrees(q);
+        }
+        x_loop = x1 - p2;
+        y_loop = y1 - q2;
+        p1 = p2;
+        q1 = q2;
+    }
+
+    return degrees(0.0);
+}
+
+/// Helper function for parallax_dec
+pub fn parallax_dec_l2870(x: f64, y: f64, rc: f64, rp: f64, rs: f64, tp: f64) -> (f64, f64) {
+    let cx = x.cos();
+    let sy = y.sin();
+    let cy = y.cos();
+
+    let aa = (rc * x.sin()) / ((rp * cy) - (rc * cx));
+    let dx = aa.atan();
+    let p = x + dx;
+    let cp = p.cos();
+
+    let p = p - tp * (p / tp).floor();
+    let q = (cp * (rp * sy - rs) / (rp * cy * cx - rc)).atan();
+
+    return (p, q);
+}

@@ -173,4 +173,26 @@ pub fn run_coordinate_tests() {
         1012.0,
         21.7,
     );
+
+    CST::test_corrections_for_geocentric_parallax(
+        22.0,
+        35.0,
+        19.0,
+        -7.0,
+        41.0,
+        13.0,
+        "TRUE".to_string(),
+        1.019167,
+        -100.0,
+        50.0,
+        60.0,
+        0,
+        -6,
+        26.0,
+        2,
+        1979,
+        10.0,
+        45.0,
+        0.0,
+    );
 }

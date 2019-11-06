@@ -557,12 +557,12 @@ pub fn rising_and_setting(
     let ut_rise_adjusted_hours = ut_rise_hours1 + 0.008333;
     let ut_set_adjusted_hours = ut_set_hours1 + 0.008333;
 
-    let rise_set_status = "OK";
+    let mut rise_set_status = "OK";
     if cos_h > 1.0 {
-        let rise_set_status = "never rises";
+        rise_set_status = "never rises";
     }
     if cos_h < -1.0 {
-        let rise_set_status = "circumpolar";
+        rise_set_status = "circumpolar";
     }
 
     let ut_rise_hour = if rise_set_status == "OK" {

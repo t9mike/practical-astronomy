@@ -12,8 +12,6 @@
 - [x] Convert -> Greenwich Sidereal Time <-> Local Sidereal Time
 - [x] Calculate -> Day of Week for Julian Date
 
-
-
 ### Coordinates
 
 - [x] Convert -> Angle <-> Decimal Degrees
@@ -29,8 +27,8 @@
 - [x] Calculate -> Effects of aberration for ecliptic coordinates
 - [x] Calculate -> RA and Declination values, corrected for atmospheric refraction
 - [x] Calculate -> RA and Declination values, corrected for geocentric parallax
-- [ ] Calculate -> Heliographic coordinates
-- [ ] Calculate -> Carrington rotation number
+- [x] Calculate -> Heliographic coordinates
+- [x] Calculate -> Carrington rotation number
 - [ ] Calculate -> Selenographic (lunar) coordinates (sub-Earth and sub-Solar)
 
 ### The Sun

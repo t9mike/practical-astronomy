@@ -195,4 +195,8 @@ pub fn run_coordinate_tests() {
         45.0,
         0.0,
     );
+
+    CST::test_heliographic_coordinates(220.0, 10.5, 1.0, 5, 1988);
+
+    CST::test_carrington_rotation_number(27.0, 1, 1975);
 }

@@ -965,3 +965,44 @@ pub fn test_corrections_for_geocentric_parallax(
     assert_eq!(corrected_dec_min, 32.0, "Corrected Declination Minutes");
     assert_eq!(corrected_dec_sec, 17.4, "Corrected Declination Seconds");
 }
+
+pub fn test_heliographic_coordinates(
+    helio_position_angle_deg: f64,
+    helio_displacement_arcmin: f64,
+    gwdate_day: f64,
+    gwdate_month: u32,
+    gwdate_year: u32,
+) {
+    let (helio_long_deg, helio_lat_deg) = CS::heliographic_coordinates(
+        helio_position_angle_deg,
+        helio_displacement_arcmin,
+        gwdate_day,
+        gwdate_month,
+        gwdate_year,
+    );
+
+    println!(
+		"Heliographic coordinates: [Helio] [Position Angle] {}d [Displacement] {} arcmin [Greenwich Date] {}/{}/{} = [Helio] [Longitude] {}d [Latitude] {}d",
+		helio_position_angle_deg,
+		helio_displacement_arcmin,
+		gwdate_month,
+		gwdate_day,
+		gwdate_year,
+		helio_long_deg,
+		helio_lat_deg
+	);
+
+    assert_eq!(helio_long_deg, 142.59, "Heliographic Longitude - degrees");
+    assert_eq!(helio_lat_deg, -19.94, "Heliographic Latitude - degrees");
+}
+
+pub fn test_carrington_rotation_number(gwdate_day: f64, gwdate_month: u32, gwdate_year: u32) {
+    let crn = CS::carrington_rotation_number(gwdate_day, gwdate_month, gwdate_year);
+
+    println!(
+        "Carrington rotation number: [Greenwich Date] {}/{}/{} = [CRN] {}",
+        gwdate_month, gwdate_day, gwdate_year, crn
+    );
+
+    assert_eq!(crn, 1624, "Carrington Rotation Number");
+}

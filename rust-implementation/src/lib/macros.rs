@@ -1079,3 +1079,63 @@ pub fn parallax_dec_l2870(x: f64, y: f64, rc: f64, rp: f64, rs: f64, tp: f64) ->
 
     return (p, q);
 }
+
+/// Calculate Sun's angular diameter in decimal degrees
+///
+/// Original macro name: SunDia
+pub fn sun_dia(lch: f64, lcm: f64, lcs: f64, ds: i32, zc: i32, ld: f64, lm: u32, ly: u32) -> f64 {
+    let a = sun_dist(lch, lcm, lcs, ds, zc, ld, lm, ly);
+
+    return 0.533128 / a;
+}
+
+/// Calculate Sun's distance from the Earth in astronomical units
+///
+/// Original macro name: SunDist
+pub fn sun_dist(lch: f64, lcm: f64, lcs: f64, ds: i32, zc: i32, ld: f64, lm: u32, ly: u32) -> f64 {
+    let aa = lct_gday(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let bb = lct_gmonth(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let cc = lct_gyear(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let ut = lct_ut(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let dj = cd_jd(aa, bb, cc) - 2415020.0;
+
+    let t = (dj / 36525.0) + (ut / 876600.0);
+    let t2 = t * t;
+
+    let a = 100.0021359 * t;
+    let b = 360.0 * (a - a.floor());
+    let _l = 279.69668 + 0.0003025 * t2 + b;
+    let a = 99.99736042 * t;
+    let b = 360.0 * (a - (a).floor());
+    let m1 = 358.47583 - (0.00015 + 0.0000033 * t) * t2 + b;
+    let ec = 0.01675104 - 0.0000418 * t - 0.000000126 * t2;
+
+    let am = m1.to_radians();
+    let _at = true_anomaly(am, ec);
+    let ae = eccentric_anomaly(am, ec);
+
+    let a = 62.55209472 * t;
+    let b = 360.0 * (a - a.floor());
+    let a1 = (153.23 + b).to_radians();
+    let a = 125.1041894 * t;
+    let b = 360.0 * (a - a.floor());
+    let b1 = (216.57 + b).to_radians();
+    let a = 91.56766028 * t;
+    let b = 360.0 * (a - a.floor());
+    let c1 = (312.69 + b).to_radians();
+    let a = 1236.853095 * t;
+    let b = 360.0 * (a - a.floor());
+    let d1 = (350.74 - 0.00144 * t2 + b).to_radians();
+    let e1 = (231.19 + 20.2 * t).to_radians();
+    let a = 183.1353208 * t;
+    let b = 360.0 * (a - a.floor());
+    let h1 = (353.4 + b).to_radians();
+
+    let _d2 = (0.00134 * a1.cos() + 0.00154 * b1.cos() + 0.002 * c1.cos())
+        + (0.00179 * d1.sin() + 0.00178 * e1.sin());
+    let d3 = (0.00000543 * a1.sin() + 0.00001575 * b1.sin())
+        + (0.00001627 * c1.sin() + 0.00003076 * d1.cos())
+        + (0.00000927 * h1.sin());
+
+    return 1.0000002 * (1.0 - ec * ae.cos()) + d3;
+}

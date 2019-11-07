@@ -957,3 +957,71 @@ pub fn corrections_for_geocentric_parallax(
         corrected_dec_sec,
     );
 }
+
+/// Calculate heliographic coordinates for a given Greenwich date, with a given heliographic position angle and heliographic displacement in arc minutes.
+///
+/// ## Returns
+/// heliographic longitude and heliographic latitude, in degrees
+pub fn heliographic_coordinates(
+    helio_position_angle_deg: f64,
+    helio_displacement_arcmin: f64,
+    gwdate_day: f64,
+    gwdate_month: u32,
+    gwdate_year: u32,
+) -> (f64, f64) {
+    let julian_date_days = macros::cd_jd(gwdate_day, gwdate_month, gwdate_year);
+    let t_centuries = (julian_date_days - 2415020.0) / 36525.0;
+    let long_asc_node_deg = macros::dms_dd(74.0, 22.0, 0.0) + (84.0 * t_centuries / 60.0);
+    let sun_long_deg = macros::sun_long(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year);
+    let y = ((long_asc_node_deg - sun_long_deg).to_radians()).sin()
+        * ((macros::dms_dd(7.0, 15.0, 0.0)).to_radians()).cos();
+    let x = -((long_asc_node_deg - sun_long_deg).to_radians()).cos();
+    let a_deg = macros::degrees(y.atan2(x));
+    let m_deg1 = 360.0 - (360.0 * (julian_date_days - 2398220.0) / 25.38);
+    let m_deg2 = m_deg1 - 360.0 * (m_deg1 / 360.0).floor();
+    let l0_deg1 = m_deg2 + a_deg;
+    let _l0_deg2 = l0_deg1 - 360.0 * (l0_deg1 / 360.0).floor();
+    let b0_rad = (((sun_long_deg - long_asc_node_deg).to_radians()).sin()
+        * ((macros::dms_dd(7.0, 15.0, 0.0)).to_radians()).sin())
+    .asin();
+    let theta1_rad = (-((sun_long_deg).to_radians()).cos()
+        * ((macros::obliq(gwdate_day, gwdate_month, gwdate_year)).to_radians()).tan())
+    .atan();
+    let theta2_rad = (-((long_asc_node_deg - sun_long_deg).to_radians()).cos()
+        * ((macros::dms_dd(7.0, 15.0, 0.0)).to_radians()).tan())
+    .atan();
+    let p_deg = macros::degrees(theta1_rad + theta2_rad);
+    let rho1_deg = helio_displacement_arcmin / 60.0;
+    let rho_rad = (2.0 * rho1_deg
+        / macros::sun_dia(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year))
+    .asin()
+        - (rho1_deg).to_radians();
+    let b_rad = ((b0_rad).sin() * (rho_rad).cos()
+        + (b0_rad).cos()
+            * (rho_rad).sin()
+            * ((p_deg - helio_position_angle_deg).to_radians()).cos())
+    .asin();
+    let b_deg = macros::degrees(b_rad);
+    let l_deg1 = macros::degrees(
+        ((rho_rad).sin() * ((p_deg - helio_position_angle_deg).to_radians()).sin() / (b_rad).cos())
+            .asin(),
+    ) + l0_deg1;
+    let l_deg2 = l_deg1 - 360.0 * (l_deg1 / 360.0).floor();
+
+    let helio_long_deg = utils::round_f64(l_deg2, 2);
+    let helio_lat_deg = utils::round_f64(b_deg, 2);
+
+    return (helio_long_deg, helio_lat_deg);
+}
+
+/// Calculate carrington rotation number for a Greenwich date
+///
+/// ## Returns
+/// carrington rotation number
+pub fn carrington_rotation_number(gwdate_day: f64, gwdate_month: u32, gwdate_year: u32) -> (i32) {
+    let julian_date_days = macros::cd_jd(gwdate_day, gwdate_month, gwdate_year);
+
+    let crn = 1690 + utils::round_f64((julian_date_days - 2444235.34) / 27.2753, 0) as i32;
+
+    return crn;
+}

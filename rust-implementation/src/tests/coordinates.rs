@@ -1006,3 +1006,48 @@ pub fn test_carrington_rotation_number(gwdate_day: f64, gwdate_month: u32, gwdat
 
     assert_eq!(crn, 1624, "Carrington Rotation Number");
 }
+
+pub struct TestSelenographicScaffold {
+    pub gwdate_day: f64,
+    pub gwdate_month: u32,
+    pub gwdate_year: u32,
+}
+impl TestSelenographicScaffold {
+    pub fn test_selenographic_coordinates_1(&mut self) {
+        let (sub_earth_longitude, sub_earth_latitude, position_angle_of_pole) =
+            CS::selenographic_coordinates_1(self.gwdate_day, self.gwdate_month, self.gwdate_year);
+
+        println!(
+			"Selenographic coordinates 1: [Greenwich Date] {}/{}/{} = [Sub-Earth] [Longitude] {} [Latitude] {} [Position Angle of Pole] {}",
+			self.gwdate_month,
+			self.gwdate_day,
+			self.gwdate_year,
+			sub_earth_longitude,
+			sub_earth_latitude,
+			position_angle_of_pole
+		);
+
+        assert_eq!(sub_earth_longitude, -4.88, "Sub-Earth Longitude");
+        assert_eq!(sub_earth_latitude, 4.04, "Sub-Earth Latitude");
+        assert_eq!(position_angle_of_pole, 19.78, "Position Angle of Pole");
+    }
+
+    pub fn test_selenographic_coordinates_2(&mut self) {
+        let (sub_solar_longitude, sub_solar_colongitude, sub_solar_latitude) =
+            CS::selenographic_coordinates_2(self.gwdate_day, self.gwdate_month, self.gwdate_year);
+
+        println!(
+			"Selenographic coordinates 2: [Greenwich Date] {}/{}/{} = [Sub-Solar] [Longitude] {} [Co-Longitude] {} [Latitude] {}",
+			self.gwdate_month,
+			self.gwdate_day,
+			self.gwdate_year,
+			sub_solar_longitude,
+			sub_solar_colongitude,
+			sub_solar_latitude
+		);
+
+        assert_eq!(sub_solar_longitude, 6.81, "Sub-Solar Longitude");
+        assert_eq!(sub_solar_colongitude, 83.19, "Sub-Solar Colongitude");
+        assert_eq!(sub_solar_latitude, 1.19, "Sub-Solar Latitude");
+    }
+}

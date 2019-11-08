@@ -199,4 +199,12 @@ pub fn run_coordinate_tests() {
     CST::test_heliographic_coordinates(220.0, 10.5, 1.0, 5, 1988);
 
     CST::test_carrington_rotation_number(27.0, 1, 1975);
+
+    let mut test_selenographic = CST::TestSelenographicScaffold {
+        gwdate_day: 1.0,
+        gwdate_month: 5,
+        gwdate_year: 1988,
+    };
+    test_selenographic.test_selenographic_coordinates_1();
+    test_selenographic.test_selenographic_coordinates_2();
 }

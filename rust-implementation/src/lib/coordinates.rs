@@ -1025,3 +1025,126 @@ pub fn carrington_rotation_number(gwdate_day: f64, gwdate_month: u32, gwdate_yea
 
     return crn;
 }
+
+/// Calculate selenographic (lunar) coordinates (sub-Earth)
+///
+/// ## Returns
+/// * sub-earth longitude
+/// * sub-earth latitude
+/// * position angle of pole
+pub fn selenographic_coordinates_1(
+    gwdate_day: f64,
+    gwdate_month: u32,
+    gwdate_year: u32,
+) -> (f64, f64, f64) {
+    let julian_date_days = macros::cd_jd(gwdate_day, gwdate_month, gwdate_year);
+    let t_centuries = (julian_date_days - 2451545.0) / 36525.0;
+    let long_asc_node_deg = 125.044522 - 1934.136261 * t_centuries;
+    let f1 = 93.27191 + 483202.0175 * t_centuries;
+    let f2 = f1 - 360.0 * (f1 / 360.0).floor();
+    let geocentric_moon_long_deg =
+        macros::moon_long(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year);
+    let geocentric_moon_lat_rad =
+        (macros::moon_lat(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year)).to_radians();
+    let inclination_rad = (macros::dms_dd(1.0, 32.0, 32.7)).to_radians();
+    let node_long_rad = (long_asc_node_deg - geocentric_moon_long_deg).to_radians();
+    let sin_be = -(inclination_rad).cos() * (geocentric_moon_lat_rad).sin()
+        + (inclination_rad).sin() * (geocentric_moon_lat_rad).cos() * (node_long_rad).sin();
+    let sub_earth_lat_deg = macros::degrees((sin_be).asin());
+    let a_rad = (-(geocentric_moon_lat_rad).sin() * (inclination_rad).sin()
+        - (geocentric_moon_lat_rad).cos() * (inclination_rad).cos() * (node_long_rad).sin())
+    .atan2((geocentric_moon_lat_rad).cos() * (node_long_rad).cos());
+    let a_deg = macros::degrees(a_rad);
+    let sub_earth_long_deg1 = a_deg - f2;
+    let sub_earth_long_deg2 = sub_earth_long_deg1 - 360.0 * (sub_earth_long_deg1 / 360.0).floor();
+    let sub_earth_long_deg3 = if sub_earth_long_deg2 > 180.0 {
+        sub_earth_long_deg2 - 360.0
+    } else {
+        sub_earth_long_deg2
+    };
+    let c1_rad = ((node_long_rad).cos() * (inclination_rad).sin()
+        / ((geocentric_moon_lat_rad).cos() * (inclination_rad).cos()
+            + (geocentric_moon_lat_rad).sin() * (inclination_rad).sin() * (node_long_rad).sin()))
+    .atan();
+    let obliquity_rad = (macros::obliq(gwdate_day, gwdate_month, gwdate_year)).to_radians();
+    let c2_rad = ((obliquity_rad).sin() * ((geocentric_moon_long_deg).to_radians()).cos()
+        / ((obliquity_rad).sin()
+            * (geocentric_moon_lat_rad).sin()
+            * ((geocentric_moon_long_deg).to_radians()).sin()
+            - (obliquity_rad).cos() * (geocentric_moon_lat_rad).cos()))
+    .atan();
+    let c_deg = macros::degrees(c1_rad + c2_rad);
+
+    let sub_earth_longitude = utils::round_f64(sub_earth_long_deg3, 2);
+    let sub_earth_latitude = utils::round_f64(sub_earth_lat_deg, 2);
+    let position_angle_of_pole = utils::round_f64(c_deg, 2);
+
+    return (
+        sub_earth_longitude,
+        sub_earth_latitude,
+        position_angle_of_pole,
+    );
+}
+
+/// Calculate selenographic (lunar) coordinates (sub-Solar)
+///
+/// ## Returns
+/// * sub-solar longitude
+/// * sub-solar colongitude
+/// * sub-solar latitude
+pub fn selenographic_coordinates_2(
+    gwdate_day: f64,
+    gwdate_month: u32,
+    gwdate_year: u32,
+) -> (f64, f64, f64) {
+    let julian_date_days = macros::cd_jd(gwdate_day, gwdate_month, gwdate_year);
+    let t_centuries = (julian_date_days - 2451545.0) / 36525.0;
+    let long_asc_node_deg = 125.044522 - 1934.136261 * t_centuries;
+    let f1 = 93.27191 + 483202.0175 * t_centuries;
+    let f2 = f1 - 360.0 * (f1 / 360.0).floor();
+    let sun_geocentric_long_deg =
+        macros::sun_long(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year);
+    let moon_equ_hor_parallax_arc_min =
+        macros::moon_hp(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year) * 60.0;
+    let sun_earth_dist_au =
+        macros::sun_dist(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year);
+    let geocentric_moon_lat_rad =
+        (macros::moon_lat(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year)).to_radians();
+    let geocentric_moon_long_deg =
+        macros::moon_long(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year);
+    let adjusted_moon_long_deg = sun_geocentric_long_deg
+        + 180.0
+        + (26.4
+            * (geocentric_moon_lat_rad).cos()
+            * ((sun_geocentric_long_deg - geocentric_moon_long_deg).to_radians()).sin()
+            / (moon_equ_hor_parallax_arc_min * sun_earth_dist_au));
+    let adjusted_moon_lat_rad =
+        0.14666 * geocentric_moon_lat_rad / (moon_equ_hor_parallax_arc_min * sun_earth_dist_au);
+    let inclination_rad = (macros::dms_dd(1.0, 32.0, 32.7)).to_radians();
+    let node_long_rad = (long_asc_node_deg - adjusted_moon_long_deg).to_radians();
+    let sin_bs = -(inclination_rad).cos() * (adjusted_moon_lat_rad).sin()
+        + (inclination_rad).sin() * (adjusted_moon_lat_rad).cos() * (node_long_rad).sin();
+    let sub_solar_lat_deg = macros::degrees((sin_bs).asin());
+    let a_rad = (-(adjusted_moon_lat_rad).sin() * (inclination_rad).sin()
+        - (adjusted_moon_lat_rad).cos() * (inclination_rad).cos() * (node_long_rad).sin())
+    .atan2((adjusted_moon_lat_rad).cos() * (node_long_rad).cos());
+    let a_deg = macros::degrees(a_rad);
+    let sub_solar_long_deg1 = a_deg - f2;
+    let sub_solar_long_deg2 = sub_solar_long_deg1 - 360.0 * (sub_solar_long_deg1 / 360.0).floor();
+    let sub_solar_long_deg3 = if sub_solar_long_deg2 > 180.0 {
+        sub_solar_long_deg2 - 360.0
+    } else {
+        sub_solar_long_deg2
+    };
+    let sub_solar_colong_deg = 90.0 - sub_solar_long_deg3;
+
+    let sub_solar_longitude = utils::round_f64(sub_solar_long_deg3, 2);
+    let sub_solar_colongitude = utils::round_f64(sub_solar_colong_deg, 2);
+    let sub_solar_latitude = utils::round_f64(sub_solar_lat_deg, 2);
+
+    return (
+        sub_solar_longitude,
+        sub_solar_colongitude,
+        sub_solar_latitude,
+    );
+}

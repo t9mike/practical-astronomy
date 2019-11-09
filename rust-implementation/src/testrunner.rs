@@ -7,6 +7,7 @@ pub fn run_tests() {
     run_datetime_tests();
 
     run_coordinate_tests();
+
     run_sun_tests();
 }
 
@@ -217,4 +218,6 @@ pub fn run_sun_tests() {
     SUNT::test_precise_position_of_sun(0.0, 0.0, 0.0, 27 as f64, 7, 1988, false, 0);
 
     SUNT::test_sun_distance_and_angular_size(0.0, 0.0, 0.0, 27 as f64, 7, 1988, false, 0);
+
+    SUNT::test_sunrise_and_sunset(10.0, 3, 1986, false, -5, -71.05, 42.37);
 }

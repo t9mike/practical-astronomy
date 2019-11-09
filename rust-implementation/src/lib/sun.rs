@@ -327,3 +327,127 @@ pub fn sun_distance_and_angular_size(
         sun_ang_size_sec,
     );
 }
+
+/// Calculate local sunrise and sunset.
+///
+/// ## Arguments
+/// * local_day -- Local date, day part.
+/// * local_month -- Local date, month part.
+/// * local_year -- Local date, year part.
+/// * is_daylight_saving -- Is daylight savings in effect?
+/// * zone_correction -- Time zone correction, in hours.
+/// * geographical_long_deg -- Geographical longitude, in degrees.
+/// * geographical_lat_deg -- Geographical latitude, in degrees.
+///
+/// ## Returns
+/// * local_sunrise_hour -- Local sunrise, hour part
+/// * local_sunrise_minute -- Local sunrise, minutes part
+/// * local_sunset_hour -- Local sunset, hour part
+/// * local_sunset_minute -- Local sunset, minutes part
+/// * azimuth_of_sunrise_deg -- Azimuth (horizon direction) of sunrise, in degrees
+/// * azimuth_of_sunset_deg -- Azimuth (horizon direction) of sunset, in degrees
+/// * status -- Calculation status
+pub fn sunrise_and_sunset(
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+    is_daylight_saving: bool,
+    zone_correction: i32,
+    geographical_long_deg: f64,
+    geographical_lat_deg: f64,
+) -> (f64, f64, f64, f64, f64, f64, String) {
+    let daylight_saving = if is_daylight_saving == true { 1 } else { 0 };
+
+    let local_sunrise_hours = macros::sunrise_lct(
+        local_day,
+        local_month,
+        local_year,
+        daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+    );
+
+    let local_sunset_hours = macros::sunset_lct(
+        local_day,
+        local_month,
+        local_year,
+        daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+    );
+
+    let sun_rise_set_status = macros::e_sun_rs(
+        local_day,
+        local_month,
+        local_year,
+        daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+    );
+
+    let adjusted_sunrise_hours = local_sunrise_hours + 0.008333;
+    let adjusted_sunset_hours = local_sunset_hours + 0.008333;
+    let azimuth_of_sunrise_deg1 = macros::sunrise_az(
+        local_day,
+        local_month,
+        local_year,
+        daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+    );
+    let azimuth_of_sunset_deg1 = macros::sunset_az(
+        local_day,
+        local_month,
+        local_year,
+        daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+    );
+
+    let local_sunrise_hour = if sun_rise_set_status == "OK" {
+        macros::dh_hour(adjusted_sunrise_hours) as f64
+    } else {
+        0.0
+    };
+    let local_sunrise_minute = if sun_rise_set_status == "OK" {
+        macros::dh_min(adjusted_sunrise_hours) as f64
+    } else {
+        0.0
+    };
+    let local_sunset_hour = if sun_rise_set_status == "OK" {
+        macros::dh_hour(adjusted_sunset_hours) as f64
+    } else {
+        0.0
+    };
+    let local_sunset_minute = if sun_rise_set_status == "OK" {
+        macros::dh_min(adjusted_sunset_hours) as f64
+    } else {
+        0.0
+    };
+    let azimuth_of_sunrise_deg = if sun_rise_set_status == "OK" {
+        utils::round_f64(azimuth_of_sunrise_deg1, 2)
+    } else {
+        0.0
+    };
+    let azimuth_of_sunset_deg = if sun_rise_set_status == "OK" {
+        utils::round_f64(azimuth_of_sunset_deg1, 2)
+    } else {
+        0.0
+    };
+    let status = sun_rise_set_status.to_string();
+
+    return (
+        local_sunrise_hour,
+        local_sunrise_minute,
+        local_sunset_hour,
+        local_sunset_minute,
+        azimuth_of_sunrise_deg,
+        azimuth_of_sunset_deg,
+        status,
+    );
+}

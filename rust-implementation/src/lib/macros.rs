@@ -345,6 +345,29 @@ pub fn lct_ut(
     return 24.0 * (e - e1);
 }
 
+/// Convert Universal Time to Local Civil Time
+///
+/// Original macro name: UTLct
+pub fn ut_lct(
+    u_hours: f64,
+    u_minutes: f64,
+    u_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) -> f64 {
+    let a = hms_dh(u_hours, u_minutes, u_seconds);
+    let b = a + zone_correction as f64;
+    let c = b + daylight_saving as f64;
+    let d = cd_jd(greenwich_day, greenwich_month, greenwich_year) + (c / 24.0);
+    let e = jdc_day(d);
+    let e1 = e.floor();
+
+    return 24.0 * (e - e1);
+}
+
 /// Determine Greenwich Day for Local Time
 ///
 /// Original macro name: LctGDay
@@ -629,6 +652,57 @@ pub fn hor_ha(
     return i - 24.0 * (i / 24.0).floor();
 }
 
+/// Nutation amount to be added in ecliptic longitude, in degrees.
+///
+/// Original macro name: NutatLong
+pub fn nutat_long(gd: f64, gm: u32, gy: u32) -> f64 {
+    let dj = cd_jd(gd, gm, gy) - 2415020.0;
+    let t = dj / 36525.0;
+    let t2 = t * t;
+
+    let a = 100.0021358 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let l1 = 279.6967 + 0.000303 * t2 + b;
+    let l2 = 2.0 * l1.to_radians();
+
+    let a = 1336.855231 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let d1 = 270.4342 - 0.001133 * t2 + b;
+    let d2 = 2.0 * d1.to_radians();
+
+    let a = 99.99736056 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let m1 = 358.4758 - 0.00015 * t2 + b;
+    let m1 = m1.to_radians();
+
+    let a = 1325.552359 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let m2 = 296.1046 + 0.009192 * t2 + b;
+    let m2 = m2.to_radians();
+
+    let a = 5.372616667 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let n1 = 259.1833 + 0.002078 * t2 - b;
+    let n1 = n1.to_radians();
+
+    let n2 = 2.0 * n1;
+
+    let dp = (-17.2327 - 0.01737 * t) * n1.sin();
+    let dp = dp + (-1.2729 - 0.00013 * t) * (l2).sin() + 0.2088 * (n2).sin();
+    let dp = dp - 0.2037 * (d2).sin() + (0.1261 - 0.00031 * t) * (m1).sin();
+    let dp = dp + 0.0675 * (m2).sin() - (0.0497 - 0.00012 * t) * (l2 + m1).sin();
+    let dp = dp - 0.0342 * (d2 - n1).sin() - 0.0261 * (d2 + m2).sin();
+    let dp = dp + 0.0214 * (l2 - m1).sin() - 0.0149 * (l2 - d2 + m2).sin();
+    let dp = dp + 0.0124 * (l2 - n1).sin() + 0.0114 * (d2 - m2).sin();
+
+    return dp / 3600.0;
+}
+
 /// Nutation of Obliquity
 ///
 /// Original macro name: NutatObl
@@ -725,6 +799,26 @@ pub fn gst_ut(
     let g = f - e;
     let h = g - (24.0 * (g / 24.0).floor());
     return h * 0.9972695663;
+}
+
+/// Status of conversion of Greenwich Sidereal Time to Universal Time.
+///
+/// Original macro name: eGSTUT
+pub fn e_gst_ut(gsh: f64, gsm: f64, gss: f64, gd: f64, gm: u32, gy: u32) -> String {
+    let a = cd_jd(gd, gm, gy);
+    let b = a - 2451545.0;
+    let c = b / 36525.0;
+    let d = 6.697374558 + (2400.051336 * c) + (0.000025862 * c * c);
+    let e = d - (24.0 * (d / 24.0).floor());
+    let f = hms_dh(gsh, gsm, gss);
+    let g = f - e;
+    let h = g - (24.0 * (g / 24.0).floor());
+
+    if (h * 0.9972695663) < (4.0 / 60.0) {
+        return "Warning".to_string();
+    } else {
+        return "OK".to_string();
+    };
 }
 
 /// Calculate Sun's ecliptic longitude
@@ -1525,4 +1619,402 @@ pub fn sun_true_anomaly(
     let am = m1.to_radians();
 
     return degrees(true_anomaly(am, ec));
+}
+
+/// Calculate local civil time of sunrise.
+///
+/// Original macro name: SunriseLCT
+pub fn sunrise_lct(ld: f64, lm: u32, ly: u32, ds: i32, zc: i32, gl: f64, gp: f64) -> f64 {
+    let di = 0.8333333;
+    let gd = lct_gday(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gm = lct_gmonth(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gy = lct_gyear(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let sr = sun_long(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+
+    let (_a, _x, _y, la, s) = sunrise_lct_l3710(gd, gm, gy, sr, di, gp);
+
+    let xx: f64;
+    if s != "OK" {
+        xx = -99.0;
+    } else {
+        let x = lst_gst(la, 0.0, 0.0, gl);
+        let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+        if e_gst_ut(x, 0.0, 0.0, gd, gm, gy) != "OK" {
+            xx = -99.0;
+        } else {
+            let sr = sun_long(ut, 0.0, 0.0, 0, 0, gd, gm, gy);
+            let (_a, _x, _y, la, s) = sunrise_lct_l3710(gd, gm, gy, sr, di, gp);
+
+            if s != "OK" {
+                xx = -99.0;
+            } else {
+                let x = lst_gst(la, 0.0, 0.0, gl);
+                let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+                xx = ut_lct(ut, 0.0, 0.0, ds, zc, gd, gm, gy);
+            }
+        }
+    }
+
+    return xx;
+}
+
+/// Helper function for sunrise_lct()
+pub fn sunrise_lct_l3710(
+    gd: f64,
+    gm: u32,
+    gy: u32,
+    sr: f64,
+    di: f64,
+    gp: f64,
+) -> (f64, f64, f64, f64, String) {
+    let a = sr + nutat_long(gd, gm, gy) - 0.005694;
+    let x = ec_ra(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let y = ec_dec(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let la = rise_set_local_sidereal_time_rise(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+    let s = e_rs(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+
+    return (a, x, y, la, s.to_string());
+}
+
+/// Calculate local civil time of sunset.
+///
+/// Original macro name: SunsetLCT
+pub fn sunset_lct(ld: f64, lm: u32, ly: u32, ds: i32, zc: i32, gl: f64, gp: f64) -> f64 {
+    let di = 0.8333333;
+    let gd = lct_gday(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gm = lct_gmonth(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gy = lct_gyear(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let sr = sun_long(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+
+    let (_a, _x, _y, la, s) = sunset_lct_l3710(gd, gm, gy, sr, di, gp);
+
+    let xx: f64;
+    if s != "OK" {
+        xx = -99.0;
+    } else {
+        let x = lst_gst(la, 0.0, 0.0, gl);
+        let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+        if e_gst_ut(x, 0.0, 0.0, gd, gm, gy) != "OK" {
+            xx = -99.0;
+        } else {
+            let sr = sun_long(ut, 0.0, 0.0, 0, 0, gd, gm, gy);
+            let (_a, _x, _y, la, s) = sunset_lct_l3710(gd, gm, gy, sr, di, gp);
+
+            if s != "OK" {
+                xx = -99.0;
+            } else {
+                let x = lst_gst(la, 0.0, 0.0, gl);
+                let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+                xx = ut_lct(ut, 0.0, 0.0, ds, zc, gd, gm, gy);
+            }
+        }
+    }
+    return xx;
+}
+
+/// Helper function for sunset_lct().
+pub fn sunset_lct_l3710(
+    gd: f64,
+    gm: u32,
+    gy: u32,
+    sr: f64,
+    di: f64,
+    gp: f64,
+) -> (f64, f64, f64, f64, String) {
+    let a = sr + nutat_long(gd, gm, gy) - 0.005694;
+    let x = ec_ra(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let y = ec_dec(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let la = rise_set_local_sidereal_time_set(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+    let s = e_rs(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+
+    return (a, x, y, la, s);
+}
+
+/// Local sidereal time of rise, in hours.
+///
+/// Original macro name: RSLSTR
+pub fn rise_set_local_sidereal_time_rise(
+    rah: f64,
+    ram: f64,
+    ras: f64,
+    dd: f64,
+    dm: f64,
+    ds: f64,
+    vd: f64,
+    g: f64,
+) -> f64 {
+    let a = hms_dh(rah, ram, ras);
+    let b = (dh_dd(a)).to_radians();
+    let c = (dms_dd(dd, dm, ds)).to_radians();
+    let d = (vd).to_radians();
+    let e = (g).to_radians();
+    let f = -((d).sin() + (e).sin() * (c).sin()) / ((e).cos() * (c).cos());
+    let h = if f.abs() < 1.0 { f.acos() } else { 0.0 };
+    let i = dd_dh(degrees(b - h));
+
+    return i - 24.0 * (i / 24.0).floor();
+}
+
+/// Azimuth of rising, in degrees.
+///
+/// Original macro name: RSAZR
+pub fn rise_set_azimuth_rise(
+    rah: f64,
+    ram: f64,
+    ras: f64,
+    dd: f64,
+    dm: f64,
+    ds: f64,
+    vd: f64,
+    g: f64,
+) -> f64 {
+    let a = hms_dh(rah, ram, ras);
+    let _b = (dh_dd(a)).to_radians();;
+    let c = (dms_dd(dd, dm, ds)).to_radians();
+    let d = vd.to_radians();
+    let e = g.to_radians();
+    let f = (c.sin() + d.sin() * e.sin()) / (d.cos() * e.cos());
+    let h = if e_rs(rah, ram, ras, dd, dm, ds, vd, g) == "OK" {
+        f.acos()
+    } else {
+        0.0
+    };
+    let i = degrees(h);
+
+    return i - 360.0 * (i / 360.0).floor();
+}
+
+/// Local sidereal time of setting, in hours.
+///
+/// Original macro name: RSLSTS
+pub fn rise_set_local_sidereal_time_set(
+    rah: f64,
+    ram: f64,
+    ras: f64,
+    dd: f64,
+    dm: f64,
+    ds: f64,
+    vd: f64,
+    g: f64,
+) -> f64 {
+    let a = hms_dh(rah, ram, ras);
+    let b = (dh_dd(a)).to_radians();
+    let c = (dms_dd(dd, dm, ds)).to_radians();
+    let d = vd.to_radians();
+    let e = g.to_radians();
+    let f = -(d.sin() + e.sin() * c.sin()) / (e.cos() * c.cos());
+    let h = if f.abs() < 1.0 { f.acos() } else { 0.0 };
+    let i = dd_dh(degrees(b + h));
+
+    return i - 24.0 * (i / 24.0).floor();
+}
+
+/// Azimuth of setting, in degrees.
+///
+/// Original macro name: RSAZS
+pub fn rise_set_azimuth_set(
+    rah: f64,
+    ram: f64,
+    ras: f64,
+    dd: f64,
+    dm: f64,
+    ds: f64,
+    vd: f64,
+    g: f64,
+) -> f64 {
+    let a = hms_dh(rah, ram, ras);
+    let _b = (dh_dd(a)).to_radians();
+    let c = (dms_dd(dd, dm, ds)).to_radians();
+    let d = vd.to_radians();
+    let e = g.to_radians();
+    let f = (c.sin() + d.sin() * e.sin()) / (d.cos() * e.cos());
+    let h = if e_rs(rah, ram, ras, dd, dm, ds, vd, g) == "OK" {
+        f.acos()
+    } else {
+        0.0
+    };
+    let i = 360.0 - degrees(h);
+
+    return i - 360.0 * (i / 360.0).floor();
+}
+
+/// Rise/Set status
+///
+/// Possible values: "OK", "** never rises", "** circumpolar"
+///
+/// Original macro name: eRS
+pub fn e_rs(rah: f64, ram: f64, ras: f64, dd: f64, dm: f64, ds: f64, vd: f64, g: f64) -> String {
+    let a = hms_dh(rah, ram, ras);
+    let _b = dh_dd(a).to_radians();
+    let c = (dms_dd(dd, dm, ds)).to_radians();
+    let d = vd.to_radians();
+    let e = g.to_radians();
+    let f = -(d.sin() + e.sin() * c.sin()) / (e.cos() * c.cos());
+
+    let mut return_value = "OK";
+    if f >= 1.0 {
+        return_value = "** never rises";
+    }
+    if f <= -1.0 {
+        return_value = "** circumpolar"
+    }
+
+    return return_value.to_string();
+}
+
+/// Sunrise/Sunset calculation status.
+///
+/// Original macro name: eSunRS
+pub fn e_sun_rs(ld: f64, lm: u32, ly: u32, ds: i32, zc: i32, gl: f64, gp: f64) -> String {
+    // S = ""
+    let di = 0.8333333;
+    let gd = lct_gday(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gm = lct_gmonth(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gy = lct_gyear(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let sr = sun_long(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+
+    let (_a, _x, _y, la, s) = e_sun_rs_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return s;
+    } else {
+        let x = lst_gst(la, 0.0, 0.0, gl);
+        let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+        let sr = sun_long(ut, 0.0, 0.0, 0, 0, gd, gm, gy);
+        let (_a, _x, _y, la, s) = e_sun_rs_l3710(gd, gm, gy, sr, di, gp);
+        if s != "OK" {
+            return s;
+        } else {
+            let x = lst_gst(la, 0.0, 0.0, gl);
+            let _ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+            if e_gst_ut(x, 0.0, 0.0, gd, gm, gy) != "OK" {
+                let s = s + " GST to UT conversion warning";
+                return s;
+            }
+            return s;
+        }
+    }
+}
+
+/// Helper function for e_sun_rs()
+pub fn e_sun_rs_l3710(
+    gd: f64,
+    gm: u32,
+    gy: u32,
+    sr: f64,
+    di: f64,
+    gp: f64,
+) -> (f64, f64, f64, f64, String) {
+    let a = sr + nutat_long(gd, gm, gy) - 0.005694;
+    let x = ec_ra(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let y = ec_dec(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let la = rise_set_local_sidereal_time_rise(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+    let s = e_rs(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+
+    return (a, x, y, la, s);
+}
+
+/// Calculate azimuth of sunrise.
+///
+/// Original macro name: SunriseAz
+pub fn sunrise_az(ld: f64, lm: u32, ly: u32, ds: i32, zc: i32, gl: f64, gp: f64) -> f64 {
+    let di = 0.8333333;
+    let gd = lct_gday(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gm = lct_gmonth(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gy = lct_gyear(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let sr = sun_long(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+
+    let (_a, _x, _y, la, s) = sunrise_az_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return -99.0;
+    }
+
+    let x = lst_gst(la, 0.0, 0.0, gl);
+    let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+    if e_gst_ut(x, 0.0, 0.0, gd, gm, gy) != "OK" {
+        return -99.0;
+    }
+
+    let sr = sun_long(ut, 0.0, 0.0, 0, 0, gd, gm, gy);
+    let (_a, x, y, _la, s) = sunrise_az_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return -99.0;
+    }
+
+    return rise_set_azimuth_rise(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+}
+
+/// Helper function for sunrise_az()
+pub fn sunrise_az_l3710(
+    gd: f64,
+    gm: u32,
+    gy: u32,
+    sr: f64,
+    di: f64,
+    gp: f64,
+) -> (f64, f64, f64, f64, String) {
+    let a = sr + nutat_long(gd, gm, gy) - 0.005694;
+    let x = ec_ra(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let y = ec_dec(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let la = rise_set_local_sidereal_time_rise(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+    let s = e_rs(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+
+    return (a, x, y, la, s);
+}
+
+/// Calculate azimuth of sunset.
+///
+/// Original macro name: SunsetAz
+pub fn sunset_az(ld: f64, lm: u32, ly: u32, ds: i32, zc: i32, gl: f64, gp: f64) -> f64 {
+    let di = 0.8333333;
+    let gd = lct_gday(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gm = lct_gmonth(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gy = lct_gyear(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let sr = sun_long(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+
+    let (_a, _x, _y, la, s) = sunset_az_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return -99.0;
+    }
+
+    let x = lst_gst(la, 0.0, 0.0, gl);
+    let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+    if e_gst_ut(x, 0.0, 0.0, gd, gm, gy) != "OK" {
+        return -99.0;
+    }
+
+    let sr = sun_long(ut, 0.0, 0.0, 0, 0, gd, gm, gy);
+
+    let (_a, x, y, _la, s) = sunset_az_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return -99.0;
+    }
+    return rise_set_azimuth_set(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+}
+
+/// Helper function for sunset_az()
+pub fn sunset_az_l3710(
+    gd: f64,
+    gm: u32,
+    gy: u32,
+    sr: f64,
+    di: f64,
+    gp: f64,
+) -> (f64, f64, f64, f64, String) {
+    let a = sr + nutat_long(gd, gm, gy) - 0.005694;
+    let x = ec_ra(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let y = ec_dec(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let la = rise_set_local_sidereal_time_set(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+    let s = e_rs(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+
+    return (a, x, y, la, s);
 }

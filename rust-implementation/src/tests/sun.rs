@@ -139,3 +139,60 @@ pub fn test_sun_distance_and_angular_size(
     assert_eq!(sun_ang_size_min, 31.0, "Sun Angular Size Minutes");
     assert_eq!(sun_ang_size_sec, 29.93, "Sun Angular Size Seconds");
 }
+
+pub fn test_sunrise_and_sunset(
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+    is_daylight_saving: bool,
+    zone_correction: i32,
+    geographical_long_deg: f64,
+    geographical_lat_deg: f64,
+) {
+    let (
+        local_sunrise_hour,
+        local_sunrise_minute,
+        local_sunset_hour,
+        local_sunset_minute,
+        azimuth_of_sunrise_deg,
+        azimuth_of_sunset_deg,
+        status,
+    ) = CS::sunrise_and_sunset(
+        local_day,
+        local_month,
+        local_year,
+        is_daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+    );
+
+    println!(
+		"Sunrise and sunset: [Local Date] {}/{}/{} [DST?] {} [Zone Correction] {} [Geographical Longitude/Latitude] {}d/{}d = [Sunrise] {}:{} [Sunset] {}:{} [Azimuth of Sunrise/Sunset] {}d/{}d [Status] {}",
+		local_month,
+		local_day,
+		local_year,
+		is_daylight_saving,
+		zone_correction,
+		geographical_long_deg,
+		geographical_lat_deg,
+		local_sunrise_hour,
+		local_sunrise_minute,
+		local_sunset_hour,
+		local_sunset_minute,
+		azimuth_of_sunrise_deg,
+		azimuth_of_sunset_deg,
+		status
+	);
+
+    assert_eq!(local_sunrise_hour, 6.0, "Local Sunrise Hour");
+    assert_eq!(local_sunrise_minute, 5.0, "Local Sunrise Minute");
+    assert_eq!(local_sunset_hour, 17.0, "Local Sunset Hour");
+    assert_eq!(local_sunset_minute, 45.0, "Local Sunset Minute");
+    assert_eq!(
+        azimuth_of_sunrise_deg, 94.83,
+        "Azimuth of Sunrise (degrees)"
+    );
+    assert_eq!(azimuth_of_sunset_deg, 265.43, "Azimuth of Sunset (degrees)");
+    assert_eq!(status, "OK", "Status of Calculation");
+}

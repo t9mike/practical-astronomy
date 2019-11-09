@@ -95,3 +95,47 @@ pub fn test_precise_position_of_sun(
     assert_eq!(sun_dec_min, 12.0, "Sun Dec Minutes");
     assert_eq!(sun_dec_sec, 49.68, "Sun Dec Seconds");
 }
+
+pub fn test_sun_distance_and_angular_size(
+    lct_hours: f64,
+    lct_minutes: f64,
+    lct_seconds: f64,
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+    is_daylight_saving: bool,
+    zone_correction: i32,
+) {
+    let (sun_dist_km, sun_ang_size_deg, sun_ang_size_min, sun_ang_size_sec) =
+        CS::sun_distance_and_angular_size(
+            lct_hours,
+            lct_minutes,
+            lct_seconds,
+            local_day,
+            local_month,
+            local_year,
+            is_daylight_saving,
+            zone_correction,
+        );
+
+    println!(
+		"Sun distance and angular size: [Local Civil Time] {}:{}:{} [Local Date] {}/{}/{} [DST?] {} [Zone Correction] {} = [Sun] [Distance] {} km [Angular Size] {}d {}m {}s",
+		lct_hours,
+		lct_minutes,
+		lct_seconds,
+		local_month,
+		local_day,
+		local_year,
+		is_daylight_saving,
+		zone_correction,
+		sun_dist_km,
+		sun_ang_size_deg,
+		sun_ang_size_min,
+		sun_ang_size_sec
+	);
+
+    assert_eq!(sun_dist_km, 151920130.0, "Sun Distance in km");
+    assert_eq!(sun_ang_size_deg, 0.0, "Sun Angular Size Degrees");
+    assert_eq!(sun_ang_size_min, 31.0, "Sun Angular Size Minutes");
+    assert_eq!(sun_ang_size_sec, 29.93, "Sun Angular Size Seconds");
+}

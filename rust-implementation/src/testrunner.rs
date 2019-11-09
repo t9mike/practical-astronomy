@@ -215,4 +215,6 @@ pub fn run_sun_tests() {
     SUNT::test_approximate_position_of_sun(0.0, 0.0, 0.0, 27 as f64, 7, 2003, false, 0);
 
     SUNT::test_precise_position_of_sun(0.0, 0.0, 0.0, 27 as f64, 7, 1988, false, 0);
+
+    SUNT::test_sun_distance_and_angular_size(0.0, 0.0, 0.0, 27 as f64, 7, 1988, false, 0);
 }

@@ -1489,3 +1489,40 @@ pub fn ec_ra(
 
     return f - 360.0 * (f / 360.0).floor();
 }
+
+/// Calculate Sun's true anomaly, i.e., how much its orbit deviates from a true circle to an ellipse.
+///
+/// Original macro name: SunTrueAnomaly
+pub fn sun_true_anomaly(
+    lch: f64,
+    lcm: f64,
+    lcs: f64,
+    ds: i32,
+    zc: i32,
+    ld: f64,
+    lm: u32,
+    ly: u32,
+) -> f64 {
+    let aa = lct_gday(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let bb = lct_gmonth(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let cc = lct_gyear(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let ut = lct_ut(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let dj = cd_jd(aa, bb, cc) - 2415020.0;
+
+    let t = (dj / 36525.0) + (ut / 876600.0);
+    let t2 = t * t;
+
+    let a = 100.0021359 * t;
+    let b = 360.0 * (a - a.floor());
+    let _l = 279.69668 + 0.0003025 * t2 + b;
+
+    let a = 99.99736042 * t;
+    let b = 360.0 * (a - a.floor());
+
+    let m1 = 358.47583 - (0.00015 + 0.0000033 * t) * t2 + b;
+    let ec = 0.01675104 - 0.0000418 * t - 0.000000126 * t2;
+
+    let am = m1.to_radians();
+
+    return degrees(true_anomaly(am, ec));
+}

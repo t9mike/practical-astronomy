@@ -1,11 +1,13 @@
 use crate::tests::coordinates as CST;
 use crate::tests::datetime as DTT;
+use crate::tests::sun as SUNT;
 
 /// Run all functional tests.
 pub fn run_tests() {
     run_datetime_tests();
 
     run_coordinate_tests();
+    run_sun_tests();
 }
 
 pub fn run_datetime_tests() {
@@ -207,4 +209,10 @@ pub fn run_coordinate_tests() {
     };
     test_selenographic.test_selenographic_coordinates_1();
     test_selenographic.test_selenographic_coordinates_2();
+}
+
+pub fn run_sun_tests() {
+    SUNT::test_approximate_position_of_sun(0.0, 0.0, 0.0, 27 as f64, 7, 2003, false, 0);
+
+    SUNT::test_precise_position_of_sun(0.0, 0.0, 0.0, 27 as f64, 7, 1988, false, 0);
 }

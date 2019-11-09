@@ -1412,3 +1412,80 @@ pub fn moon_hp(lh: f64, lm: f64, ls: f64, ds: i32, zc: i32, dy: f64, mn: u32, yr
 pub fn unwind(w: f64) -> f64 {
     return w - 6.283185308 * (w / 6.283185308).floor();
 }
+
+/// Mean ecliptic longitude of the Sun at the epoch
+///
+/// Original macro name: SunElong
+pub fn sun_e_long(gd: f64, gm: u32, gy: u32) -> f64 {
+    let t = (cd_jd(gd, gm, gy) - 2415020.0) / 36525.0;
+    let t2 = t * t;
+    let x = 279.6966778 + 36000.76892 * t + 0.0003025 * t2;
+
+    return x - 360.0 * (x / 360.0).floor();
+}
+
+/// Longitude of the Sun at perigee
+///
+/// Original macro name: SunPeri
+pub fn sun_peri(gd: f64, gm: u32, gy: u32) -> f64 {
+    let t = (cd_jd(gd, gm, gy) - 2415020.0) / 36525.0;
+    let t2 = t * t;
+    let x = 281.2208444 + 1.719175 * t + 0.000452778 * t2;
+
+    return x - 360.0 * (x / 360.0).floor();
+}
+
+/// Eccentricity of the Sun-Earth orbit
+///
+/// Original macro name: SunEcc
+pub fn sun_ecc(gd: f64, gm: u32, gy: u32) -> f64 {
+    let t = (cd_jd(gd, gm, gy) - 2415020.0) / 36525.0;
+    let t2 = t * t;
+
+    return 0.01675104 - 0.0000418 * t - 0.000000126 * t2;
+}
+
+/// Ecliptic - Declination (degrees)
+///
+/// Original macro name: ECDec
+pub fn ec_dec(
+    eld: f64,
+    elm: f64,
+    els: f64,
+    bd: f64,
+    bm: f64,
+    bs: f64,
+    gd: f64,
+    gm: u32,
+    gy: u32,
+) -> f64 {
+    let a = (dms_dd(eld, elm, els)).to_radians();
+    let b = (dms_dd(bd, bm, bs)).to_radians();
+    let c = (obliq(gd, gm, gy)).to_radians();
+    let d = b.sin() * c.cos() + b.cos() * c.sin() * a.sin();
+    return degrees(d.asin());
+}
+
+/// Ecliptic - Right Ascension (degrees)
+///
+/// Original macro name: ECRA
+pub fn ec_ra(
+    eld: f64,
+    elm: f64,
+    els: f64,
+    bd: f64,
+    bm: f64,
+    bs: f64,
+    gd: f64,
+    gm: u32,
+    gy: u32,
+) -> f64 {
+    let a = (dms_dd(eld, elm, els)).to_radians();
+    let b = (dms_dd(bd, bm, bs)).to_radians();
+    let c = (obliq(gd, gm, gy)).to_radians();
+    let d = a.sin() * c.cos() - b.tan() * c.sin();
+    let e = a.cos();
+    let f = degrees(d.atan2(e));
+
+    return f - 360.0 * (f / 360.0).floor();
+}

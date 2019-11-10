@@ -852,9 +852,9 @@ pub fn sun_long(lch: f64, lcm: f64, lcs: f64, ds: i32, zc: i32, ld: f64, lm: u32
 
     let a1 = (153.23 + b).to_radians();
     let a = 125.1041894 * t;
-    let _b = 360.0 * (a - (a).floor());
+    let b = 360.0 * (a - (a).floor());
 
-    let b1 = (216.57 + t).to_radians();
+    let b1 = (216.57 + b).to_radians();
     let a = 91.56766028 * t;
     let b = 360.0 * (a - (a).floor());
 

@@ -91,10 +91,10 @@ pub fn test_precise_position_of_sun(
 
     assert_eq!(sun_ra_hour, 8.0, "Sun RA Hour");
     assert_eq!(sun_ra_min, 26.0, "Sun RA Minutes");
-    assert_eq!(sun_ra_sec, 3.84, "Sun RA Seconds");
+    assert_eq!(sun_ra_sec, 3.83, "Sun RA Seconds");
     assert_eq!(sun_dec_deg, 19.0, "Sun Dec Degrees");
     assert_eq!(sun_dec_min, 12.0, "Sun Dec Minutes");
-    assert_eq!(sun_dec_sec, 49.68, "Sun Dec Seconds");
+    assert_eq!(sun_dec_sec, 49.72, "Sun Dec Seconds");
 }
 
 pub fn test_sun_distance_and_angular_size(
@@ -253,4 +253,17 @@ pub fn test_morning_and_evening_twilight(
     assert_eq!(pm_twilight_ends_hour, 20.0, "PM Twilight Ends (hour)");
     assert_eq!(pm_twilight_ends_min, 37.0, "PM Twilight Ends (minute)");
     assert_eq!(status, "OK", "Status of Calculation");
+}
+
+pub fn test_equation_of_time(gwdate_day: f64, gwdate_month: u32, gwdate_year: u32) {
+    let (equation_of_time_min, equation_of_time_sec) =
+        CS::equation_of_time(gwdate_day, gwdate_month, gwdate_year);
+
+    println!(
+        "Equation of time: [Greenwich Date] {}/{}/{} = [Time] {}:{}",
+        gwdate_month, gwdate_day, gwdate_year, equation_of_time_min, equation_of_time_sec
+    );
+
+    assert_eq!(equation_of_time_min, 6.0, "Equation of Time (min)");
+    assert_eq!(equation_of_time_sec, 31.52, "Equation of Time (sec)");
 }

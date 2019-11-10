@@ -232,4 +232,6 @@ pub fn run_sun_tests() {
         52.0,
         pa_types::TwilightType::Astronomical,
     );
+
+    SUNT::test_equation_of_time(27.0, 7, 2010);
 }

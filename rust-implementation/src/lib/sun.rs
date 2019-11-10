@@ -549,3 +549,43 @@ pub fn morning_and_evening_twilight(
         status,
     );
 }
+
+/// Calculate the equation of time. (The difference between the real Sun time and the mean Sun time.)
+///
+/// ## Arguments
+/// * `gwdate_day` -- Greenwich date (day part)
+/// * `gwdate_month` -- Greenwich date (month part)
+/// * `gwdate_year` -- Greenwich date (year part)
+///
+/// ## Returns
+/// * `equation_of_time_min` -- equation of time (minute part)
+/// * `equation_of_time_sec` -- equation of time (seconds part)
+pub fn equation_of_time(gwdate_day: f64, gwdate_month: u32, gwdate_year: u32) -> (f64, f64) {
+    let sun_longitude_deg =
+        macros::sun_long(12.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year);
+    let sun_ra_hours = macros::dd_dh(macros::ec_ra(
+        sun_longitude_deg,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        gwdate_day,
+        gwdate_month,
+        gwdate_year,
+    ));
+    let equivalent_ut_hours = macros::gst_ut(
+        sun_ra_hours,
+        0.0,
+        0.0,
+        gwdate_day,
+        gwdate_month,
+        gwdate_year,
+    );
+    let equation_of_time_hours = equivalent_ut_hours - 12.0;
+
+    let equation_of_time_min = macros::dh_min(equation_of_time_hours) as f64;
+    let equation_of_time_sec = macros::dh_sec(equation_of_time_hours);
+
+    return (equation_of_time_min, equation_of_time_sec);
+}

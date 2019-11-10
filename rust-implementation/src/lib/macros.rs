@@ -2250,3 +2250,47 @@ pub fn e_twilight_l3710(
 
     return (a, x, y, la, s);
 }
+
+/// Calculate the angle between two celestial objects
+///
+/// Original macro name: Angle
+pub fn angle(
+    xx1: f64,
+    xm1: f64,
+    xs1: f64,
+    dd1: f64,
+    dm1: f64,
+    ds1: f64,
+    xx2: f64,
+    xm2: f64,
+    xs2: f64,
+    dd2: f64,
+    dm2: f64,
+    ds2: f64,
+    s: pa_types::AngleMeasure,
+) -> f64 {
+    let s_value = match s {
+        pa_types::AngleMeasure::Degrees => "D",
+        pa_types::AngleMeasure::Hours => "H",
+    };
+
+    let a = if s_value == "H" {
+        dh_dd(hms_dh(xx1, xm1, xs1))
+    } else {
+        dms_dd(xx1, xm1, xs1)
+    };
+    let b = a.to_radians();
+    let c = dms_dd(dd1, dm1, ds1);
+    let d = c.to_radians();
+    let e = if s_value == "H" {
+        dh_dd(hms_dh(xx2, xm2, xs2))
+    } else {
+        dms_dd(xx2, xm2, xs2)
+    };
+    let f = e.to_radians();
+    let g = dms_dd(dd2, dm2, ds2);
+    let h = g.to_radians();
+    let i = (d.sin() * h.sin() + d.cos() * h.cos() * (b - f).cos()).acos();
+
+    return degrees(i);
+}

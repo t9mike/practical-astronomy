@@ -234,4 +234,6 @@ pub fn run_sun_tests() {
     );
 
     SUNT::test_equation_of_time(27.0, 7, 2010);
+
+    SUNT::test_solar_elongation(10.0, 6.0, 45.0, 11.0, 57.0, 27.0, 27.8333333, 7, 2010);
 }

@@ -589,3 +589,74 @@ pub fn equation_of_time(gwdate_day: f64, gwdate_month: u32, gwdate_year: u32) ->
 
     return (equation_of_time_min, equation_of_time_sec);
 }
+
+/// Calculate solar elongation for a celestial body.
+///
+/// Solar elongation is the angle between the lines of sight from the Earth to the Sun and from the Earth to the celestial body.
+///
+/// ## Arguments
+/// * `ra_hour` -- Right Ascension, hour part
+/// * `ra_min` -- Right Ascension, minutes part
+/// * `ra_sec` -- Right Ascension, seconds part
+/// * `dec_deg` -- Declination, degrees part
+/// * `dec_min` -- Declination, minutes part
+/// * `dec_sec` -- Declination, seconds part
+/// * `gwdate_day` -- Greenwich Date, day part
+/// * `gwdate_month` -- Greenwich Date, month part
+/// * `gwdate_year` -- Greenwich Date, year part
+///
+/// ## Returns
+/// * `solar_elongation_deg` -- Solar elongation, in degrees
+pub fn solar_elongation(
+    ra_hour: f64,
+    ra_min: f64,
+    ra_sec: f64,
+    dec_deg: f64,
+    dec_min: f64,
+    dec_sec: f64,
+    gwdate_day: f64,
+    gwdate_month: u32,
+    gwdate_year: u32,
+) -> f64 {
+    let sun_longitude_deg =
+        macros::sun_long(0.0, 0.0, 0.0, 0, 0, gwdate_day, gwdate_month, gwdate_year);
+    let sun_ra_hours = macros::dd_dh(macros::ec_ra(
+        sun_longitude_deg,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        gwdate_day,
+        gwdate_month,
+        gwdate_year,
+    ));
+    let sun_dec_deg = macros::ec_dec(
+        sun_longitude_deg,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        gwdate_day,
+        gwdate_month,
+        gwdate_year,
+    );
+    let solar_elongation_deg = macros::angle(
+        sun_ra_hours,
+        0.0,
+        0.0,
+        sun_dec_deg,
+        0.0,
+        0.0,
+        ra_hour,
+        ra_min,
+        ra_sec,
+        dec_deg,
+        dec_min,
+        dec_sec,
+        pa_types::AngleMeasure::Hours,
+    );
+
+    return utils::round_f64(solar_elongation_deg, 2);
+}

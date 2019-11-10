@@ -267,3 +267,42 @@ pub fn test_equation_of_time(gwdate_day: f64, gwdate_month: u32, gwdate_year: u3
     assert_eq!(equation_of_time_min, 6.0, "Equation of Time (min)");
     assert_eq!(equation_of_time_sec, 31.52, "Equation of Time (sec)");
 }
+
+pub fn test_solar_elongation(
+    ra_hour: f64,
+    ra_min: f64,
+    ra_sec: f64,
+    dec_deg: f64,
+    dec_min: f64,
+    dec_sec: f64,
+    gwdate_day: f64,
+    gwdate_month: u32,
+    gwdate_year: u32,
+) {
+    let solar_elongation_deg = CS::solar_elongation(
+        ra_hour,
+        ra_min,
+        ra_sec,
+        dec_deg,
+        dec_min,
+        dec_sec,
+        gwdate_day,
+        gwdate_month,
+        gwdate_year,
+    );
+
+    println!(
+		"Solar elongation: [RA] {}h {}m {}s [Declination] {}d {}m {}s [Greenwich Date] {}/{}/{} = [Solar Elongation] {}d",
+		ra_hour,
+		ra_min,
+		ra_sec,
+		dec_deg,
+		dec_min,
+		dec_sec,
+		gwdate_month,
+		gwdate_day,
+		gwdate_year,
+		solar_elongation_deg);
+
+    assert_eq!(solar_elongation_deg, 24.78, "Solar Elongation (degrees)");
+}

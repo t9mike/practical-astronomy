@@ -1,4 +1,5 @@
 use crate::lib::sun as CS;
+use crate::lib::types as pa_types;
 
 pub fn test_approximate_position_of_sun(
     lct_hours: f64,
@@ -194,5 +195,62 @@ pub fn test_sunrise_and_sunset(
         "Azimuth of Sunrise (degrees)"
     );
     assert_eq!(azimuth_of_sunset_deg, 265.43, "Azimuth of Sunset (degrees)");
+    assert_eq!(status, "OK", "Status of Calculation");
+}
+
+pub fn test_morning_and_evening_twilight(
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+    is_daylight_saving: bool,
+    zone_correction: i32,
+    geographical_long_deg: f64,
+    geographical_lat_deg: f64,
+    twilight_type: pa_types::TwilightType,
+) {
+    let display_twilight_type = match twilight_type {
+        pa_types::TwilightType::Astronomical => "Astronomical",
+        pa_types::TwilightType::Civil => "Civil",
+        pa_types::TwilightType::Nautical => "Nautical",
+    };
+
+    let (
+        am_twilight_begins_hour,
+        am_twilight_begins_min,
+        pm_twilight_ends_hour,
+        pm_twilight_ends_min,
+        status,
+    ) = CS::morning_and_evening_twilight(
+        local_day,
+        local_month,
+        local_year,
+        is_daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+        twilight_type,
+    );
+
+    println!(
+		"Morning and evening twilight: [Local Date] {}/{}/{} [DST?] {} [Zone Correction] {} [Geographical Longitude/Latitude] {}d/{}d [Twilight Type] {:?} = [Twilight] [Begins] {}:{} [Ends] {}:{} [Status] {}",
+		local_month,
+		local_day,
+		local_year,
+		is_daylight_saving,
+		zone_correction,
+		geographical_long_deg,
+		geographical_lat_deg,
+		display_twilight_type,
+		am_twilight_begins_hour,
+		am_twilight_begins_min,
+		pm_twilight_ends_hour,
+		pm_twilight_ends_min,
+		status
+	);
+
+    assert_eq!(am_twilight_begins_hour, 3.0, "AM Twilight Begins (hour)");
+    assert_eq!(am_twilight_begins_min, 17.0, "AM Twilight Begins (minute)");
+    assert_eq!(pm_twilight_ends_hour, 20.0, "PM Twilight Ends (hour)");
+    assert_eq!(pm_twilight_ends_min, 37.0, "PM Twilight Ends (minute)");
     assert_eq!(status, "OK", "Status of Calculation");
 }

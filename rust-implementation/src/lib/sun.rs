@@ -1,4 +1,5 @@
 use crate::lib::macros;
+use crate::lib::types as pa_types;
 use crate::lib::util as utils;
 
 /// Calculate approximate position of the sun for a local date and time.
@@ -448,6 +449,103 @@ pub fn sunrise_and_sunset(
         local_sunset_minute,
         azimuth_of_sunrise_deg,
         azimuth_of_sunset_deg,
+        status,
+    );
+}
+
+/// Calculate times of morning and evening twilight.
+///
+/// ## Arguments
+/// * `local_day` -- Local date, day part.
+/// * `local_month` -- Local date, month part.
+/// * `local_year` -- Local date, year part.
+/// * `is_daylight_saving` -- Is daylight savings in effect?
+/// * `zone_correction` -- Time zone correction, in hours.
+/// * `geographical_long_deg` -- Geographical longitude, in degrees.
+/// * `geographical_lat_deg` -- Geographical latitude, in degrees.
+/// * `twilight_type` -- "C" (civil), "N" (nautical), or "A" (astronomical)
+///
+/// ## Returns
+/// * `am_twilight_begins_hour` -- Beginning of AM twilight (hour part)
+/// * `am_twilight_begins_min` -- Beginning of AM twilight (minutes part)
+/// * `pm_twilight_ends_hour` -- Ending of PM twilight (hour part)
+/// * `pm_twilight_ends_min` -- Ending of PM twilight (minutes part)
+/// * `status` -- Calculation status
+pub fn morning_and_evening_twilight(
+    local_day: f64,
+    local_month: u32,
+    local_year: u32,
+    is_daylight_saving: bool,
+    zone_correction: i32,
+    geographical_long_deg: f64,
+    geographical_lat_deg: f64,
+    twilight_type: pa_types::TwilightType,
+) -> (f64, f64, f64, f64, String) {
+    let daylight_saving = if is_daylight_saving == true { 1 } else { 0 };
+
+    let start_of_am_twilight_hours = macros::twilight_am_lct(
+        local_day,
+        local_month,
+        local_year,
+        daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+        &twilight_type,
+    );
+
+    let end_of_pm_twilight_hours = macros::twilight_pm_lct(
+        local_day,
+        local_month,
+        local_year,
+        daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+        &twilight_type,
+    );
+
+    let twilight_status = macros::e_twilight(
+        local_day,
+        local_month,
+        local_year,
+        daylight_saving,
+        zone_correction,
+        geographical_long_deg,
+        geographical_lat_deg,
+        &twilight_type,
+    );
+
+    let adjusted_am_start_time = start_of_am_twilight_hours + 0.008333;
+    let adjusted_pm_start_time = end_of_pm_twilight_hours + 0.008333;
+
+    let am_twilight_begins_hour = if twilight_status == "OK" {
+        macros::dh_hour(adjusted_am_start_time) as f64
+    } else {
+        -99.0
+    };
+    let am_twilight_begins_min = if twilight_status == "OK" {
+        macros::dh_min(adjusted_am_start_time) as f64
+    } else {
+        -99.0
+    };
+    let pm_twilight_ends_hour = if twilight_status == "OK" {
+        macros::dh_hour(adjusted_pm_start_time) as f64
+    } else {
+        -99.0
+    };
+    let pm_twilight_ends_min = if twilight_status == "OK" {
+        macros::dh_min(adjusted_pm_start_time) as f64
+    } else {
+        -99.0
+    };
+    let status = twilight_status;
+
+    return (
+        am_twilight_begins_hour,
+        am_twilight_begins_min,
+        pm_twilight_ends_hour,
+        pm_twilight_ends_min,
         status,
     );
 }

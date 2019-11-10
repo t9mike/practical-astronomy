@@ -1,3 +1,4 @@
+use crate::lib::types as pa_types;
 use crate::tests::coordinates as CST;
 use crate::tests::datetime as DTT;
 use crate::tests::sun as SUNT;
@@ -220,4 +221,15 @@ pub fn run_sun_tests() {
     SUNT::test_sun_distance_and_angular_size(0.0, 0.0, 0.0, 27 as f64, 7, 1988, false, 0);
 
     SUNT::test_sunrise_and_sunset(10.0, 3, 1986, false, -5, -71.05, 42.37);
+
+    SUNT::test_morning_and_evening_twilight(
+        7.0,
+        9,
+        1979,
+        false,
+        0,
+        0.0,
+        52.0,
+        pa_types::TwilightType::Astronomical,
+    );
 }

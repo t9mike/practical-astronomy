@@ -1,3 +1,4 @@
+use crate::lib::types as pa_types;
 use crate::lib::util as utils;
 
 /// Convert a Civil Time (hours,minutes,seconds) to Decimal Hours
@@ -2015,6 +2016,237 @@ pub fn sunset_az_l3710(
     let y = ec_dec(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
     let la = rise_set_local_sidereal_time_set(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
     let s = e_rs(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+
+    return (a, x, y, la, s);
+}
+
+/// Calculate morning twilight start, in local time.
+///
+/// Twilight type (TT) can be one of "C" (civil), "N" (nautical), or "A" (astronomical)
+///
+/// Original macro name: TwilightAMLCT
+pub fn twilight_am_lct(
+    ld: f64,
+    lm: u32,
+    ly: u32,
+    ds: i32,
+    zc: i32,
+    gl: f64,
+    gp: f64,
+    tt: &pa_types::TwilightType,
+) -> f64 {
+    let di = match tt {
+        pa_types::TwilightType::Astronomical => 18.0,
+        pa_types::TwilightType::Civil => 6.0,
+        pa_types::TwilightType::Nautical => 12.0,
+    };
+
+    let gd = lct_gday(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gm = lct_gmonth(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gy = lct_gyear(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let sr = sun_long(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+
+    let (_a, _x, _y, la, s) = twilight_am_lct_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return -99.0;
+    }
+
+    let x = lst_gst(la, 0.0, 0.0, gl);
+    let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+    if e_gst_ut(x, 0.0, 0.0, gd, gm, gy) != "OK" {
+        return -99.0;
+    }
+
+    let sr = sun_long(ut, 0.0, 0.0, 0, 0, gd, gm, gy);
+
+    let (_a, _x, _y, la, s) = twilight_am_lct_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return -99.0;
+    }
+
+    let x = lst_gst(la, 0.0, 0.0, gl);
+    let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+    let xx = ut_lct(ut, 0.0, 0.0, ds, zc, gd, gm, gy);
+
+    return xx;
+}
+
+/// Helper function for twilight_am_lct()
+pub fn twilight_am_lct_l3710(
+    gd: f64,
+    gm: u32,
+    gy: u32,
+    sr: f64,
+    di: f64,
+    gp: f64,
+) -> (f64, f64, f64, f64, String) {
+    let a = sr + nutat_long(gd, gm, gy) - 0.005694;
+    let x = ec_ra(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let y = ec_dec(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let la = rise_set_local_sidereal_time_rise(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+    let s = e_rs(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+
+    return (a, x, y, la, s);
+}
+
+/// Calculate evening twilight end, in local time.
+///
+/// Twilight type can be one of "C" (civil), "N" (nautical), or "A" (astronomical)
+///
+/// Original macro name: TwilightPMLCT
+pub fn twilight_pm_lct(
+    ld: f64,
+    lm: u32,
+    ly: u32,
+    ds: i32,
+    zc: i32,
+    gl: f64,
+    gp: f64,
+    tt: &pa_types::TwilightType,
+) -> f64 {
+    let di = match tt {
+        pa_types::TwilightType::Astronomical => 18.0,
+        pa_types::TwilightType::Civil => 6.0,
+        pa_types::TwilightType::Nautical => 12.0,
+    };
+
+    let gd = lct_gday(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gm = lct_gmonth(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gy = lct_gyear(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let sr = sun_long(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+
+    let (_a, _x, _y, la, s) = twilight_pm_lct_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return 0.0;
+    }
+
+    let x = lst_gst(la, 0.0, 0.0, gl);
+    let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+    if e_gst_ut(x, 0.0, 0.0, gd, gm, gy) != "OK" {
+        return 0.0;
+    }
+
+    let sr = sun_long(ut, 0.0, 0.0, 0, 0, gd, gm, gy);
+
+    let (_a, _x, _y, la, s) = twilight_pm_lct_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return 0.0;
+    }
+
+    let x = lst_gst(la, 0.0, 0.0, gl);
+    let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+    return ut_lct(ut, 0.0, 0.0, ds, zc, gd, gm, gy);
+}
+
+/// Helper function for twilight_pm_lct()
+pub fn twilight_pm_lct_l3710(
+    gd: f64,
+    gm: u32,
+    gy: u32,
+    sr: f64,
+    di: f64,
+    gp: f64,
+) -> (f64, f64, f64, f64, String) {
+    let a = sr + nutat_long(gd, gm, gy) - 0.005694;
+    let x = ec_ra(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let y = ec_dec(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let la = rise_set_local_sidereal_time_set(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+    let s = e_rs(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+
+    return (a, x, y, la, s);
+}
+
+/// Twilight calculation status.
+///
+/// Twilight type can be one of "C" (civil), "N" (nautical), or "A" (astronomical)
+///
+/// Original macro name: eTwilight
+///
+/// ## Returns
+/// One of: "OK", "** lasts all night", or "** Sun too far below horizon"
+pub fn e_twilight(
+    ld: f64,
+    lm: u32,
+    ly: u32,
+    ds: i32,
+    zc: i32,
+    gl: f64,
+    gp: f64,
+    tt: &pa_types::TwilightType,
+) -> String {
+    // S = ""
+
+    let di = match tt {
+        pa_types::TwilightType::Astronomical => 18.0,
+        pa_types::TwilightType::Civil => 6.0,
+        pa_types::TwilightType::Nautical => 12.0,
+    };
+
+    let gd = lct_gday(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gm = lct_gmonth(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let gy = lct_gyear(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+    let sr = sun_long(12.0, 0.0, 0.0, ds, zc, ld, lm, ly);
+
+    let (_a, _x, _y, la, s) = e_twilight_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return s;
+    }
+
+    let x = lst_gst(la, 0.0, 0.0, gl);
+    let ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+    let sr = sun_long(ut, 0.0, 0.0, 0, 0, gd, gm, gy);
+
+    let (_a, _x, _y, la, s) = e_twilight_l3710(gd, gm, gy, sr, di, gp);
+
+    if s != "OK" {
+        return s;
+    }
+
+    let x = lst_gst(la, 0.0, 0.0, gl);
+    let _ut = gst_ut(x, 0.0, 0.0, gd, gm, gy);
+
+    if e_gst_ut(x, 0.0, 0.0, gd, gm, gy) != "OK" {
+        let s = s + " GST to UT conversion warning";
+
+        return s;
+    }
+
+    return s;
+}
+
+/// Helper function for e_twilight()
+pub fn e_twilight_l3710(
+    gd: f64,
+    gm: u32,
+    gy: u32,
+    sr: f64,
+    di: f64,
+    gp: f64,
+) -> (f64, f64, f64, f64, String) {
+    let a = sr + nutat_long(gd, gm, gy) - 0.005694;
+    let x = ec_ra(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let y = ec_dec(a, 0.0, 0.0, 0.0, 0.0, 0.0, gd, gm, gy);
+    let la = rise_set_local_sidereal_time_rise(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+    let mut s = e_rs(dd_dh(x), 0.0, 0.0, y, 0.0, 0.0, di, gp);
+
+    if s.len() > 2 {
+        if &s[0..3].to_string() == "** c" {
+            s = "** lasts all night".to_string();
+        } else {
+            if &s[0..3].to_string() == "** n" {
+                s = "** Sun too far below horizon".to_string();
+            }
+        }
+    }
 
     return (a, x, y, la, s);
 }

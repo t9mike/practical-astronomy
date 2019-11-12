@@ -42,7 +42,8 @@
 
 ### Planets
 
-- [ ] Calculate -> Approximate and precise position of planet
+- [x] Calculate -> Approximate position of planet
+- [ ] Calculate -> Precise position of planet
 - [ ] Calculate -> Visual aspects of planet (distance, angular diameter, phase, light time, position angle of bright limb, and apparent magnitude)
 - [ ] Calculate -> Position of comet (elliptical and parabolic)
 - [ ] Calculate -> Binary star orbit data

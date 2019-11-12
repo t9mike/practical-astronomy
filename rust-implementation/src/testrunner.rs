@@ -1,6 +1,7 @@
 use crate::lib::types as pa_types;
 use crate::tests::coordinates as CST;
 use crate::tests::datetime as DTT;
+use crate::tests::planet as PLANETT;
 use crate::tests::sun as SUNT;
 
 /// Run all functional tests.
@@ -10,6 +11,8 @@ pub fn run_tests() {
     run_coordinate_tests();
 
     run_sun_tests();
+
+    run_planet_tests();
 }
 
 pub fn run_datetime_tests() {
@@ -236,4 +239,19 @@ pub fn run_sun_tests() {
     SUNT::test_equation_of_time(27.0, 7, 2010);
 
     SUNT::test_solar_elongation(10.0, 6.0, 45.0, 11.0, 57.0, 27.0, 27.8333333, 7, 2010);
+}
+
+pub fn run_planet_tests() {
+    let mut test_planet_position = PLANETT::TestPositionOfPlanetScaffold {
+        lct_hour: 0.0,
+        lct_minute: 0.0,
+        lct_second: 0.0,
+        is_daylight_saving: false,
+        zone_correction_hours: 0,
+        local_date_day: 22.0,
+        local_date_month: 11,
+        local_date_year: 2003,
+        planet_name: "Jupiter".to_string(),
+    };
+    test_planet_position.test_approximate_position_of_planet();
 }

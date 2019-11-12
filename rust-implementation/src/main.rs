@@ -1,4 +1,5 @@
 extern crate clap;
+extern crate num;
 
 mod lib;
 mod testrunner;

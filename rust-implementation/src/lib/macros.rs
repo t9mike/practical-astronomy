@@ -2866,7 +2866,7 @@ pub fn planet_coordinates(
         value9: h,
     });
 
-    let li = 0.0;
+    let mut li = 0.0;
     let _tp = 2.0 * std::f64::consts::PI;
     let ms = sun_mean_anomaly(lh, lm, ls, ds, zc, dy, mn, yr);
     let sr = (sun_long(lh, lm, ls, ds, zc, dy, mn, yr)).to_radians();
@@ -2969,7 +2969,7 @@ pub fn planet_coordinates(
         ll = pd - lg;
         let rh = re * re + pvv * pvv - 2.0 * re * pvv * ci * (ll).cos();
         let rh = (rh).sqrt();
-        let _li = rh * 0.005775518;
+        li = rh * 0.005775518;
 
         if k == 1 {
             l0 = pd;

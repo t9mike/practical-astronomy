@@ -100,9 +100,9 @@ impl TestPositionOfPlanetScaffold {
 
         assert_eq!(planet_ra_hour, 11.0, "Planet Right Ascension (hour)");
         assert_eq!(planet_ra_min, 10.0, "Planet Right Ascension (minutes)");
-        assert_eq!(planet_ra_sec, 31.52, "Planet Right Ascension (seconds)");
+        assert_eq!(planet_ra_sec, 30.99, "Planet Right Ascension (seconds)");
         assert_eq!(planet_dec_deg, 6.0, "Planet Declination (degrees)");
         assert_eq!(planet_dec_min, 25.0, "Planet Declination (minutes)");
-        assert_eq!(planet_dec_sec, 46.25, "Planet Declination (seconds)");
+        assert_eq!(planet_dec_sec, 49.46, "Planet Declination (seconds)");
     }
 }

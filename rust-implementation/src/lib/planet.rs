@@ -181,3 +181,127 @@ pub fn approximate_position_of_planet(
         planet_dec_sec,
     );
 }
+
+/// Calculate precise position of a planet.
+///
+/// ## Arguments
+/// * `lct_hour` -- Local civil time, hour part.
+/// * `lct_min` -- Local civil time, minutes part.
+/// * `lct_sec` -- Local civil time, seconds part.
+/// * `is_daylight_saving` -- Is daylight savings in effect?
+/// * `zone_correction_hours` -- Time zone correction, in hours.
+/// * `local_date_day` -- Local date, day part.
+/// * `local_date_month` -- Local date, month part.
+/// * `local_date_year` -- Local date, year part.
+/// * `planet_name` -- Name of planet, e.g., "Jupiter"
+///
+/// ## Returns
+/// * `planet_ra_hour` -- Right ascension of planet (hour part)
+/// * `planet_ra_min` -- Right ascension of planet (minutes part)
+/// * `planet_ra_sec` -- Right ascension of planet (seconds part)
+/// * `planet_dec_deg` -- Declination of planet (degrees part)
+/// * `planet_dec_min` -- Declination of planet (minutes part)
+/// * `planet_dec_sec` -- Declination of planet (seconds part)
+pub fn precise_position_of_planet(
+    lct_hour: f64,
+    lct_min: f64,
+    lct_sec: f64,
+    is_daylight_saving: bool,
+    zone_correction_hours: i32,
+    local_date_day: f64,
+    local_date_month: u32,
+    local_date_year: u32,
+    planet_name: String,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let daylight_saving = if is_daylight_saving == true { 1 } else { 0 };
+
+    let _gdate_day = macros::lct_gday(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let _gdate_month = macros::lct_gmonth(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let _gdate_year = macros::lct_gyear(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+
+    let (
+        planet_ecl_long_deg,
+        planet_ecl_lat_deg,
+        _planet_distance_au,
+        _planet_h_long1,
+        _planet_h_long2,
+        _planet_h_lat,
+        _planet_r_vect,
+    ) = macros::planet_coordinates(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        planet_name,
+    );
+
+    let planet_ra_hours = macros::dd_dh(macros::ec_ra(
+        planet_ecl_long_deg,
+        0.0,
+        0.0,
+        planet_ecl_lat_deg,
+        0.0,
+        0.0,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    ));
+    let planet_dec_deg1 = macros::ec_dec(
+        planet_ecl_long_deg,
+        0.0,
+        0.0,
+        planet_ecl_lat_deg,
+        0.0,
+        0.0,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+
+    let planet_ra_hour = macros::dh_hour(planet_ra_hours);
+    let planet_ra_min = macros::dh_min(planet_ra_hours);
+    let planet_ra_sec = macros::dh_sec(planet_ra_hours);
+    let planet_dec_deg = macros::dd_deg(planet_dec_deg1);
+    let planet_dec_min = macros::dd_min(planet_dec_deg1);
+    let planet_dec_sec = macros::dd_sec(planet_dec_deg1);
+
+    return (
+        planet_ra_hour as f64,
+        planet_ra_min as f64,
+        planet_ra_sec,
+        planet_dec_deg,
+        planet_dec_min,
+        planet_dec_sec,
+    );
+}

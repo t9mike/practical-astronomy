@@ -1622,6 +1622,34 @@ pub fn sun_true_anomaly(
     return degrees(true_anomaly(am, ec));
 }
 
+/// Calculate the Sun's mean anomaly.
+///
+/// Original macro name: SunMeanAnomaly
+pub fn sun_mean_anomaly(
+    lch: f64,
+    lcm: f64,
+    lcs: f64,
+    ds: i32,
+    zc: i32,
+    ld: f64,
+    lm: u32,
+    ly: u32,
+) -> f64 {
+    let aa = lct_gday(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let bb = lct_gmonth(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let cc = lct_gyear(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let ut = lct_ut(lch, lcm, lcs, ds, zc, ld, lm, ly);
+    let dj = cd_jd(aa, bb, cc) - 2415020.0;
+    let t = (dj / 36525.0) + (ut / 876600.0);
+    let t2 = t * t;
+    let a = 100.0021359 * t;
+    let b = 360.0 * (a - a.floor());
+    let m1 = 358.47583 - (0.00015 + 0.0000033 * t) * t2 + b;
+    let am = unwind((m1).to_radians());
+
+    return am;
+}
+
 /// Calculate local civil time of sunrise.
 ///
 /// Original macro name: SunriseLCT
@@ -2293,4 +2321,1025 @@ pub fn angle(
     let i = (d.sin() * h.sin() + d.cos() * h.cos() * (b - f).cos()).acos();
 
     return degrees(i);
+}
+
+#[derive(Clone)]
+pub struct PlDataStruct {
+    pub value1: f64,
+    pub value2: f64,
+    pub value3: f64,
+    pub value4: f64,
+    pub value5: f64,
+    pub value6: f64,
+    pub value7: f64,
+    pub value8: f64,
+    pub value9: f64,
+}
+
+/// Calculate several planetary properties.
+///
+/// Original macro names: PlanetLong, PlanetLat, PlanetDist, PlanetHLong1, PlanetHLong2, PlanetHLat, PlanetRVect
+///
+/// ## Arguments
+/// * `lh` -- Local civil time, hour part.
+/// * `lm` -- Local civil time, minutes part.
+/// * `ls` -- Local civil time, seconds part.
+/// * `ds` -- Daylight Savings offset.
+/// * `zc` -- Time zone correction, in hours.
+/// * `dy` -- Local date, day part.
+/// * `mn` -- Local date, month part.
+/// * `yr` -- Local date, year part.
+/// * `s` -- Planet name.
+///
+/// ## Returns
+/// * `planet_longitude` -- Ecliptic longitude, in degrees.
+/// * `planet_latitude` -- Ecliptic latitude, in degrees.
+/// * `planet_distance_au` -- Earth-planet distance, in AU.
+/// * `planet_h_long1` -- Heliocentric orbital longitude, in degrees.
+/// * `planet_h_long2` -- NOT USED
+/// * `planet_h_lat` -- NOT USED
+/// * `planet_r_vect` -- Sun-planet distance (length of radius vector), in AU.
+pub fn planet_coordinates(
+    lh: f64,
+    lm: f64,
+    ls: f64,
+    ds: i32,
+    zc: i32,
+    dy: f64,
+    mn: u32,
+    yr: u32,
+    s: String,
+) -> (f64, f64, f64, f64, f64, f64, f64) {
+    let a11 = 178.179078;
+    let a12 = 415.2057519;
+    let a13 = 0.0003011;
+    let a14 = 0.0;
+    let a21 = 75.899697;
+    let a22 = 1.5554889;
+    let a23 = 0.0002947;
+    let a24 = 0.0;
+    let a31 = 0.20561421;
+    let a32 = 0.00002046;
+    let a33 = -0.00000003;
+    let a34 = 0.0;
+    let a41 = 7.002881;
+    let a42 = 0.0018608;
+    let a43 = -0.0000183;
+    let a44 = 0.0;
+    let a51 = 47.145944;
+    let a52 = 1.1852083;
+    let a53 = 0.0001739;
+    let a54 = 0.0;
+    let a61 = 0.3870986;
+    let a62 = 6.74;
+    let a63 = -0.42;
+
+    let b11 = 342.767053;
+    let b12 = 162.5533664;
+    let b13 = 0.0003097;
+    let b14 = 0.0;
+    let b21 = 130.163833;
+    let b22 = 1.4080361;
+    let b23 = -0.0009764;
+    let b24 = 0.0;
+    let b31 = 0.00682069;
+    let b32 = -0.00004774;
+    let b33 = 0.000000091;
+    let b34 = 0.0;
+    let b41 = 3.393631;
+    let b42 = 0.0010058;
+    let b43 = -0.000001;
+    let b44 = 0.0;
+    let b51 = 75.779647;
+    let b52 = 0.89985;
+    let b53 = 0.00041;
+    let b54 = 0.0;
+    let b61 = 0.7233316;
+    let b62 = 16.92;
+    let b63 = -4.4;
+
+    let c11 = 293.737334;
+    let c12 = 53.17137642;
+    let c13 = 0.0003107;
+    let c14 = 0.0;
+    let c21 = 334.218203;
+    let c22 = 1.8407584;
+    let c23 = 0.0001299;
+    let c24 = -0.00000119;
+    let c31 = 0.0933129;
+    let c32 = 0.000092064;
+    let c33 = -0.000000077;
+    let c34 = 0.0;
+    let c41 = 1.850333;
+    let c42 = -0.000675;
+    let c43 = 0.0000126;
+    let c44 = 0.0;
+    let c51 = 48.786442;
+    let c52 = 0.7709917;
+    let c53 = -0.0000014;
+    let c54 = -0.00000533;
+    let c61 = 1.5236883;
+    let c62 = 9.36;
+    let c63 = -1.52;
+
+    let d11 = 238.049257;
+    let d12 = 8.434172183;
+    let d13 = 0.0003347;
+    let d14 = -0.00000165;
+    let d21 = 12.720972;
+    let d22 = 1.6099617;
+    let d23 = 0.00105627;
+    let d24 = -0.00000343;
+    let d31 = 0.04833475;
+    let d32 = 0.00016418;
+    let d33 = -0.0000004676;
+    let d34 = -0.0000000017;
+    let d41 = 1.308736;
+    let d42 = -0.0056961;
+    let d43 = 0.0000039;
+    let d44 = 0.0;
+    let d51 = 99.443414;
+    let d52 = 1.01053;
+    let d53 = 0.00035222;
+    let d54 = -0.00000851;
+    let d61 = 5.202561;
+    let d62 = 196.74;
+    let d63 = -9.4;
+
+    let e11 = 266.564377;
+    let e12 = 3.398638567;
+    let e13 = 0.0003245;
+    let e14 = -0.0000058;
+    let e21 = 91.098214;
+    let e22 = 1.9584158;
+    let e23 = 0.00082636;
+    let e24 = 0.00000461;
+    let e31 = 0.05589232;
+    let e32 = -0.0003455;
+    let e33 = -0.000000728;
+    let e34 = 0.00000000074;
+    let e41 = 2.492519;
+    let e42 = -0.0039189;
+    let e43 = -0.00001549;
+    let e44 = 0.00000004;
+    let e51 = 112.790414;
+    let e52 = 0.8731951;
+    let e53 = -0.00015218;
+    let e54 = -0.00000531;
+    let e61 = 9.554747;
+    let e62 = 165.6;
+    let e63 = -8.88;
+
+    let f11 = 244.19747;
+    let f12 = 1.194065406;
+    let f13 = 0.000316;
+    let f14 = -0.0000006;
+    let f21 = 171.548692;
+    let f22 = 1.4844328;
+    let f23 = 0.0002372;
+    let f24 = -0.00000061;
+    let f31 = 0.0463444;
+    let f32a = -0.00002658;
+    let f33 = 0.000000077;
+    let f34 = 0.0;
+    let f41 = 0.772464;
+    let f42 = 0.0006253;
+    let f43 = 0.0000395;
+    let f44 = 0.0;
+    let f51 = 73.477111;
+    let f52 = 0.4986678;
+    let f53 = 0.0013117;
+    let f54 = 0.0;
+    let f61 = 19.21814;
+    let f62 = 65.8;
+    let f63 = -7.19;
+
+    let g11 = 84.457994;
+    let g12 = 0.6107942056;
+    let g13 = 0.0003205;
+    let g14 = -0.0000006;
+    let g21 = 46.727364;
+    let g22 = 1.4245744;
+    let g23 = 0.00039082;
+    let g24 = -0.000000605;
+    let g31 = 0.00899704;
+    let g32 = 0.00000633;
+    let g33 = -0.000000002;
+    let g34 = 0.0;
+    let g41 = 1.779242;
+    let g42 = -0.0095436;
+    let g43 = -0.0000091;
+    let g44 = 0.0;
+    let g51 = 130.681389;
+    let g52 = 1.098935;
+    let g53 = 0.00024987;
+    let g54 = -0.000004718;
+    let g61 = 30.10957;
+    let g62 = 62.2;
+    let g63 = -6.87;
+
+    let mut pl: Vec<PlDataStruct> = Vec::new();
+    pl.push(PlDataStruct {
+        value1: 0.0,
+        value2: 0.0,
+        value3: 0.0,
+        value4: 0.0,
+        value5: 0.0,
+        value6: 0.0,
+        value7: 0.0,
+        value8: 0.0,
+        value9: 0.0,
+    });
+
+    let mut ip = 0;
+    let b = lct_ut(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gd = lct_gday(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gm = lct_gmonth(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gy = lct_gyear(lh, lm, ls, ds, zc, dy, mn, yr);
+    let a = cd_jd(gd, gm, gy);
+    let t = ((a - 2415020.0) / 36525.0) + (b / 876600.0);
+
+    let u_s = s.to_lowercase();
+
+    if u_s == "mercury" {
+        ip = 1;
+    }
+    if u_s == "venus" {
+        ip = 2;
+    }
+    if u_s == "mars" {
+        ip = 3;
+    }
+    if u_s == "jupiter" {
+        ip = 4;
+    }
+    if u_s == "saturn" {
+        ip = 5;
+    }
+    if u_s == "uranus" {
+        ip = 6;
+    }
+    if u_s == "neptune" {
+        ip = 7;
+    }
+    if ip == 0 {
+        return (
+            degrees(unwind(0.0)),
+            degrees(unwind(0.0)),
+            degrees(unwind(0.0)),
+            degrees(unwind(0.0)),
+            degrees(unwind(0.0)),
+            degrees(unwind(0.0)),
+            degrees(unwind(0.0)),
+        );
+    }
+
+    let a0 = a11;
+    let a1 = a12;
+    let a2 = a13;
+    let a3 = a14;
+    let b0 = a21;
+    let b1 = a22;
+    let b2 = a23;
+    let b3 = a24;
+    let c0 = a31;
+    let c1 = a32;
+    let c2 = a33;
+    let c3 = a34;
+    let d0 = a41;
+    let d1 = a42;
+    let d2 = a43;
+    let d3 = a44;
+    let e0 = a51;
+    let e1 = a52;
+    let e2 = a53;
+    let e3 = a54;
+    let f = a61;
+    let g = a62;
+    let h = a63;
+    let aa = a1 * t;
+    let b = 360.0 * (aa - aa.floor());
+    let c = a0 + b + (a3 * t + a2) * t * t;
+
+    pl.push(PlDataStruct {
+        value1: c - 360.0 * (c / 360.0).floor(),
+        value2: (a1 * 0.009856263) + (a2 + a3) / 36525.0,
+        value3: ((b3 * t + b2) * t + b1) * t + b0,
+        value4: ((c3 * t + c2) * t + c1) * t + c0,
+        value5: ((d3 * t + d2) * t + d1) * t + d0,
+        value6: ((e3 * t + e2) * t + e1) * t + e0,
+        value7: f,
+        value8: g,
+        value9: h,
+    });
+
+    let a0 = b11;
+    let a1 = b12;
+    let a2 = b13;
+    let a3 = b14;
+    let b0 = b21;
+    let b1 = b22;
+    let b2 = b23;
+    let b3 = b24;
+    let c0 = b31;
+    let c1 = b32;
+    let c2 = b33;
+    let c3 = b34;
+    let d0 = b41;
+    let d1 = b42;
+    let d2 = b43;
+    let d3 = b44;
+    let e0 = b51;
+    let e1 = b52;
+    let e2 = b53;
+    let e3 = b54;
+    let f = b61;
+    let g = b62;
+    let h = b63;
+    let aa = a1 * t;
+    let b = 360.0 * (aa - (aa).floor());
+    let c = a0 + b + (a3 * t + a2) * t * t;
+    pl.push(PlDataStruct {
+        value1: c - 360.0 * (c / 360.0).floor(),
+        value2: (a1 * 0.009856263) + (a2 + a3) / 36525.0,
+        value3: ((b3 * t + b2) * t + b1) * t + b0,
+        value4: ((c3 * t + c2) * t + c1) * t + c0,
+        value5: ((d3 * t + d2) * t + d1) * t + d0,
+        value6: ((e3 * t + e2) * t + e1) * t + e0,
+        value7: f,
+        value8: g,
+        value9: h,
+    });
+
+    let a0 = c11;
+    let a1 = c12;
+    let a2 = c13;
+    let a3 = c14;
+    let b0 = c21;
+    let b1 = c22;
+    let b2 = c23;
+    let b3 = c24;
+    let c0 = c31;
+    let c1 = c32;
+    let c2 = c33;
+    let c3 = c34;
+    let d0 = c41;
+    let d1 = c42;
+    let d2 = c43;
+    let d3 = c44;
+    let e0 = c51;
+    let e1 = c52;
+    let e2 = c53;
+    let e3 = c54;
+    let f = c61;
+    let g = c62;
+    let h = c63;
+
+    let aa = a1 * t;
+    let b = 360.0 * (aa - (aa).floor());
+    let c = a0 + b + (a3 * t + a2) * t * t;
+    pl.push(PlDataStruct {
+        value1: c - 360.0 * (c / 360.0).floor(),
+        value2: (a1 * 0.009856263) + (a2 + a3) / 36525.0,
+        value3: ((b3 * t + b2) * t + b1) * t + b0,
+        value4: ((c3 * t + c2) * t + c1) * t + c0,
+        value5: ((d3 * t + d2) * t + d1) * t + d0,
+        value6: ((e3 * t + e2) * t + e1) * t + e0,
+        value7: f,
+        value8: g,
+        value9: h,
+    });
+
+    let a0 = d11;
+    let a1 = d12;
+    let a2 = d13;
+    let a3 = d14;
+    let b0 = d21;
+    let b1 = d22;
+    let b2 = d23;
+    let b3 = d24;
+    let c0 = d31;
+    let c1 = d32;
+    let c2 = d33;
+    let c3 = d34;
+    let d0 = d41;
+    let d1 = d42;
+    let d2 = d43;
+    let d3 = d44;
+    let e0 = d51;
+    let e1 = d52;
+    let e2 = d53;
+    let e3 = d54;
+    let f = d61;
+    let g = d62;
+    let h = d63;
+
+    let aa = a1 * t;
+    let b = 360.0 * (aa - (aa).floor());
+    let c = a0 + b + (a3 * t + a2) * t * t;
+    pl.push(PlDataStruct {
+        value1: c - 360.0 * (c / 360.0).floor(),
+        value2: (a1 * 0.009856263) + (a2 + a3) / 36525.0,
+        value3: ((b3 * t + b2) * t + b1) * t + b0,
+        value4: ((c3 * t + c2) * t + c1) * t + c0,
+        value5: ((d3 * t + d2) * t + d1) * t + d0,
+        value6: ((e3 * t + e2) * t + e1) * t + e0,
+        value7: f,
+        value8: g,
+        value9: h,
+    });
+
+    let a0 = e11;
+    let a1 = e12;
+    let a2 = e13;
+    let a3 = e14;
+    let b0 = e21;
+    let b1 = e22;
+    let b2 = e23;
+    let b3 = e24;
+    let c0 = e31;
+    let c1 = e32;
+    let c2 = e33;
+    let c3 = e34;
+    let d0 = e41;
+    let d1 = e42;
+    let d2 = e43;
+    let d3 = e44;
+    let e0 = e51;
+    let e1 = e52;
+    let e2 = e53;
+    let e3 = e54;
+    let f = e61;
+    let g = e62;
+    let h = e63;
+
+    let aa = a1 * t;
+    let b = 360.0 * (aa - (aa).floor());
+    let c = a0 + b + (a3 * t + a2) * t * t;
+    pl.push(PlDataStruct {
+        value1: c - 360.0 * (c / 360.0).floor(),
+        value2: (a1 * 0.009856263) + (a2 + a3) / 36525.0,
+        value3: ((b3 * t + b2) * t + b1) * t + b0,
+        value4: ((c3 * t + c2) * t + c1) * t + c0,
+        value5: ((d3 * t + d2) * t + d1) * t + d0,
+        value6: ((e3 * t + e2) * t + e1) * t + e0,
+        value7: f,
+        value8: g,
+        value9: h,
+    });
+
+    let a0 = f11;
+    let a1 = f12;
+    let a2 = f13;
+    let a3 = f14;
+    let b0 = f21;
+    let b1 = f22;
+    let b2 = f23;
+    let b3 = f24;
+    let c0 = f31;
+    let c1 = f32a;
+    let c2 = f33;
+    let c3 = f34;
+    let d0 = f41;
+    let d1 = f42;
+    let d2 = f43;
+    let d3 = f44;
+    let e0 = f51;
+    let e1 = f52;
+    let e2 = f53;
+    let e3 = f54;
+    let f = f61;
+    let g = f62;
+    let h = f63;
+
+    let aa = a1 * t;
+    let b = 360.0 * (aa - (aa).floor());
+    let c = a0 + b + (a3 * t + a2) * t * t;
+    pl.push(PlDataStruct {
+        value1: c - 360.0 * (c / 360.0).floor(),
+        value2: (a1 * 0.009856263) + (a2 + a3) / 36525.0,
+        value3: ((b3 * t + b2) * t + b1) * t + b0,
+        value4: ((c3 * t + c2) * t + c1) * t + c0,
+        value5: ((d3 * t + d2) * t + d1) * t + d0,
+        value6: ((e3 * t + e2) * t + e1) * t + e0,
+        value7: f,
+        value8: g,
+        value9: h,
+    });
+
+    let a0 = g11;
+    let a1 = g12;
+    let a2 = g13;
+    let a3 = g14;
+    let b0 = g21;
+    let b1 = g22;
+    let b2 = g23;
+    let b3 = g24;
+    let c0 = g31;
+    let c1 = g32;
+    let c2 = g33;
+    let c3 = g34;
+    let d0 = g41;
+    let d1 = g42;
+    let d2 = g43;
+    let d3 = g44;
+    let e0 = g51;
+    let e1 = g52;
+    let e2 = g53;
+    let e3 = g54;
+    let f = g61;
+    let g = g62;
+    let h = g63;
+
+    let aa = a1 * t;
+    let b = 360.0 * (aa - (aa).floor());
+    let c = a0 + b + (a3 * t + a2) * t * t;
+    pl.push(PlDataStruct {
+        value1: c - 360.0 * (c / 360.0).floor(),
+        value2: (a1 * 0.009856263) + (a2 + a3) / 36525.0,
+        value3: ((b3 * t + b2) * t + b1) * t + b0,
+        value4: ((c3 * t + c2) * t + c1) * t + c0,
+        value5: ((d3 * t + d2) * t + d1) * t + d0,
+        value6: ((e3 * t + e2) * t + e1) * t + e0,
+        value7: f,
+        value8: g,
+        value9: h,
+    });
+
+    let li = 0.0;
+    let _tp = 2.0 * std::f64::consts::PI;
+    let ms = sun_mean_anomaly(lh, lm, ls, ds, zc, dy, mn, yr);
+    let sr = (sun_long(lh, lm, ls, ds, zc, dy, mn, yr)).to_radians();
+    let re = sun_dist(lh, lm, ls, ds, zc, dy, mn, yr);
+    let lg = sr + std::f64::consts::PI;
+
+    let mut l0 = 0.0;
+    let _v0 = 0.0;
+    let mut s0 = 0.0;
+    let mut p0 = 0.0;
+    let mut vo = 0.0;
+    let mut lp1 = 0.0;
+    let mut ll = 0.0;
+    let mut rd = 0.0;
+    let mut pd = 0.0;
+    let mut sp = 0.0;
+    let mut ci = 0.0;
+
+    for k in 1..3 {
+        let pl_instance = pl.clone();
+        let mut ap: Vec<f64> = Vec::new();
+        ap.push(0.0);
+        for j in 1..8 {
+            let pl_loop_instance = pl.clone();
+
+            ap.push(
+                (pl_loop_instance[j as usize].value1
+                    - pl_loop_instance[j as usize].value3
+                    - li * pl_loop_instance[j as usize].value2)
+                    .to_radians(),
+            );
+        }
+
+        let mut qa = 0.0;
+        let mut qb = 0.0;
+        let mut qc = 0.0;
+        let mut qd = 0.0;
+        let mut qe = 0.0;
+        let mut qf = 0.0;
+        let mut qg = 0.0;
+        let _a = 0.0;
+        let _sa = 0.0;
+        let _ca = 0.0;
+
+        if ip == 1 {
+            let (qa_temp, qb_temp) = planet_long_l4685(ap.clone());
+            qa = qa_temp;
+            qb = qb_temp;
+        }
+        if ip == 2 {
+            let (qa_temp, qb_temp, qc_temp, qe_temp) = planet_long_l4735(ap.clone(), ms, t);
+            qa = qa_temp;
+            qb = qb_temp;
+            qc = qc_temp;
+            qe = qe_temp;
+        }
+        if ip == 3 {
+            let (_a_temp, _sa_temp, _ca_temp, qc_temp, qe_temp, qa_temp, qb_temp) =
+                planet_long_l4810(ap.clone(), ms);
+            // a = a_temp;
+            // sa = sa_temp;
+            // ca = ca_temp;
+            qc = qc_temp;
+            qe = qe_temp;
+            qa = qa_temp;
+            qb = qb_temp;
+        }
+        if [4, 5, 6, 7].contains(&ip) {
+            let (qa_temp, qb_temp, qc_temp, qd_temp, qe_temp, qf_temp, qg_temp) =
+                planet_long_l4945(t, ip, pl_instance.clone());
+            qa = qa_temp;
+            qb = qb_temp;
+            qc = qc_temp;
+            qd = qd_temp;
+            qe = qe_temp;
+            qf = qf_temp;
+            qg = qg_temp;
+        }
+        let ec = pl_instance[ip as usize].value4 + qd;
+        let am = ap[ip as usize] + qe;
+        let at = true_anomaly(am, ec);
+        let pvv =
+            (pl_instance[ip as usize].value7 + qf) * (1.0 - ec * ec) / (1.0 + ec * (at).cos());
+        let lp = degrees(at) + pl_instance[ip as usize].value3 + degrees(qc - qe);
+        let lp = lp.to_radians();
+        let om = (pl_instance[ip as usize].value6).to_radians();
+        let lo = lp - om;
+        let so = (lo).sin();
+        let co = (lo).cos();
+        let inn = (pl_instance[ip as usize].value5).to_radians();
+        let pvv = pvv + qb;
+        sp = so * (inn).sin();
+        let y = so * (inn).cos();
+        let ps = (sp).asin() + qg;
+        sp = (ps).sin();
+        pd = y.atan2(co) + om + (qa).to_radians();
+        pd = unwind(pd);
+        ci = (ps).cos();
+        rd = pvv * ci;
+        ll = pd - lg;
+        let rh = re * re + pvv * pvv - 2.0 * re * pvv * ci * (ll).cos();
+        let rh = (rh).sqrt();
+        let _li = rh * 0.005775518;
+
+        if k == 1 {
+            l0 = pd;
+            // v0 = rh;
+            s0 = ps;
+            p0 = pvv;
+            vo = rh;
+            lp1 = lp;
+        }
+    }
+
+    let l1 = (ll).sin();
+    let l2 = (ll).cos();
+
+    // let mut ep = 0.0;
+    let ep: f64;
+    if ip < 3 {
+        ep = (-1.0 * rd * l1 / (re - rd * l2)).atan() + lg + std::f64::consts::PI;
+    } else {
+        ep = (re * l1 / (rd - re * l2)).atan() + pd
+    }
+
+    let ep = unwind(ep);
+    let bp = (rd * sp * (ep - pd).sin() / (ci * re * l1)).atan();
+
+    let planet_longitude = degrees(unwind(ep));
+    let planet_latitude = degrees(unwind(bp));
+    let planet_distance_au = vo;
+    let planet_h_long1 = degrees(lp1);
+    let planet_h_long2 = degrees(l0);
+    let planet_h_lat = degrees(s0);
+    let planet_r_vect = p0;
+
+    return (
+        planet_longitude,
+        planet_latitude,
+        planet_distance_au,
+        planet_h_long1,
+        planet_h_long2,
+        planet_h_lat,
+        planet_r_vect,
+    );
+}
+
+/// Helper function for planet_long_lat()
+pub fn planet_long_l4685(ap: Vec<f64>) -> (f64, f64) {
+    let qa = 0.00204 * (5.0 * ap[2] - 2.0 * ap[1] + 0.21328).cos();
+    let qa = qa + 0.00103 * (2.0 * ap[2] - ap[1] - 2.8046).cos();
+    let qa = qa + 0.00091 * (2.0 * ap[4] - ap[1] - 0.64582).cos();
+    let qa = qa + 0.00078 * (5.0 * ap[2] - 3.0 * ap[1] + 0.17692).cos();
+
+    let qb = 0.000007525 * (2.0 * ap[4] - ap[1] + 0.925251).cos();
+    let qb = qb + 0.000006802 * (5.0 * ap[2] - 3.0 * ap[1] - 4.53642).cos();
+    let qb = qb + 0.000005457 * (2.0 * ap[2] - 2.0 * ap[1] - 1.24246).cos();
+    let qb = qb + 0.000003569 * (5.0 * ap[2] - ap[1] - 1.35699).cos();
+
+    return (qa, qb);
+}
+
+/// Helper function for planet_long_lat()
+pub fn planet_long_l4735(ap: Vec<f64>, ms: f64, t: f64) -> (f64, f64, f64, f64) {
+    let qc = 0.00077 * (4.1406 + t * 2.6227).sin();
+    let qc = qc.to_radians();
+    let qe = qc;
+
+    let qa = 0.00313 * (2.0 * ms - 2.0 * ap[2] - 2.587).cos();
+    let qa = qa + 0.00198 * (3.0 * ms - 3.0 * ap[2] + 0.044768).cos();
+    let qa = qa + 0.00136 * (ms - ap[2] - 2.0788).cos();
+    let qa = qa + 0.00096 * (3.0 * ms - 2.0 * ap[2] - 2.3721).cos();
+    let qa = qa + 0.00082 * (ap[4] - ap[2] - 3.6318).cos();
+
+    let qb = 0.000022501 * (2.0 * ms - 2.0 * ap[2] - 1.01592).cos();
+    let qb = qb + 0.000019045 * (3.0 * ms - 3.0 * ap[2] + 1.61577).cos();
+    let qb = qb + 0.000006887 * (ap[4] - ap[2] - 2.06106).cos();
+    let qb = qb + 0.000005172 * (ms - ap[2] - 0.508065).cos();
+    let qb = qb + 0.00000362 * (5.0 * ms - 4.0 * ap[2] - 1.81877).cos();
+    let qb = qb + 0.000003283 * (4.0 * ms - 4.0 * ap[2] + 1.10851).cos();
+    let qb = qb + 0.000003074 * (2.0 * ap[4] - 2.0 * ap[2] - 0.962846).cos();
+
+    return (qa, qb, qc, qe);
+}
+
+/// Helper function for planet_long_lat()
+pub fn planet_long_l4810(ap: Vec<f64>, ms: f64) -> (f64, f64, f64, f64, f64, f64, f64) {
+    let a = 3.0 * ap[4] - 8.0 * ap[3] + 4.0 * ms;
+    let sa = a.sin();
+    let ca = a.cos();
+    let qc = -(0.01133 * sa + 0.00933 * ca);
+    let qc = qc.to_radians();
+    let qe = qc;
+
+    let qa = 0.00705 * (ap[4] - ap[3] - 0.85448).cos();
+    let qa = qa + 0.00607 * (2.0 * ap[4] - ap[3] - 3.2873).cos();
+    let qa = qa + 0.00445 * (2.0 * ap[4] - 2.0 * ap[3] - 3.3492).cos();
+    let qa = qa + 0.00388 * (ms - 2.0 * ap[3] + 0.35771).cos();
+    let qa = qa + 0.00238 * (ms - ap[3] + 0.61256).cos();
+    let qa = qa + 0.00204 * (2.0 * ms - 3.0 * ap[3] + 2.7688).cos();
+    let qa = qa + 0.00177 * (3.0 * ap[3] - ap[2] - 1.0053).cos();
+    let qa = qa + 0.00136 * (2.0 * ms - 4.0 * ap[3] + 2.6894).cos();
+    let qa = qa + 0.00104 * (ap[4] + 0.30749).cos();
+
+    let qb = 0.000053227 * (ap[4] - ap[3] + 0.717864).cos();
+    let qb = qb + 0.000050989 * (2.0 * ap[4] - 2.0 * ap[3] - 1.77997).cos();
+    let qb = qb + 0.000038278 * (2.0 * ap[4] - ap[3] - 1.71617).cos();
+    let qb = qb + 0.000015996 * (ms - ap[3] - 0.969618).cos();
+    let qb = qb + 0.000014764 * (2.0 * ms - 3.0 * ap[3] + 1.19768).cos();
+    let qb = qb + 0.000008966 * (ap[4] - 2.0 * ap[3] + 0.761225).cos();
+    let qb = qb + 0.000007914 * (3.0 * ap[4] - 2.0 * ap[3] - 2.43887).cos();
+    let qb = qb + 0.000007004 * (2.0 * ap[4] - 3.0 * ap[3] - 1.79573).cos();
+    let qb = qb + 0.00000662 * (ms - 2.0 * ap[3] + 1.97575).cos();
+    let qb = qb + 0.00000493 * (3.0 * ap[4] - 3.0 * ap[3] - 1.33069).cos();
+    let qb = qb + 0.000004693 * (3.0 * ms - 5.0 * ap[3] + 3.32665).cos();
+    let qb = qb + 0.000004571 * (2.0 * ms - 4.0 * ap[3] + 4.27086).cos();
+    let qb = qb + 0.000004409 * (3.0 * ap[4] - ap[3] - 2.02158).cos();
+
+    return (a, sa, ca, qc, qe, qa, qb);
+}
+
+/// Helper function for planet_long_lat()
+pub fn planet_long_l4945(
+    t: f64,
+    ip: i32,
+    pl: Vec<PlDataStruct>,
+) -> (f64, f64, f64, f64, f64, f64, f64) {
+    let qa = 0.0;
+    let qb = 0.0;
+    let qc = 0.0;
+    let qd = 0.0;
+    let qe = 0.0;
+    let qf = 0.0;
+    let qg = 0.0;
+
+    let j1 = t / 5.0 + 0.1;
+    let j2 = unwind(4.14473 + 52.9691 * t);
+    let j3 = unwind(4.641118 + 21.32991 * t);
+    let j4 = unwind(4.250177 + 7.478172 * t);
+    let j5 = 5.0 * j3 - 2.0 * j2;
+    let j6 = 2.0 * j2 - 6.0 * j3 + 3.0 * j4;
+
+    if [1, 2, 3, 8].contains(&ip) {
+        return (qa, qb, qc, qd, qe, qf, qg);
+    }
+    if [4, 5].contains(&ip) {
+        let j7 = j3 - j2;
+        let u1 = (j3).sin();
+        let u2 = (j3).cos();
+        let u3 = (2.0 * j3).sin();
+        let u4 = (2.0 * j3).cos();
+        let u5 = (j5).sin();
+        let u6 = (j5).cos();
+        let u7 = (2.0 * j5).sin();
+        let u8a = (j6).sin();
+        let u9 = (j7).sin();
+        let ua = (j7).cos();
+        let ub = (2.0 * j7).sin();
+        let uc = (2.0 * j7).cos();
+        let ud = (3.0 * j7).sin();
+        let ue = (3.0 * j7).cos();
+        let uf = (4.0 * j7).sin();
+        let ug = (4.0 * j7).cos();
+        let vh = (5.0 * j7).cos();
+
+        if ip == 5 {
+            let ui = (3.0 * j3).sin();
+            let uj = (3.0 * j3).cos();
+            let uk = (4.0 * j3).sin();
+            let ul = (4.0 * j3).cos();
+            let vi = (2.0 * j5).cos();
+            let un = (5.0 * j7).sin();
+            let j8 = j4 - j3;
+            let uo = (2.0 * j8).sin();
+            let up = (2.0 * j8).cos();
+            let uq = (3.0 * j8).sin();
+            let ur = (3.0 * j8).cos();
+
+            let qc = 0.007581 * u7 - 0.007986 * u8a - 0.148811 * u9;
+            let qc = qc - (0.814181 - (0.01815 - 0.016714 * j1) * j1) * u5;
+            let qc = qc - (0.010497 - (0.160906 - 0.0041 * j1) * j1) * u6;
+            let qc = qc - 0.015208 * ud - 0.006339 * uf - 0.006244 * u1;
+            let qc = qc - 0.0165 * ub * u1 - 0.040786 * ub;
+            let qc = qc + (0.008931 + 0.002728 * j1) * u9 * u1 - 0.005775 * ud * u1;
+            let qc = qc + (0.081344 + 0.003206 * j1) * ua * u1 + 0.015019 * uc * u1;
+            let qc = qc + (0.085581 + 0.002494 * j1) * u9 * u2 + 0.014394 * uc * u2;
+            let qc = qc + (0.025328 - 0.003117 * j1) * ua * u2 + 0.006319 * ue * u2;
+            let qc = qc + 0.006369 * u9 * u3 + 0.009156 * ub * u3 + 0.007525 * uq * u3;
+            let qc = qc - 0.005236 * ua * u4 - 0.007736 * uc * u4 - 0.007528 * ur * u4;
+            let qc = qc.to_radians();
+
+            let qd = (-7927.0 + (2548.0 + 91.0 * j1) * j1) * u5;
+            let qd = qd + (13381.0 + (1226.0 - 253.0 * j1) * j1) * u6 + (248.0 - 121.0 * j1) * u7;
+            let qd = qd - (305.0 + 91.0 * j1) * vi + 412.0 * ub + 12415.0 * u1;
+            let qd = qd + (390.0 - 617.0 * j1) * u9 * u1 + (165.0 - 204.0 * j1) * ub * u1;
+            let qd = qd + 26599.0 * ua * u1 - 4687.0 * uc * u1 - 1870.0 * ue * u1 - 821.0 * ug * u1;
+            let qd = qd - 377.0 * vh * u1 + 497.0 * up * u1 + (163.0 - 611.0 * j1) * u2;
+            let qd = qd - 12696.0 * u9 * u2 - 4200.0 * ub * u2 - 1503.0 * ud * u2 - 619.0 * uf * u2;
+            let qd = qd - 268.0 * un * u2 - (282.0 + 1306.0 * j1) * ua * u2;
+            let qd = qd + (-86.0 + 230.0 * j1) * uc * u2 + 461.0 * uo * u2 - 350.0 * u3;
+            let qd = qd + (2211.0 - 286.0 * j1) * u9 * u3 - 2208.0 * ub * u3 - 568.0 * ud * u3;
+            let qd = qd - 346.0 * uf * u3 - (2780.0 + 222.0 * j1) * ua * u3;
+            let qd = qd + (2022.0 + 263.0 * j1) * uc * u3 + 248.0 * ue * u3 + 242.0 * uq * u3;
+            let qd = qd + 467.0 * ur * u3 - 490.0 * u4 - (2842.0 + 279.0 * j1) * u9 * u4;
+            let qd = qd + (128.0 + 226.0 * j1) * ub * u4 + 224.0 * ud * u4;
+            let qd = qd + (-1594.0 + 282.0 * j1) * ua * u4 + (2162.0 - 207.0 * j1) * uc * u4;
+            let qd = qd + 561.0 * ue * u4 + 343.0 * ug * u4 + 469.0 * uq * u4 - 242.0 * ur * u4;
+            let qd = qd - 205.0 * u9 * ui + 262.0 * ud * ui + 208.0 * ua * uj - 271.0 * ue * uj;
+            let qd = qd - 382.0 * ue * uk - 376.0 * ud * ul;
+            let qd = qd * 0.0000001;
+
+            let vk = (0.077108 + (0.007186 - 0.001533 * j1) * j1) * u5;
+            let vk = vk - 0.007075 * u9;
+            let vk = vk + (0.045803 - (0.014766 + 0.000536 * j1) * j1) * u6;
+            let vk = vk - 0.072586 * u2 - 0.075825 * u9 * u1 - 0.024839 * ub * u1;
+            let vk = vk - 0.008631 * ud * u1 - 0.150383 * ua * u2;
+            let vk = vk + 0.026897 * uc * u2 + 0.010053 * ue * u2;
+            let vk = vk - (0.013597 + 0.001719 * j1) * u9 * u3 + 0.011981 * ub * u4;
+            let vk = vk - (0.007742 - 0.001517 * j1) * ua * u3;
+            let vk = vk + (0.013586 - 0.001375 * j1) * uc * u3;
+            let vk = vk - (0.013667 - 0.001239 * j1) * u9 * u4;
+            let vk = vk + (0.014861 + 0.001136 * j1) * ua * u4;
+            let vk = vk - (0.013064 + 0.001628 * j1) * uc * u4;
+            let qe = qc - ((vk).to_radians() / pl[ip as usize].value4);
+
+            let qf = 572.0 * u5 - 1590.0 * ub * u2 + 2933.0 * u6 - 647.0 * ud * u2;
+            let qf = qf + 33629.0 * ua - 344.0 * uf * u2 - 3081.0 * uc + 2885.0 * ua * u2;
+            let qf = qf - 1423.0 * ue + (2172.0 + 102.0 * j1) * uc * u2 - 671.0 * ug;
+            let qf = qf + 296.0 * ue * u2 - 320.0 * vh - 267.0 * ub * u3 + 1098.0 * u1;
+            let qf = qf - 778.0 * ua * u3 - 2812.0 * u9 * u1 + 495.0 * uc * u3 + 688.0 * ub * u1;
+            let qf = qf + 250.0 * ue * u3 - 393.0 * ud * u1 - 856.0 * u9 * u4 - 228.0 * uf * u1;
+            let qf = qf + 441.0 * ub * u4 + 2138.0 * ua * u1 + 296.0 * uc * u4 - 999.0 * uc * u1;
+            let qf = qf + 211.0 * ue * u4 - 642.0 * ue * u1 - 427.0 * u9 * ui - 325.0 * ug * u1;
+            let qf = qf + 398.0 * ud * ui - 890.0 * u2 + 344.0 * ua * uj + 2206.0 * u9 * u2;
+            let qf = qf - 427.0 * ue * uj;
+            let qf = qf * 0.000001;
+
+            let qg = 0.000747 * ua * u1 + 0.001069 * ua * u2 + 0.002108 * ub * u3;
+            let qg = qg + 0.001261 * uc * u3 + 0.001236 * ub * u4 - 0.002075 * uc * u4;
+            let qg = qg.to_radians();
+
+            return (qa, qb, qc, qd, qe, qf, qg);
+        }
+
+        let qc = (0.331364 - (0.010281 + 0.004692 * j1) * j1) * u5;
+        let qc = qc + (0.003228 - (0.064436 - 0.002075 * j1) * j1) * u6;
+        let qc = qc - (0.003083 + (0.000275 - 0.000489 * j1) * j1) * u7;
+        let qc = qc + 0.002472 * u8a + 0.013619 * u9 + 0.018472 * ub;
+        let qc = qc + 0.006717 * ud + 0.002775 * uf + 0.006417 * ub * u1;
+        let qc = qc + (0.007275 - 0.001253 * j1) * u9 * u1 + 0.002439 * ud * u1;
+        let qc = qc - (0.035681 + 0.001208 * j1) * u9 * u2 - 0.003767 * uc * u1;
+        let qc = qc - (0.033839 + 0.001125 * j1) * ua * u1 - 0.004261 * ub * u2;
+        let qc = qc + (0.001161 * j1 - 0.006333) * ua * u2 + 0.002178 * u2;
+        let qc = qc - 0.006675 * uc * u2 - 0.002664 * ue * u2 - 0.002572 * u9 * u3;
+        let qc = qc - 0.003567 * ub * u3 + 0.002094 * ua * u4 + 0.003342 * uc * u4;
+        let qc = qc.to_radians();
+
+        let qd = (3606.0 + (130.0 - 43.0 * j1) * j1) * u5 + (1289.0 - 580.0 * j1) * u6;
+        let qd = qd - 6764.0 * u9 * u1 - 1110.0 * ub * u1 - 224.0 * ud * u1 - 204.0 * u1;
+        let qd = qd + (1284.0 + 116.0 * j1) * ua * u1 + 188.0 * uc * u1;
+        let qd = qd + (1460.0 + 130.0 * j1) * u9 * u2 + 224.0 * ub * u2 - 817.0 * u2;
+        let qd = qd + 6074.0 * u2 * ua + 992.0 * uc * u2 + 508.0 * ue * u2 + 230.0 * ug * u2;
+        let qd = qd + 108.0 * vh * u2 - (956.0 + 73.0 * j1) * u9 * u3 + 448.0 * ub * u3;
+        let qd = qd + 137.0 * ud * u3 + (108.0 * j1 - 997.0) * ua * u3 + 480.0 * uc * u3;
+        let qd = qd + 148.0 * ue * u3 + (99.0 * j1 - 956.0) * u9 * u4 + 490.0 * ub * u4;
+        let qd = qd + 158.0 * ud * u4 + 179.0 * u4 + (1024.0 + 75.0 * j1) * ua * u4;
+        let qd = qd - 437.0 * uc * u4 - 132.0 * ue * u4;
+        let qd = qd * 0.0000001;
+
+        let vk = (0.007192 - 0.003147 * j1) * u5 - 0.004344 * u1;
+        let vk = vk + (j1 * (0.000197 * j1 - 0.000675) - 0.020428) * u6;
+        let vk = vk + 0.034036 * ua * u1 + (0.007269 + 0.000672 * j1) * u9 * u1;
+        let vk = vk + 0.005614 * uc * u1 + 0.002964 * ue * u1 + 0.037761 * u9 * u2;
+        let vk = vk + 0.006158 * ub * u2 - 0.006603 * ua * u2 - 0.005356 * u9 * u3;
+        let vk = vk + 0.002722 * ub * u3 + 0.004483 * ua * u3;
+        let vk = vk - 0.002642 * uc * u3 + 0.004403 * u9 * u4;
+        let vk = vk - 0.002536 * ub * u4 + 0.005547 * ua * u4 - 0.002689 * uc * u4;
+        let qe = qc - (vk.to_radians() / pl[ip as usize].value4);
+
+        let qf = 205.0 * ua - 263.0 * u6 + 693.0 * uc + 312.0 * ue + 147.0 * ug + 299.0 * u9 * u1;
+        let qf = qf + 181.0 * uc * u1 + 204.0 * ub * u2 + 111.0 * ud * u2 - 337.0 * ua * u2;
+        let qf = qf - 111.0 * uc * u2;
+        let qf = qf * 0.000001;
+
+        return (qa, qb, qc, qd, qe, qf, qg);
+    }
+
+    if [6, 7].contains(&ip) {
+        let j8 = unwind(1.46205 + 3.81337 * t);
+        let j9 = 2.0 * j8 - j4;
+        let vj = (j9).sin();
+        let uu = (j9).cos();
+        let uv = (2.0 * j9).sin();
+        let uw = (2.0 * j9).cos();
+
+        if ip == 7 {
+            let ja = j8 - j2;
+            let jb = j8 - j3;
+            let jc = j8 - j4;
+            let qc = (0.001089 * j1 - 0.589833) * vj;
+            let qc = qc + (0.004658 * j1 - 0.056094) * uu - 0.024286 * uv;
+            let qc = qc.to_radians();
+
+            let vk = 0.024039 * vj - 0.025303 * uu + 0.006206 * uv;
+            let vk = vk - 0.005992 * uw;
+            let qe = qc - (vk.to_radians() / pl[ip as usize].value4);
+
+            let qd = 4389.0 * vj + 1129.0 * uv + 4262.0 * uu + 1089.0 * uw;
+            let qd = qd * 0.0000001;
+
+            let qf = 8189.0 * uu - 817.0 * vj + 781.0 * uw;
+            let qf = qf * 0.000001;
+
+            let vd = (2.0 * jc).sin();
+            let ve = (2.0 * jc).cos();
+            let vf = (j8).sin();
+            let vg = (j8).cos();
+            let qa = -0.009556 * (ja).sin() - 0.005178 * (jb).sin();
+            let qa = qa + 0.002572 * vd - 0.002972 * ve * vf - 0.002833 * vd * vg;
+
+            let qg = 0.000336 * ve * vf + 0.000364 * vd * vg;
+            let qg = qg.to_radians();
+
+            let qb = -40596.0 + 4992.0 * (ja).cos() + 2744.0 * (jb).cos();
+            let qb = qb + 2044.0 * (jc).cos() + 1051.0 * ve;
+            let qb = qb * 0.000001;
+
+            return (qa, qb, qc, qd, qe, qf, qg);
+        }
+
+        let ja = j4 - j2;
+        let jb = j4 - j3;
+        let jc = j8 - j4;
+        let qc = (0.864319 - 0.001583 * j1) * vj;
+        let qc = qc + (0.082222 - 0.006833 * j1) * uu + 0.036017 * uv;
+        let qc = qc - 0.003019 * uw + 0.008122 * (j6).sin();
+        let qc = qc.to_radians();
+
+        let vk = 0.120303 * vj + 0.006197 * uv;
+        let vk = vk + (0.019472 - 0.000947 * j1) * uu;
+        let qe = qc - ((vk).to_radians() / pl[ip as usize].value4);
+
+        let qd = (163.0 * j1 - 3349.0) * vj + 20981.0 * uu + 1311.0 * uw;
+        let qd = qd * 0.0000001;
+
+        let qf = -0.003825 * uu;
+
+        let qa = (-0.038581 + (0.002031 - 0.00191 * j1) * j1) * (j4 + jb).cos();
+        let qa = qa + (0.010122 - 0.000988 * j1) * (j4 + jb).sin();
+        let a = (0.034964 - (0.001038 - 0.000868 * j1) * j1) * (2.0 * j4 + jb).cos();
+        let qa = a + qa + 0.005594 * (j4 + 3.0 * jc).sin() - 0.014808 * (ja).sin();
+        let qa = qa - 0.005794 * (jb).sin() + 0.002347 * (jb).cos();
+        let qa = qa + 0.009872 * (jc).sin() + 0.008803 * (2.0 * jc).sin();
+        let qa = qa - 0.004308 * (3.0 * jc).sin();
+
+        let ux = jb.sin();
+        let uy = jb.cos();
+        let uz = j4.sin();
+        let va = j4.cos();
+        let vb = (2.0 * j4).sin();
+        let vc = (2.0 * j4).cos();
+        let qg = (0.000458 * ux - 0.000642 * uy - 0.000517 * (4.0 * jc).cos()) * uz;
+        let qg = qg - (0.000347 * ux + 0.000853 * uy + 0.000517 * (4.0 * jb).sin()) * va;
+        let qg = qg + 0.000403 * ((2.0 * jc).cos() * vb + (2.0 * jc).sin() * vc);
+        let qg = qg.to_radians();
+
+        let qb = -25948.0 + 4985.0 * (ja).cos() - 1230.0 * va + 3354.0 * uy;
+        let qb = qb + 904.0 * (2.0 * jc).cos() + 894.0 * ((jc).cos() - (3.0 * jc).cos());
+        let qb = qb + (5795.0 * va - 1165.0 * uz + 1388.0 * vc) * ux;
+        let qb = qb + (1351.0 * va + 5702.0 * uz + 1388.0 * vb) * uy;
+        let qb = qb * 0.000001;
+
+        return (qa, qb, qc, qd, qe, qf, qg);
+    }
+    return (qa, qb, qc, qd, qe, qf, qg);
 }

@@ -254,4 +254,5 @@ pub fn run_planet_tests() {
         planet_name: "Jupiter".to_string(),
     };
     test_planet_position.test_approximate_position_of_planet();
+    test_planet_position.test_precise_position_of_planet();
 }

@@ -255,4 +255,5 @@ pub fn run_planet_tests() {
     };
     test_planet_position.test_approximate_position_of_planet();
     test_planet_position.test_precise_position_of_planet();
+    test_planet_position.test_visual_aspects_of_a_planet();
 }

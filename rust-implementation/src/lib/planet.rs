@@ -1,5 +1,6 @@
 use crate::lib::macros;
 use crate::lib::planetdata;
+use crate::lib::util;
 // use num;
 
 /// Calculate approximate position of a planet.
@@ -303,5 +304,187 @@ pub fn precise_position_of_planet(
         planet_dec_deg,
         planet_dec_min,
         planet_dec_sec,
+    );
+}
+
+/// Calculate several visual aspects of a planet.
+///
+/// ## Arguments
+/// * `lct_hour` -- Local civil time, hour part.
+/// * `lct_min` -- Local civil time, minutes part.
+/// * `lct_sec` -- Local civil time, seconds part.
+/// * `is_daylight_saving` -- Is daylight savings in effect?
+/// * `zone_correction_hours` -- Time zone correction, in hours.
+/// * `local_date_day` -- Local date, day part.
+/// * `local_date_month` -- Local date, month part.
+/// * `local_date_year` -- Local date, year part.
+/// * `planet_name` -- Name of planet, e.g., "Jupiter"
+///
+/// ## Returns
+/// * `distance_au` -- Planet's distance from Earth, in AU.
+/// * `ang_dia_arcsec` -- Angular diameter of the planet.
+/// * `phase` -- Illuminated fraction of the planet.
+/// * `light_time_hour` -- Light travel time from planet to Earth, hour part.
+/// * `light_time_minutes` -- Light travel time from planet to Earth, minutes part.
+/// * `light_time_seconds` -- Light travel time from planet to Earth, seconds part.
+/// * `pos_angle_bright_limb_deg` -- Position-angle of the bright limb.
+/// * `approximate_magnitude` -- Apparent brightness of the planet.
+pub fn visual_aspects_of_a_planet(
+    lct_hour: f64,
+    lct_min: f64,
+    lct_sec: f64,
+    is_daylight_saving: bool,
+    zone_correction_hours: i32,
+    local_date_day: f64,
+    local_date_month: u32,
+    local_date_year: u32,
+    planet_name: String,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64) {
+    let daylight_saving = if is_daylight_saving == true { 1 } else { 0 };
+
+    let greenwich_date_day = macros::lct_gday(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let greenwich_date_month = macros::lct_gmonth(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let greenwich_date_year = macros::lct_gyear(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+
+    let (
+        planet_ecl_long_deg,
+        planet_ecl_lat_deg,
+        planet_dist_au,
+        planet_h_long1,
+        _temp3,
+        _temp4,
+        planet_r_vect,
+    ) = macros::planet_coordinates(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        planet_name.to_string(),
+    );
+
+    let planet_ra_rad = (macros::ec_ra(
+        planet_ecl_long_deg,
+        0.0,
+        0.0,
+        planet_ecl_lat_deg,
+        0.0,
+        0.0,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    ))
+    .to_radians();
+    let planet_dec_rad = (macros::ec_dec(
+        planet_ecl_long_deg,
+        0.0,
+        0.0,
+        planet_ecl_lat_deg,
+        0.0,
+        0.0,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    ))
+    .to_radians();
+
+    let light_travel_time_hours = planet_dist_au * 0.1386;
+    let (planet_info, _planet_info_status) =
+        planetdata::get_planet_info_vector(planet_name.to_string());
+    let angular_diameter_arcsec = planet_info.theta0 / planet_dist_au;
+    let phase1 = 0.5 * (1.0 + ((planet_ecl_long_deg - planet_h_long1).to_radians()).cos());
+
+    let sun_ecl_long_deg = macros::sun_long(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let sun_ra_rad = (macros::ec_ra(
+        sun_ecl_long_deg,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        greenwich_date_day,
+        greenwich_date_month,
+        greenwich_date_year,
+    ))
+    .to_radians();
+    let sun_dec_rad = (macros::ec_dec(
+        sun_ecl_long_deg,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        greenwich_date_day,
+        greenwich_date_month,
+        greenwich_date_year,
+    ))
+    .to_radians();
+
+    let y = (sun_dec_rad).cos() * (sun_ra_rad - planet_ra_rad).sin();
+    let x = (planet_dec_rad).cos() * (sun_dec_rad).sin()
+        - (planet_dec_rad).sin() * (sun_dec_rad).cos() * (sun_ra_rad - planet_ra_rad).cos();
+
+    let chi_deg = macros::degrees(y.atan2(x));
+    let radius_vector_au = planet_r_vect;
+    let approximate_magnitude1 =
+        5.0 * (radius_vector_au * planet_dist_au / (phase1).sqrt()).log10() + planet_info.v0;
+
+    let distance_au = util::round_f64(planet_dist_au, 5);
+    let ang_dia_arcsec = util::round_f64(angular_diameter_arcsec, 1);
+    let phase = util::round_f64(phase1, 2);
+    let light_time_hour = macros::dh_hour(light_travel_time_hours);
+    let light_time_minutes = macros::dh_min(light_travel_time_hours);
+    let light_time_seconds = macros::dh_sec(light_travel_time_hours);
+    let pos_angle_bright_limb_deg = util::round_f64(chi_deg, 1);
+    let approximate_magnitude = util::round_f64(approximate_magnitude1, 1);
+
+    return (
+        distance_au,
+        ang_dia_arcsec,
+        phase,
+        light_time_hour as f64,
+        light_time_minutes as f64,
+        light_time_seconds,
+        pos_angle_bright_limb_deg,
+        approximate_magnitude,
     );
 }

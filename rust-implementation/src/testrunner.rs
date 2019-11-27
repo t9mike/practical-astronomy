@@ -1,4 +1,5 @@
 use crate::lib::types as pa_types;
+use crate::tests::comet as COMT;
 use crate::tests::coordinates as CST;
 use crate::tests::datetime as DTT;
 use crate::tests::planet as PLANETT;
@@ -13,6 +14,8 @@ pub fn run_tests() {
     run_sun_tests();
 
     run_planet_tests();
+
+    run_comet_tests();
 }
 
 pub fn run_datetime_tests() {
@@ -256,4 +259,30 @@ pub fn run_planet_tests() {
     test_planet_position.test_approximate_position_of_planet();
     test_planet_position.test_precise_position_of_planet();
     test_planet_position.test_visual_aspects_of_a_planet();
+}
+
+pub fn run_comet_tests() {
+    COMT::test_position_of_elliptical_comet(
+        0.0,
+        0.0,
+        0.0,
+        false,
+        0,
+        1.0,
+        1,
+        1984,
+        "Halley".to_string(),
+    );
+
+    COMT::test_position_of_parabolic_comet(
+        0.0,
+        0.0,
+        0.0,
+        false,
+        0,
+        25.0,
+        12,
+        1977,
+        "Kohler".to_string(),
+    );
 }

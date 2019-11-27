@@ -1,3 +1,5 @@
+pub mod comet;
+pub mod cometdata;
 pub mod coordinates;
 pub mod datetime;
 pub mod macros;

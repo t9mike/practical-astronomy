@@ -3341,5 +3341,129 @@ pub fn planet_long_l4945(
 
         return (qa, qb, qc, qd, qe, qf, qg);
     }
+
     return (qa, qb, qc, qd, qe, qf, qg);
+}
+
+/// For W, in radians, return S, also in radians.
+///
+/// Original macro name: SolveCubic
+pub fn solve_cubic(w: f64) -> f64 {
+    let mut s = w / 3.0;
+
+    while 1 == 1 {
+        let s2 = s * s;
+        let d = (s2 + 3.0) * s - w;
+
+        if d.abs() < 0.000001 {
+            return s;
+        }
+
+        s = ((2.0 * s * s2) + w) / (3.0 * (s2 + 1.0));
+    }
+
+    return s;
+}
+
+/// Calculate longitude, latitude, and distance of parabolic-orbit comet.
+///
+/// Original macro names: PcometLong, PcometLat, PcometDist
+///
+/// ## Arguments
+/// * `lh` -- Local civil time, hour part.
+/// * `lm` -- Local civil time, minutes part.
+/// * `ls` -- Local civil time, seconds part.
+/// * `ds` -- Daylight Savings offset.
+/// * `zc` -- Time zone correction, in hours.
+/// * `dy` -- Local date, day part.
+/// * `mn` -- Local date, month part.
+/// * `yr` -- Local date, year part.
+/// * `td` -- Perihelion epoch (day)
+/// * `tm` -- Perihelion epoch (month)
+/// * `ty` -- Perihelion epoch (year)
+/// * `q` -- q (AU)
+/// * `i` -- Inclination (degrees)
+/// * `p` -- Perihelion (degrees)
+/// * `n` -- Node (degrees)
+///
+/// ## Returns
+/// * `comet_long_deg` -- Comet longitude (degrees)
+/// * `comet_lat_deg` -- Comet lat (degrees)
+/// * `comet_dist_au` -- Comet distance from Earth (AU)
+pub fn p_comet_long_lat_dist(
+    lh: f64,
+    lm: f64,
+    ls: f64,
+    ds: i32,
+    zc: i32,
+    dy: f64,
+    mn: u32,
+    yr: u32,
+    td: f64,
+    tm: u32,
+    ty: u32,
+    q: f64,
+    i: f64,
+    p: f64,
+    n: f64,
+) -> (f64, f64, f64) {
+    let gd = lct_gday(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gm = lct_gmonth(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gy = lct_gyear(lh, lm, ls, ds, zc, dy, mn, yr);
+    let ut = lct_ut(lh, lm, ls, ds, zc, dy, mn, yr);
+    let tpe = (ut / 365.242191) + cd_jd(gd, gm, gy) - cd_jd(td, tm, ty);
+    let lg = (sun_long(lh, lm, ls, ds, zc, dy, mn, yr) + 180.0).to_radians();
+    let re = sun_dist(lh, lm, ls, ds, zc, dy, mn, yr);
+
+    let mut _li = 0.0;
+    let mut rh2 = 0.0;
+    let mut rd = 0.0;
+    let mut s3 = 0.0;
+    let mut c3 = 0.0;
+    let mut lc = 0.0;
+    let mut s2 = 0.0;
+    let mut c2 = 0.0;
+    for k in 1..3 {
+        let s = solve_cubic(0.0364911624 * tpe / (q * (q).sqrt()));
+        let nu = 2.0 * s.atan();
+        let r = q * (1.0 + s * s);
+        let l = nu + p.to_radians();
+        let s1 = l.sin();
+        let c1 = l.cos();
+        let i1 = i.to_radians();
+        s2 = s1 * i1.sin();
+        let ps = s2.asin();
+        let y = s1 * i1.cos();
+        lc = y.atan2(c1) + n.to_radians();
+        c2 = ps.cos();
+        rd = r * c2;
+        let ll = lc - lg;
+        c3 = ll.cos();
+        s3 = ll.sin();
+        let rh = ((re * re) + (r * r) - (2.0 * re * rd * c3 * (ps).cos())).sqrt();
+        if k == 1 {
+            rh2 = ((re * re) + (r * r)
+                - (2.0 * re * r * (ps).cos() * (l + (n).to_radians() - lg).cos()))
+            .sqrt();
+        }
+
+        _li = rh * 0.005775518;
+    }
+
+    let mut ep: f64;
+    if rd < re {
+        ep = ((-rd * s3) / (re - (rd * c3))).atan() + lg + 3.141592654;
+    } else {
+        ep = ((re * s3) / (rd - (re * c3))).atan() + lc;
+    }
+
+    ep = unwind(ep);
+    let tb = (rd * s2 * (ep - lc).sin()) / (c2 * re * s3);
+    let bp = (tb).atan();
+
+    let comet_long_deg = degrees(ep);
+    let comet_lat_deg = degrees(bp);
+    let comet_dist_au = rh2;
+
+    return (comet_long_deg, comet_lat_deg, comet_dist_au);
 }

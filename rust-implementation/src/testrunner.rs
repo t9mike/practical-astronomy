@@ -1,4 +1,5 @@
 use crate::lib::types as pa_types;
+use crate::tests::binary as BINS;
 use crate::tests::comet as COMT;
 use crate::tests::coordinates as CST;
 use crate::tests::datetime as DTT;
@@ -16,6 +17,8 @@ pub fn run_tests() {
     run_planet_tests();
 
     run_comet_tests();
+
+    run_binary_tests();
 }
 
 pub fn run_datetime_tests() {
@@ -285,4 +288,8 @@ pub fn run_comet_tests() {
         1977,
         "Kohler".to_string(),
     );
+}
+
+pub fn run_binary_tests() {
+    BINS::test_binary_star_orbit(1.0, 1, 1980, "eta-Cor".to_string());
 }

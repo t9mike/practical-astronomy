@@ -1,3 +1,5 @@
+pub mod binary;
+pub mod binarydata;
 pub mod comet;
 pub mod cometdata;
 pub mod coordinates;

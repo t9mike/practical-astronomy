@@ -1508,6 +1508,21 @@ pub fn unwind(w: f64) -> f64 {
     return w - 6.283185308 * (w / 6.283185308).floor();
 }
 
+/// Convert angle in degrees to equivalent angle in the range 0 to 360 degrees.
+///
+/// Original macro name: UnwindDeg
+pub fn unwind_deg(w: f64) -> f64 {
+    return w - 360.0 * (w / 360.0).floor();
+}
+
+/// Convert angle in radians to equivalent angle in degrees.
+///
+/// Original macro name: UnwindRad
+#[allow(dead_code)]
+pub fn unwind_rad(w: f64) -> f64 {
+    return w - 6.283185308 * (w / 6.283185308).floor();
+}
+
 /// Mean ecliptic longitude of the Sun at the epoch
 ///
 /// Original macro name: SunElong
@@ -3466,4 +3481,179 @@ pub fn p_comet_long_lat_dist(
     let comet_dist_au = rh2;
 
     return (comet_long_deg, comet_lat_deg, comet_dist_au);
+}
+
+/// Calculate longitude, latitude, and horizontal parallax of the Moon.
+///
+/// Original macro names: MoonLong, MoonLat, MoonHP
+///
+/// ## Arguments
+/// * `lh` -- Local civil time, hour part.
+/// * `lm` -- Local civil time, minutes part.
+/// * `ls` -- Local civil time, seconds part.
+/// * `ds` -- Daylight Savings offset.
+/// * `zc` -- Time zone correction, in hours.
+/// * `dy` -- Local date, day part.
+/// * `mn` -- Local date, month part.
+/// * `yr` -- Local date, year part.
+///
+/// ## Returns
+/// * `moon_long_deg` -- Moon longitude (degrees)
+/// * `moon_lat_deg` -- Moon latitude (degrees)
+/// * `moon_hor_para` -- Moon horizontal parallax (degrees)
+pub fn moon_long_lat_hp(
+    lh: f64,
+    lm: f64,
+    ls: f64,
+    ds: i32,
+    zc: i32,
+    dy: f64,
+    mn: u32,
+    yr: u32,
+) -> (f64, f64, f64) {
+    let ut = lct_ut(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gd = lct_gday(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gm = lct_gmonth(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gy = lct_gyear(lh, lm, ls, ds, zc, dy, mn, yr);
+    let t = ((cd_jd(gd, gm, gy) - 2415020.0) / 36525.0) + (ut / 876600.0);
+    let t2 = t * t;
+
+    let m1 = 27.32158213;
+    let m2 = 365.2596407;
+    let m3 = 27.55455094;
+    let m4 = 29.53058868;
+    let m5 = 27.21222039;
+    let m6 = 6798.363307;
+    let q = cd_jd(gd, gm, gy) - 2415020.0 + (ut / 24.0);
+    let m1 = q / m1;
+    let m2 = q / m2;
+    let m3 = q / m3;
+    let m4 = q / m4;
+    let m5 = q / m5;
+    let m6 = q / m6;
+    let m1 = 360.0 * (m1 - m1.floor());
+    let m2 = 360.0 * (m2 - m2.floor());
+    let m3 = 360.0 * (m3 - m3.floor());
+    let m4 = 360.0 * (m4 - m4.floor());
+    let m5 = 360.0 * (m5 - m5.floor());
+    let m6 = 360.0 * (m6 - m6.floor());
+
+    let ml = 270.434164 + m1 - (0.001133 - 0.0000019 * t) * t2;
+    let ms = 358.475833 + m2 - (0.00015 + 0.0000033 * t) * t2;
+    let md = 296.104608 + m3 + (0.009192 + 0.0000144 * t) * t2;
+    let me1 = 350.737486 + m4 - (0.001436 - 0.0000019 * t) * t2;
+    let mf = 11.250889 + m5 - (0.003211 + 0.0000003 * t) * t2;
+    let na = 259.183275 - m6 + (0.002078 + 0.0000022 * t) * t2;
+    let a = (51.2 + 20.2 * t).to_radians();
+    let s1 = a.sin();
+    let s2 = na.to_radians().sin();
+    let b = 346.56 + (132.87 - 0.0091731 * t) * t;
+    let s3 = 0.003964 * b.to_radians().sin();
+    let c = (na + 275.05 - 2.3 * t).to_radians();
+    let s4 = c.sin();
+    let ml = ml + 0.000233 * s1 + s3 + 0.001964 * s2;
+    let ms = ms - 0.001778 * s1;
+    let md = md + 0.000817 * s1 + s3 + 0.002541 * s2;
+    let mf = mf + s3 - 0.024691 * s2 - 0.004328 * s4;
+    let me1 = me1 + 0.002011 * s1 + s3 + 0.001964 * s2;
+    let e = 1.0 - (0.002495 + 0.00000752 * t) * t;
+    let e2 = e * e;
+    let ml = ml.to_radians();
+    let ms = ms.to_radians();
+    let na = na.to_radians();
+    let me1 = me1.to_radians();
+    let mf = mf.to_radians();
+    let md = md.to_radians();
+
+    // Longitude-specific
+    let l = 6.28875 * md.sin() + 1.274018 * (2.0 * me1 - md).sin();
+    let l = l + 0.658309 * (2.0 * me1).sin() + 0.213616 * (2.0 * md).sin();
+    let l = l - e * 0.185596 * ms.sin() - 0.114336 * (2.0 * mf).sin();
+    let l = l + 0.058793 * (2.0 * (me1 - md)).sin();
+    let l = l + 0.057212 * e * (2.0 * me1 - ms - md).sin() + 0.05332 * (2.0 * me1 + md).sin();
+    let l = l + 0.045874 * e * (2.0 * me1 - ms).sin() + 0.041024 * e * (md - ms).sin();
+    let l = l - 0.034718 * me1.sin() - e * 0.030465 * (ms + md).sin();
+    let l = l + 0.015326 * (2.0 * (me1 - mf)).sin() - 0.012528 * (2.0 * mf + md).sin();
+    let l = l - 0.01098 * (2.0 * mf - md).sin() + 0.010674 * (4.0 * me1 - md).sin();
+    let l = l + 0.010034 * (3.0 * md).sin() + 0.008548 * (4.0 * me1 - 2.0 * md).sin();
+    let l = l - e * 0.00791 * (ms - md + 2.0 * me1).sin() - e * 0.006783 * (2.0 * me1 + ms).sin();
+    let l = l + 0.005162 * (md - me1).sin() + e * 0.005 * (ms + me1).sin();
+    let l = l + 0.003862 * (4.0 * me1).sin() + e * 0.004049 * (md - ms + 2.0 * me1).sin();
+    let l = l + 0.003996 * (2.0 * (md + me1)).sin() + 0.003665 * (2.0 * me1 - 3.0 * md).sin();
+    let l = l + e * 0.002695 * (2.0 * md - ms).sin() + 0.002602 * (md - 2.0 * (mf + me1)).sin();
+    let l = l + e * 0.002396 * (2.0 * (me1 - md) - ms).sin() - 0.002349 * (md + me1).sin();
+    let l = l + e2 * 0.002249 * (2.0 * (me1 - ms)).sin() - e * 0.002125 * (2.0 * md + ms).sin();
+    let l = l - e2 * 0.002079 * (2.0 * ms).sin() + e2 * 0.002059 * (2.0 * (me1 - ms) - md).sin();
+    let l = l - 0.001773 * (md + 2.0 * (me1 - mf)).sin() - 0.001595 * (2.0 * (mf + me1)).sin();
+    let l = l + e * 0.00122 * (4.0 * me1 - ms - md).sin() - 0.00111 * (2.0 * (md + mf)).sin();
+    let l = l + 0.000892 * (md - 3.0 * me1).sin() - e * 0.000811 * (ms + md + 2.0 * me1).sin();
+    let l = l + e * 0.000761 * (4.0 * me1 - ms - 2.0 * md).sin();
+    let l = l + e2 * 0.000704 * (md - 2.0 * (ms + me1)).sin();
+    let l = l + e * 0.000693 * (ms - 2.0 * (md - me1)).sin();
+    let l = l + e * 0.000598 * (2.0 * (me1 - mf) - ms).sin();
+    let l = l + 0.00055 * (md + 4.0 * me1).sin() + 0.000538 * (4.0 * md).sin();
+    let l = l + e * 0.000521 * (4.0 * me1 - ms).sin() + 0.000486 * (2.0 * md - me1).sin();
+    let l = l + e2 * 0.000717 * (md - 2.0 * ms).sin();
+    let mm = unwind(ml + l.to_radians());
+
+    // Latitude-specific
+    let g = 5.128189 * mf.sin() + 0.280606 * (md + mf).sin();
+    let g = g + 0.277693 * (md - mf).sin() + 0.173238 * (2.0 * me1 - mf).sin();
+    let g = g + 0.055413 * (2.0 * me1 + mf - md).sin() + 0.046272 * (2.0 * me1 - mf - md).sin();
+    let g = g + 0.032573 * (2.0 * me1 + mf).sin() + 0.017198 * (2.0 * md + mf).sin();
+    let g = g + 0.009267 * (2.0 * me1 + md - mf).sin() + 0.008823 * (2.0 * md - mf).sin();
+    let g =
+        g + e * 0.008247 * (2.0 * me1 - ms - mf).sin() + 0.004323 * (2.0 * (me1 - md) - mf).sin();
+    let g = g + 0.0042 * (2.0 * me1 + mf + md).sin() + e * 0.003372 * (mf - ms - 2.0 * me1).sin();
+    let g = g + e * 0.002472 * (2.0 * me1 + mf - ms - md).sin();
+    let g = g + e * 0.002222 * (2.0 * me1 + mf - ms).sin();
+    let g = g + e * 0.002072 * (2.0 * me1 - mf - ms - md).sin();
+    let g = g + e * 0.001877 * (mf - ms + md).sin() + 0.001828 * (4.0 * me1 - mf - md).sin();
+    let g = g - e * 0.001803 * (mf + ms).sin() - 0.00175 * (3.0 * mf).sin();
+    let g = g + e * 0.00157 * (md - ms - mf).sin() - 0.001487 * (mf + me1).sin();
+    let g = g - e * 0.001481 * (mf + ms + md).sin() + e * 0.001417 * (mf - ms - md).sin();
+    let g = g + e * 0.00135 * (mf - ms).sin() + 0.00133 * (mf - me1).sin();
+    let g = g + 0.001106 * (mf + 3.0 * md).sin() + 0.00102 * (4.0 * me1 - mf).sin();
+    let g = g + 0.000833 * (mf + 4.0 * me1 - md).sin() + 0.000781 * (md - 3.0 * mf).sin();
+    let g =
+        g + 0.00067 * (mf + 4.0 * me1 - 2.0 * md).sin() + 0.000606 * (2.0 * me1 - 3.0 * mf).sin();
+    let g = g + 0.000597 * (2.0 * (me1 + md) - mf).sin();
+    let g = g
+        + e * 0.000492 * (2.0 * me1 + md - ms - mf).sin()
+        + 0.00045 * (2.0 * (md - me1) - mf).sin();
+    let g = g + 0.000439 * (3.0 * md - mf).sin() + 0.000423 * (mf + 2.0 * (me1 + md)).sin();
+    let g = g + 0.000422 * (2.0 * me1 - mf - 3.0 * md).sin()
+        - e * 0.000367 * (ms + mf + 2.0 * me1 - md).sin();
+    let g = g - e * 0.000353 * (ms + mf + 2.0 * me1).sin() + 0.000331 * (mf + 4.0 * me1).sin();
+    let g = g + e * 0.000317 * (2.0 * me1 + mf - ms + md).sin();
+    let g = g + e2 * 0.000306 * (2.0 * (me1 - ms) - mf).sin() - 0.000283 * (md + 3.0 * mf).sin();
+    let w1 = 0.0004664 * na.cos();
+    let w2 = 0.0000754 * c.cos();
+    let bm = g.to_radians() * (1.0 - w1 - w2);
+
+    // Horizontal parallax-specific
+    let pm = 0.950724 + 0.051818 * md.cos() + 0.009531 * (2.0 * me1 - md).cos();
+    let pm = pm + 0.007843 * (2.0 * me1).cos() + 0.002824 * (2.0 * md).cos();
+    let pm = pm + 0.000857 * (2.0 * me1 + md).cos() + e * 0.000533 * (2.0 * me1 - ms).cos();
+    let pm = pm + e * 0.000401 * (2.0 * me1 - md - ms).cos();
+    let pm = pm + e * 0.00032 * (md - ms).cos() - 0.000271 * me1.cos();
+    let pm = pm - e * 0.000264 * (ms + md).cos() - 0.000198 * (2.0 * mf - md).cos();
+    let pm = pm + 0.000173 * (3.0 * md).cos() + 0.000167 * (4.0 * me1 - md).cos();
+    let pm = pm - e * 0.000111 * ms.cos() + 0.000103 * (4.0 * me1 - 2.0 * md).cos();
+    let pm = pm - 0.000084 * (2.0 * md - 2.0 * me1).cos() - e * 0.000083 * (2.0 * me1 + ms).cos();
+    let pm = pm + 0.000079 * (2.0 * me1 + 2.0 * md).cos() + 0.000072 * (4.0 * me1).cos();
+    let pm = pm + e * 0.000064 * (2.0 * me1 - ms + md).cos()
+        - e * 0.000063 * (2.0 * me1 + ms - md).cos();
+    let pm = pm + e * 0.000041 * (ms + me1).cos() + e * 0.000035 * (2.0 * md - ms).cos();
+    let pm = pm - 0.000033 * (3.0 * md - 2.0 * me1).cos() - 0.00003 * (md + me1).cos();
+    let pm = pm - 0.000029 * (2.0 * (mf - me1)).cos() - e * 0.000029 * (2.0 * md + ms).cos();
+    let pm =
+        pm + e2 * 0.000026 * (2.0 * (me1 - ms)).cos() - 0.000023 * (2.0 * (mf - me1) + md).cos();
+    let pm = pm + e * 0.000019 * (4.0 * me1 - ms - md).cos();
+
+    let moon_long_deg = degrees(mm);
+    let moon_lat_deg = degrees(bm);
+    let moon_hor_para = pm;
+
+    return (moon_long_deg, moon_lat_deg, moon_hor_para);
 }

@@ -5,6 +5,7 @@ pub mod cometdata;
 pub mod coordinates;
 pub mod datetime;
 pub mod macros;
+pub mod moon;
 pub mod planet;
 pub mod planetdata;
 pub mod sun;

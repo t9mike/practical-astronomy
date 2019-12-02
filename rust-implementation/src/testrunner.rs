@@ -3,6 +3,7 @@ use crate::tests::binary as BINS;
 use crate::tests::comet as COMT;
 use crate::tests::coordinates as CST;
 use crate::tests::datetime as DTT;
+use crate::tests::moon as MOONT;
 use crate::tests::planet as PLANETT;
 use crate::tests::sun as SUNT;
 
@@ -19,6 +20,8 @@ pub fn run_tests() {
     run_comet_tests();
 
     run_binary_tests();
+
+    run_moon_tests();
 }
 
 pub fn run_datetime_tests() {
@@ -292,4 +295,19 @@ pub fn run_comet_tests() {
 
 pub fn run_binary_tests() {
     BINS::test_binary_star_orbit(1.0, 1, 1980, "eta-Cor".to_string());
+}
+
+pub fn run_moon_tests() {
+    let mut test_moon_position_and_info = MOONT::TestMoonPositionInfoScaffold {
+        lct_hour: 0.0,
+        lct_min: 0.0,
+        lct_sec: 0.0,
+        is_daylight_saving: false,
+        zone_correction_hours: 0,
+        local_date_day: 1.0,
+        local_date_month: 9,
+        local_date_year: 2003,
+    };
+    test_moon_position_and_info.test_approximate_position_of_moon();
+    test_moon_position_and_info.test_precise_position_of_moon();
 }

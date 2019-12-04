@@ -3657,3 +3657,83 @@ pub fn moon_long_lat_hp(
 
     return (moon_long_deg, moon_lat_deg, moon_hor_para);
 }
+
+/// Calculate current phase of Moon.
+///
+/// Original macro name: MoonPhase
+pub fn moon_phase(lh: f64, lm: f64, ls: f64, ds: i32, zc: i32, dy: f64, mn: u32, yr: u32) -> f64 {
+    let (moon_long_deg, moon_lat_deg, _moon_hor_para) =
+        moon_long_lat_hp(lh, lm, ls, ds, zc, dy, mn, yr);
+
+    let cd = ((moon_long_deg - sun_long(lh, lm, ls, ds, zc, dy, mn, yr)).to_radians()).cos()
+        * ((moon_lat_deg).to_radians()).cos();
+    let d = cd.acos();
+    let sd = d.sin();
+    let i =
+        0.1468 * sd * (1.0 - 0.0549 * (moon_mean_anomaly(lh, lm, ls, ds, zc, dy, mn, yr)).sin());
+    let i = i / (1.0 - 0.0167 * (sun_mean_anomaly(lh, lm, ls, ds, zc, dy, mn, yr)).sin());
+    let i = 3.141592654 - d - i.to_radians();
+    let k = (1.0 + (i).cos()) / 2.0;
+
+    return utils::round_f64(k, 2);
+}
+
+/// Calculate the Moon's mean anomaly.
+///
+/// Original macro name: MoonMeanAnomaly
+pub fn moon_mean_anomaly(
+    lh: f64,
+    lm: f64,
+    ls: f64,
+    ds: i32,
+    zc: i32,
+    dy: f64,
+    mn: u32,
+    yr: u32,
+) -> f64 {
+    let ut = lct_ut(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gd = lct_gday(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gm = lct_gmonth(lh, lm, ls, ds, zc, dy, mn, yr);
+    let gy = lct_gyear(lh, lm, ls, ds, zc, dy, mn, yr);
+    let t = ((cd_jd(gd, gm, gy) - 2415020.0) / 36525.0) + (ut / 876600.0);
+    let t2 = t * t;
+
+    let m1 = 27.32158213;
+    let m2 = 365.2596407;
+    let m3 = 27.55455094;
+    let m4 = 29.53058868;
+    let m5 = 27.21222039;
+    let m6 = 6798.363307;
+    let q = cd_jd(gd, gm, gy) - 2415020.0 + (ut / 24.0);
+    let m1 = q / m1;
+    let m2 = q / m2;
+    let m3 = q / m3;
+    let m4 = q / m4;
+    let m5 = q / m5;
+    let m6 = q / m6;
+    let m1 = 360.0 * (m1 - m1.floor());
+    let m2 = 360.0 * (m2 - m2.floor());
+    let m3 = 360.0 * (m3 - m3.floor());
+    let m4 = 360.0 * (m4 - m4.floor());
+    let m5 = 360.0 * (m5 - m5.floor());
+    let m6 = 360.0 * (m6 - m6.floor());
+
+    let ml = 270.434164 + m1 - (0.001133 - 0.0000019 * t) * t2;
+    let ms = 358.475833 + m2 - (0.00015 + 0.0000033 * t) * t2;
+    let md = 296.104608 + m3 + (0.009192 + 0.0000144 * t) * t2;
+    let _me1 = 350.737486 + m4 - (0.001436 - 0.0000019 * t) * t2;
+    let _mf = 11.250889 + m5 - (0.003211 + 0.0000003 * t) * t2;
+    let na = 259.183275 - m6 + (0.002078 + 0.0000022 * t) * t2;
+    let a = (51.2 + 20.2 * t).to_radians();
+    let s1 = a.sin();
+    let s2 = na.to_radians().sin();
+    let b = 346.56 + (132.87 - 0.0091731 * t) * t;
+    let s3 = 0.003964 * b.to_radians().sin();
+    let c = (na + 275.05 - 2.3 * t).to_radians();
+    let _s4 = c.sin();
+    let _ml = ml + 0.000233 * s1 + s3 + 0.001964 * s2;
+    let _ms = ms - 0.001778 * s1;
+    let md = md + 0.000817 * s1 + s3 + 0.002541 * s2;
+
+    return md.to_radians();
+}

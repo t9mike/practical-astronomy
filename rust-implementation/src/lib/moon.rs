@@ -292,3 +292,162 @@ pub fn precise_position_of_moon(
         moon_hor_parallax_deg,
     );
 }
+
+/// Calculate Moon phase and position angle of bright limb.
+///
+/// ## Arguments
+/// * `lct_hour` -- Local civil time, in hours.
+/// * `lct_min` -- Local civil time, in minutes.
+/// * `lct_sec` -- Local civil time, in seconds.
+/// * `is_daylight_saving` -- Is daylight savings in effect?
+/// * `zone_correction_hours` -- Time zone correction, in hours.
+/// * `local_date_day` -- Local date, day part.
+/// * `local_date_month` -- Local date, month part.
+/// * `local_date_year` -- Local date, year part.
+/// * `accuracy_level` -- "A" (approximate) or "P" (precise)
+///
+/// ## Returns
+/// * `moon_phase` -- Phase of Moon, between 0 and 1, where 0 is New and 1 is Full.
+/// * `pa_bright_limb_deg` -- Position angle of the bright limb (degrees)
+pub fn moon_phase(
+    lct_hour: f64,
+    lct_min: f64,
+    lct_sec: f64,
+    is_daylight_saving: bool,
+    zone_correction_hours: i32,
+    local_date_day: f64,
+    local_date_month: u32,
+    local_date_year: u32,
+    accuracy_level: String,
+) -> (f64, f64) {
+    let daylight_saving = if is_daylight_saving == true { 1 } else { 0 };
+
+    let gdate_day = macros::lct_gday(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let gdate_month = macros::lct_gmonth(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let gdate_year = macros::lct_gyear(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+
+    let sun_long_deg = macros::sun_long(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let (moon_ecliptic_longitude_deg, moon_ecliptic_latitude_deg, _moon_horizontal_parallax_deg) =
+        macros::moon_long_lat_hp(
+            lct_hour,
+            lct_min,
+            lct_sec,
+            daylight_saving,
+            zone_correction_hours,
+            local_date_day,
+            local_date_month,
+            local_date_year,
+        );
+    let d_rad = (moon_ecliptic_longitude_deg - sun_long_deg).to_radians();
+
+    let moon_phase1 = if accuracy_level.to_string() == "P" {
+        macros::moon_phase(
+            lct_hour,
+            lct_min,
+            lct_sec,
+            daylight_saving,
+            zone_correction_hours,
+            local_date_day,
+            local_date_month,
+            local_date_year,
+        )
+    } else {
+        (1.0 - (d_rad).cos()) / 2.0
+    };
+
+    let sun_ra_rad = (macros::ec_ra(
+        sun_long_deg,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        gdate_day,
+        gdate_month,
+        gdate_year,
+    ))
+    .to_radians();
+    let moon_ra_rad = (macros::ec_ra(
+        moon_ecliptic_longitude_deg,
+        0.0,
+        0.0,
+        moon_ecliptic_latitude_deg,
+        0.0,
+        0.0,
+        gdate_day,
+        gdate_month,
+        gdate_year,
+    ))
+    .to_radians();
+    let sun_dec_rad = (macros::ec_dec(
+        sun_long_deg,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        gdate_day,
+        gdate_month,
+        gdate_year,
+    ))
+    .to_radians();
+    let moon_dec_rad = (macros::ec_dec(
+        moon_ecliptic_longitude_deg,
+        0.0,
+        0.0,
+        moon_ecliptic_latitude_deg,
+        0.0,
+        0.0,
+        gdate_day,
+        gdate_month,
+        gdate_year,
+    ))
+    .to_radians();
+
+    let y = (sun_dec_rad).cos() * (sun_ra_rad - moon_ra_rad).sin();
+    let x = (moon_dec_rad).cos() * (sun_dec_rad).sin()
+        - (moon_dec_rad).sin() * (sun_dec_rad).cos() * (sun_ra_rad - moon_ra_rad).cos();
+
+    let chi_deg = macros::degrees(y.atan2(x));
+
+    let moon_phase = util::round_f64(moon_phase1, 2);
+    let pa_bright_limb_deg = util::round_f64(chi_deg, 2);
+
+    return (moon_phase, pa_bright_limb_deg);
+}

@@ -310,4 +310,5 @@ pub fn run_moon_tests() {
     };
     test_moon_position_and_info.test_approximate_position_of_moon();
     test_moon_position_and_info.test_precise_position_of_moon();
+    test_moon_position_and_info.test_moon_phase();
 }

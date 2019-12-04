@@ -103,4 +103,36 @@ impl TestMoonPositionInfoScaffold {
             "Moon Horizontal Parallax (degrees)"
         );
     }
+
+    pub fn test_moon_phase(&mut self) {
+        let (moon_phase, pa_bright_limb_deg) = M::moon_phase(
+            self.lct_hour,
+            self.lct_min,
+            self.lct_sec,
+            self.is_daylight_saving,
+            self.zone_correction_hours,
+            self.local_date_day,
+            self.local_date_month,
+            self.local_date_year,
+            "A".to_string(),
+        );
+
+        println!(
+			"Moon phase: [Local Time] {}:{}:{} [DST?] {} [Zone Correction] {} hours [Local Date] {}/{}/{} [Accuracy] {} = [Phase] {} [Position Angle of Bright Limb] {} degrees ",
+			self.lct_hour,
+			self.lct_min,
+			self.lct_sec,
+			self.is_daylight_saving,
+			self.zone_correction_hours,
+			self.local_date_month,
+			self.local_date_day,
+			self.local_date_year,
+			"A".to_string(),
+			moon_phase,
+			pa_bright_limb_deg
+		);
+
+        assert_eq!(moon_phase, 0.22, "Moon Phase");
+        assert_eq!(pa_bright_limb_deg, -71.58, "Position Angle of Bright Limb");
+    }
 }

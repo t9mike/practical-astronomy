@@ -369,6 +369,71 @@ pub fn ut_lct(
     return 24.0 * (e - e1);
 }
 
+/// Get Local Civil Day for Universal Time
+///
+/// Original macro name: UTLcDay
+pub fn ut_lc_day(
+    u_hours: f64,
+    u_minutes: f64,
+    u_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) -> f64 {
+    let a = hms_dh(u_hours, u_minutes, u_seconds);
+    let b = a + zone_correction as f64;
+    let c = b + daylight_saving as f64;
+    let d = cd_jd(greenwich_day, greenwich_month, greenwich_year) + (c / 24.0);
+    let e = jdc_day(d);
+    let e1 = e.floor();
+
+    return e1;
+}
+
+/// Get Local Civil Month for Universal Time
+///
+/// Original macro name: UTLcMonth
+pub fn ut_lc_month(
+    u_hours: f64,
+    u_minutes: f64,
+    u_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) -> u32 {
+    let a = hms_dh(u_hours, u_minutes, u_seconds);
+    let b = a + zone_correction as f64;
+    let c = b + daylight_saving as f64;
+    let d = cd_jd(greenwich_day, greenwich_month, greenwich_year) + (c / 24.0);
+
+    return jdc_month(d);
+}
+
+/// Get Local Civil Year for Universal Time
+///
+/// Original macro name: UTLcYear
+pub fn ut_lc_year(
+    u_hours: f64,
+    u_minutes: f64,
+    u_seconds: f64,
+    daylight_saving: i32,
+    zone_correction: i32,
+    greenwich_day: f64,
+    greenwich_month: u32,
+    greenwich_year: u32,
+) -> u32 {
+    let a = hms_dh(u_hours, u_minutes, u_seconds);
+    let b = a + zone_correction as f64;
+    let c = b + daylight_saving as f64;
+    let d = cd_jd(greenwich_day, greenwich_month, greenwich_year) + (c / 24.0);
+
+    return jdc_year(d);
+}
+
 /// Determine Greenwich Day for Local Time
 ///
 /// Original macro name: LctGDay
@@ -3736,4 +3801,159 @@ pub fn moon_mean_anomaly(
     let md = md + 0.000817 * s1 + s3 + 0.002541 * s2;
 
     return md.to_radians();
+}
+
+/// Calculate Julian date of New Moon.
+///
+/// Original macro name: NewMoon
+///
+/// ## Arguments
+/// * `ds` -- Daylight Savings offset.
+/// * `zc` -- Time zone correction, in hours.
+/// * `dy` -- Local date, day part.
+/// * `mn` -- Local date, month part.
+/// * `yr` -- Local date, year part.
+pub fn new_moon(ds: i32, zc: i32, dy: f64, mn: u32, yr: u32) -> f64 {
+    let d0 = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let m0 = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let y0 = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+
+    /*  Irrelevant, because of the typing on y0
+    if y0 < 0 {
+        y0 = y0 + 1;
+    }
+    */
+
+    let j0 = cd_jd(0.0, 1, y0) - 2415020.0;
+    let dj = cd_jd(d0, m0, y0) - 2415020.0;
+    let k = lint(((y0 as f64 - 1900.0 + ((dj - j0) / 365.0)) * 12.3685) + 0.5);
+    let tn = k / 1236.85;
+    let tf = (k + 0.5) / 1236.85;
+    let t = tn;
+    let (a, b, f) = new_moon_full_moon_l6855(k, t);
+    let ni = a;
+    let nf = b;
+    let _nb = f;
+    let t = tf;
+    let k = k + 0.5;
+    let (a, b, f) = new_moon_full_moon_l6855(k, t);
+    let _fi = a;
+    let _ff = b;
+    let _fb = f;
+
+    return ni + 2415020.0 + nf;
+}
+
+/// Calculate Julian date of Full Moon.
+///
+/// Original macro name: FullMoon
+///
+/// ## Arguments
+/// * `ds` -- Daylight Savings offset.
+/// * `zc` -- Time zone correction, in hours.
+/// * `dy` -- Local date, day part.
+/// * `mn` -- Local date, month part.
+/// * `yr` -- Local date, year part.
+pub fn full_moon(ds: i32, zc: i32, dy: f64, mn: u32, yr: u32) -> f64 {
+    let d0 = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let m0 = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let y0 = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+
+    /*  Irrelevant, because of the typing on y0
+    if y0 < 0 {
+        y0 = y0 + 1;
+    }
+    */
+
+    let j0 = cd_jd(0.0, 1, y0) - 2415020.0;
+    let dj = cd_jd(d0, m0, y0) - 2415020.0;
+    let k = lint(((y0 as f64 - 1900.0 + ((dj - j0) / 365.0)) * 12.3685) + 0.5);
+    let tn = k / 1236.85;
+    let tf = (k + 0.5) / 1236.85;
+    let t = tn;
+    let (a, b, f) = new_moon_full_moon_l6855(k, t);
+    let _ni = a;
+    let _nf = b;
+    let _nb = f;
+    let t = tf;
+    let k = k + 0.5;
+    let (a, b, f) = new_moon_full_moon_l6855(k, t);
+    let fi = a;
+    let ff = b;
+    let _fb = f;
+
+    return fi + 2415020.0 + ff;
+}
+
+/// Helper function for new_moon() and full_moon() """
+pub fn new_moon_full_moon_l6855(k: f64, t: f64) -> (f64, f64, f64) {
+    let t2 = t * t;
+    let e = 29.53 * k;
+    let c = 166.56 + (132.87 - 0.009173 * t) * t;
+    let c = c.to_radians();
+    let b = 0.00058868 * k + (0.0001178 - 0.000000155 * t) * t2;
+    let b = b + 0.00033 * c.sin() + 0.75933;
+    let a = k / 12.36886;
+    let a1 = 359.2242 + 360.0 * fract(a) - (0.0000333 + 0.00000347 * t) * t2;
+    let a2 = 306.0253 + 360.0 * fract(k / 0.9330851);
+    let a2 = a2 + (0.0107306 + 0.00001236 * t) * t2;
+    let a = k / 0.9214926;
+    let f = 21.2964 + 360.0 * fract(a) - (0.0016528 + 0.00000239 * t) * t2;
+    let a1 = unwind_deg(a1);
+    let a2 = unwind_deg(a2);
+    let f = unwind_deg(f);
+    let a1 = a1.to_radians();
+    let a2 = a2.to_radians();
+    let f = f.to_radians();
+
+    let dd = (0.1734 - 0.000393 * t) * a1.sin() + 0.0021 * (2.0 * a1).sin();
+    let dd = dd - 0.4068 * a2.sin() + 0.0161 * (2.0 * a2).sin() - 0.0004 * (3.0 * a2).sin();
+    let dd = dd + 0.0104 * (2.0 * f).sin() - 0.0051 * (a1 + a2).sin();
+    let dd = dd - 0.0074 * (a1 - a2).sin() + 0.0004 * (2.0 * f + a1).sin();
+    let dd = dd - 0.0004 * (2.0 * f - a1).sin() - 0.0006 * (2.0 * f + a2).sin()
+        + 0.001 * (2.0 * f - a2).sin();
+    let dd = dd + 0.0005 * (a1 + 2.0 * a2).sin();
+    let e1 = e.floor();
+    let b = b + dd + (e - e1);
+    let b1 = b.floor();
+    let a = e1 + b1;
+    let b = b - b1;
+
+    return (a, b, f);
+}
+
+/// Original macro name: FRACT
+pub fn fract(w: f64) -> f64 {
+    return w - lint(w);
+}
+
+/// Original macro name: LINT
+pub fn lint(w: f64) -> f64 {
+    return iint(w) + iint(((1.0 * sgn(w)) - 1.0) / 2.0);
+}
+
+/// Original macro name: IINT
+pub fn iint(w: f64) -> f64 {
+    return sgn(w) * w.abs().floor();
+}
+
+/// Calculate sign of number.
+///
+/// ## Arguments
+/// * number_to_check -- Number to calculate the sign of.
+///
+/// ## Returns
+/// * sign_value -- Sign value: -1, 0, or 1
+pub fn sgn(number_to_check: f64) -> f64 {
+    let mut sign_value = 0.0;
+
+    if number_to_check < 0.0 {
+        sign_value = -1.0;
+    }
+
+    if number_to_check > 0.0 {
+        sign_value = 1.0;
+    }
+
+    return sign_value;
 }

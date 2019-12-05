@@ -136,3 +136,90 @@ impl TestMoonPositionInfoScaffold {
         assert_eq!(pa_bright_limb_deg, -71.58, "Position Angle of Bright Limb");
     }
 }
+
+pub fn test_times_of_new_moon_and_full_moon(
+    is_daylight_saving: bool,
+    zone_correction_hours: i32,
+    local_date_day: f64,
+    local_date_month: u32,
+    local_date_year: u32,
+) {
+    let (
+        nm_local_time_hour,
+        nm_local_time_min,
+        nm_local_date_day,
+        nm_local_date_month,
+        nm_local_date_year,
+        fm_local_time_hour,
+        fm_local_time_min,
+        fm_local_date_day,
+        fm_local_date_month,
+        fm_local_date_year,
+    ) = M::times_of_new_moon_and_full_moon(
+        is_daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+
+    println!(
+		"Times of new moon and full moon: [DST?] {} [Zone Correction] {} [Local Date] {}/{}/{} = [New Moon] [Local Time] {}:{} [Local Date] {}/{}/{} [Full Moon] [Local Time] {}:{} [Local Date] {}/{}/{}",
+		is_daylight_saving,
+		zone_correction_hours,
+		local_date_month,
+		local_date_day,
+		local_date_year,
+		nm_local_time_hour,
+		nm_local_time_min,
+		nm_local_date_month,
+		nm_local_date_day,
+		nm_local_date_year,
+		fm_local_time_hour,
+		fm_local_time_min,
+		fm_local_date_month,
+		fm_local_date_day,
+		fm_local_date_year
+	);
+
+    assert_eq!(
+        nm_local_time_hour, 17.0,
+        "new Moon instant - local time (hour)"
+    );
+    assert_eq!(
+        nm_local_time_min, 27.0,
+        "new Moon instant - local time (minutes)"
+    );
+    assert_eq!(
+        nm_local_date_day, 27.0,
+        "new Moon instance - local date (day)"
+    );
+    assert_eq!(
+        nm_local_date_month, 8,
+        "new Moon instance - local date (month)"
+    );
+    assert_eq!(
+        nm_local_date_year, 2003,
+        "new Moon instance - local date (year)"
+    );
+    assert_eq!(
+        fm_local_time_hour, 16.0,
+        "full Moon instant - local time (hour)"
+    );
+    assert_eq!(
+        fm_local_time_min, 36.0,
+        "full Moon instant - local time (minutes)"
+    );
+    assert_eq!(
+        fm_local_date_day, 10.0,
+        "full Moon instance - local date (day)"
+    );
+    assert_eq!(
+        fm_local_date_month, 9,
+        "full Moon instance - local date (month)"
+    );
+    assert_eq!(
+        fm_local_date_year, 2003,
+        "full Moon instance - local date (year)"
+    );
+}

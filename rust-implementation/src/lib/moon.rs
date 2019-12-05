@@ -451,3 +451,159 @@ pub fn moon_phase(
 
     return (moon_phase, pa_bright_limb_deg);
 }
+
+/// Calculate new moon and full moon instances.
+///
+/// ## Arguments
+/// * `is_daylight_saving` -- Is daylight savings in effect?
+/// * `zone_correction_hours` -- Time zone correction, in hours.
+/// * `local_date_day` -- Local date, day part.
+/// * `local_date_month` -- Local date, month part.
+/// * `local_date_year` -- Local date, year part.
+///
+/// ## Returns
+/// * `nm_local_time_hour` -- new Moon instant - local time (hour)
+/// * `nm_local_time_min` -- new Moon instant - local time (minutes)
+/// * `nm_local_date_day` -- new Moon instance - local date (day)
+/// * `nm_local_date_month` -- new Moon instance - local date (month)
+/// * `nm_local_date_year` -- new Moon instance - local date (year)
+/// * `fm_local_time_hour` -- full Moon instant - local time (hour)
+/// * `fm_local_time_min` -- full Moon instant - local time (minutes)
+/// * `fm_local_date_day` -- full Moon instance - local date (day)
+/// * `fm_local_date_month` -- full Moon instance - local date (month)
+/// * `fm_local_date_year` -- full Moon instance - local date (year)
+pub fn times_of_new_moon_and_full_moon(
+    is_daylight_saving: bool,
+    zone_correction_hours: i32,
+    local_date_day: f64,
+    local_date_month: u32,
+    local_date_year: u32,
+) -> (f64, f64, f64, u32, u32, f64, f64, f64, u32, u32) {
+    let daylight_saving = if is_daylight_saving == true { 1 } else { 0 };
+
+    let jd_of_new_moon_days = macros::new_moon(
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let jd_of_full_moon_days = macros::full_moon(
+        3,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+
+    let g_date_of_new_moon_day = macros::jdc_day(jd_of_new_moon_days);
+    let integer_day1 = g_date_of_new_moon_day.floor();
+    let g_date_of_new_moon_month = macros::jdc_month(jd_of_new_moon_days);
+    let g_date_of_new_moon_year = macros::jdc_year(jd_of_new_moon_days);
+
+    let g_date_of_full_moon_day = macros::jdc_day(jd_of_full_moon_days);
+    let integer_day2 = g_date_of_full_moon_day.floor();
+    let g_date_of_full_moon_month = macros::jdc_month(jd_of_full_moon_days);
+    let g_date_of_full_moon_year = macros::jdc_year(jd_of_full_moon_days);
+
+    let ut_of_new_moon_hours = 24.0 * (g_date_of_new_moon_day - integer_day1);
+    let ut_of_full_moon_hours = 24.0 * (g_date_of_full_moon_day - integer_day2);
+    let lct_of_new_moon_hours = macros::ut_lct(
+        ut_of_new_moon_hours + 0.008333,
+        0.0,
+        0.0,
+        daylight_saving,
+        zone_correction_hours,
+        integer_day1,
+        g_date_of_new_moon_month,
+        g_date_of_new_moon_year,
+    );
+    let lct_of_full_moon_hours = macros::ut_lct(
+        ut_of_full_moon_hours + 0.008333,
+        0.0,
+        0.0,
+        daylight_saving,
+        zone_correction_hours,
+        integer_day2,
+        g_date_of_full_moon_month,
+        g_date_of_full_moon_year,
+    );
+
+    let nm_local_time_hour = macros::dh_hour(lct_of_new_moon_hours);
+    let nm_local_time_min = macros::dh_min(lct_of_new_moon_hours);
+    let nm_local_date_day = macros::ut_lc_day(
+        ut_of_new_moon_hours,
+        0.0,
+        0.0,
+        daylight_saving,
+        zone_correction_hours,
+        integer_day1,
+        g_date_of_new_moon_month,
+        g_date_of_new_moon_year,
+    );
+    let nm_local_date_month = macros::ut_lc_month(
+        ut_of_new_moon_hours,
+        0.0,
+        0.0,
+        daylight_saving,
+        zone_correction_hours,
+        integer_day1,
+        g_date_of_new_moon_month,
+        g_date_of_new_moon_year,
+    );
+    let nm_local_date_year = macros::ut_lc_year(
+        ut_of_new_moon_hours,
+        0.0,
+        0.0,
+        daylight_saving,
+        zone_correction_hours,
+        integer_day1,
+        g_date_of_new_moon_month,
+        g_date_of_new_moon_year,
+    );
+    let fm_local_time_hour = macros::dh_hour(lct_of_full_moon_hours);
+    let fm_local_time_min = macros::dh_min(lct_of_full_moon_hours);
+    let fm_local_date_day = macros::ut_lc_day(
+        ut_of_full_moon_hours,
+        0.0,
+        0.0,
+        daylight_saving,
+        zone_correction_hours,
+        integer_day2,
+        g_date_of_full_moon_month,
+        g_date_of_full_moon_year,
+    );
+    let fm_local_date_month = macros::ut_lc_month(
+        ut_of_full_moon_hours,
+        0.0,
+        0.0,
+        daylight_saving,
+        zone_correction_hours,
+        integer_day2,
+        g_date_of_full_moon_month,
+        g_date_of_full_moon_year,
+    );
+    let fm_local_date_year = macros::ut_lc_year(
+        ut_of_full_moon_hours,
+        0.0,
+        0.0,
+        daylight_saving,
+        zone_correction_hours,
+        integer_day2,
+        g_date_of_full_moon_month,
+        g_date_of_full_moon_year,
+    );
+
+    return (
+        nm_local_time_hour as f64,
+        nm_local_time_min as f64,
+        nm_local_date_day,
+        nm_local_date_month,
+        nm_local_date_year,
+        fm_local_time_hour as f64,
+        fm_local_time_min as f64,
+        fm_local_date_day,
+        fm_local_date_month,
+        fm_local_date_year,
+    );
+}

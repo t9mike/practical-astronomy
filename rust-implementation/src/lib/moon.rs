@@ -607,3 +607,83 @@ pub fn times_of_new_moon_and_full_moon(
         fm_local_date_year,
     );
 }
+
+/// Calculate Moon's distance, angular diameter, and horizontal parallax.
+///
+/// ## Arguments
+/// * `lct_hour` -- Local civil time, in hours.
+/// * `lct_min` -- Local civil time, in minutes.
+/// * `lct_sec` -- Local civil time, in seconds.
+/// * `is_daylight_saving` -- Is daylight savings in effect?
+/// * `zone_correction_hours` -- Time zone correction, in hours.
+/// * `local_date_day` -- Local date, day part.
+/// * `local_date_month` -- Local date, month part.
+/// * `local_date_year` -- Local date, year part.
+///
+/// ## Returns
+/// * `earth_moon_dist` -- Earth-Moon distance (km)
+/// * `ang_diameter_deg` -- Angular diameter (degrees part)
+/// * `ang_diameter_min` -- Angular diameter (minutes part)
+/// * `hor_parallax_deg` -- Horizontal parallax (degrees part)
+/// * `hor_parallax_min` -- Horizontal parallax (minutes part)
+/// * `hor_parallax_sec` -- Horizontal parallax (seconds part)
+pub fn moon_dist_ang_diam_hor_parallax(
+    lct_hour: f64,
+    lct_min: f64,
+    lct_sec: f64,
+    is_daylight_saving: bool,
+    zone_correction_hours: i32,
+    local_date_day: f64,
+    local_date_month: u32,
+    local_date_year: u32,
+) -> (f64, f64, f64, f64, f64, f64) {
+    let daylight_saving = if is_daylight_saving == true { 1 } else { 0 };
+
+    let moon_distance = macros::moon_dist(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let moon_angular_diameter = macros::moon_size(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+    let moon_horizontal_parallax = macros::moon_hp(
+        lct_hour,
+        lct_min,
+        lct_sec,
+        daylight_saving,
+        zone_correction_hours,
+        local_date_day,
+        local_date_month,
+        local_date_year,
+    );
+
+    // earth_moon_dist = round(moon_distance,-1)
+    let earth_moon_dist = util::round_f64(moon_distance, 0);
+    let ang_diameter_deg = macros::dd_deg(moon_angular_diameter + 0.008333);
+    let ang_diameter_min = macros::dd_min(moon_angular_diameter + 0.008333);
+    let hor_parallax_deg = macros::dd_deg(moon_horizontal_parallax);
+    let hor_parallax_min = macros::dd_min(moon_horizontal_parallax);
+    let hor_parallax_sec = macros::dd_sec(moon_horizontal_parallax);
+
+    return (
+        earth_moon_dist,
+        ang_diameter_deg,
+        ang_diameter_min,
+        hor_parallax_deg,
+        hor_parallax_min,
+        hor_parallax_sec,
+    );
+}

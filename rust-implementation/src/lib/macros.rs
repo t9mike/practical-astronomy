@@ -1566,6 +1566,27 @@ pub fn moon_hp(lh: f64, lm: f64, ls: f64, ds: i32, zc: i32, dy: f64, mn: u32, yr
     return pm;
 }
 
+/// Calculate distance from the Earth to the Moon (km)
+///
+/// Original macro name: MoonDist
+pub fn moon_dist(lh: f64, lm: f64, ls: f64, ds: i32, zc: i32, dy: f64, mn: u32, yr: u32) -> f64 {
+    let hp = (moon_hp(lh, lm, ls, ds, zc, dy, mn, yr)).to_radians();
+    let r = 6378.14 / hp.sin();
+
+    return r;
+}
+
+/// Calculate the Moon's angular diameter (degrees)
+///
+/// Original macro name: MoonSize
+pub fn moon_size(lh: f64, lm: f64, ls: f64, ds: i32, zc: i32, dy: f64, mn: u32, yr: u32) -> f64 {
+    let hp = (moon_hp(lh, lm, ls, ds, zc, dy, mn, yr)).to_radians();
+    let r = 6378.14 / hp.sin();
+    let th = 384401.0 * 0.5181 / r;
+
+    return th;
+}
+
 /// Convert angle in radians to equivalent angle in degrees.
 ///
 /// Original macro name: Unwind

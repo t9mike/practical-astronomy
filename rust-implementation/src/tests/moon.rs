@@ -135,6 +135,54 @@ impl TestMoonPositionInfoScaffold {
         assert_eq!(moon_phase, 0.22, "Moon Phase");
         assert_eq!(pa_bright_limb_deg, -71.58, "Position Angle of Bright Limb");
     }
+
+    pub fn test_moon_dist_ang_diam_hor_parallax(&mut self) {
+        let (
+            earth_moon_dist,
+            ang_diameter_deg,
+            ang_diameter_min,
+            hor_parallax_deg,
+            hor_parallax_min,
+            hor_parallax_sec,
+        ) = M::moon_dist_ang_diam_hor_parallax(
+            self.lct_hour,
+            self.lct_min,
+            self.lct_sec,
+            self.is_daylight_saving,
+            self.zone_correction_hours,
+            self.local_date_day,
+            self.local_date_month,
+            self.local_date_year,
+        );
+
+        println!(
+			"Moon distance, angular diameter, and horizontal parallax: [Local Time] {}:{}:{} [DST?] {} [Zone Correction] {} hours [Local Date] {}/{}/{} = [Earth-Moon Distance] {} km [Angular Diameter] {} degrees {} minutes [Horizontal Parallax] {} degrees {} minutes {} seconds",
+			self.lct_hour,
+			self.lct_min,
+			self.lct_sec,
+			self.is_daylight_saving,
+			self.zone_correction_hours,
+			self.local_date_month,
+			self.local_date_day,
+			self.local_date_year,
+			earth_moon_dist,
+			ang_diameter_deg,
+			ang_diameter_min,
+			hor_parallax_deg,
+			hor_parallax_min,
+			hor_parallax_sec
+		);
+
+        assert_eq!(earth_moon_dist, 367964.0, "Earth-Moon distance (km)");
+        assert_eq!(ang_diameter_deg, 0.0, "Angular diameter (degrees part)");
+        assert_eq!(ang_diameter_min, 32.0, "Angular diameter (minutes part)");
+        assert_eq!(hor_parallax_deg, 0.0, "Horizontal parallax (degrees part)");
+        assert_eq!(hor_parallax_min, 59.0, "Horizontal parallax (minutes part)");
+        assert_eq!(
+            hor_parallax_sec, 35.49,
+            "Horizontal parallax (seconds part)"
+        );
+    }
 }
 
 pub fn test_times_of_new_moon_and_full_moon(

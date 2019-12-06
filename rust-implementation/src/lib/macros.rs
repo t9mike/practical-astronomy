@@ -3961,10 +3961,10 @@ pub fn iint(w: f64) -> f64 {
 /// Calculate sign of number.
 ///
 /// ## Arguments
-/// * number_to_check -- Number to calculate the sign of.
+/// * `number_to_check` -- Number to calculate the sign of.
 ///
 /// ## Returns
-/// * sign_value -- Sign value: -1, 0, or 1
+/// * `sign_value` -- Sign value: -1, 0, or 1
 pub fn sgn(number_to_check: f64) -> f64 {
     let mut sign_value = 0.0;
 

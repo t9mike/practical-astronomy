@@ -314,4 +314,5 @@ pub fn run_moon_tests() {
     test_moon_position_and_info.test_moon_dist_ang_diam_hor_parallax();
 
     MOONT::test_times_of_new_moon_and_full_moon(false, 0, 1.0, 9, 2003);
+    MOONT::test_moonrise_and_moonset(6.0, 3, 1986, false, -5, -71.05, 42.3667);
 }

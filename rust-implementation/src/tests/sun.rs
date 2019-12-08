@@ -46,7 +46,7 @@ pub fn test_approximate_position_of_sun(
     assert_eq!(sun_ra_sec, 33.73, "Sun RA Seconds");
     assert_eq!(sun_dec_deg, 19.0, "Sun Dec Degrees");
     assert_eq!(sun_dec_min, 21.0, "Sun Dec Minutes");
-    assert_eq!(sun_dec_sec, 14.32, "Sun Dec Seconds");
+    assert_eq!(sun_dec_sec, 14.33, "Sun Dec Seconds");
 }
 
 pub fn test_precise_position_of_sun(

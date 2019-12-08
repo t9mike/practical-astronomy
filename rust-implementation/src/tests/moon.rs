@@ -271,3 +271,72 @@ pub fn test_times_of_new_moon_and_full_moon(
         "full Moon instance - local date (year)"
     );
 }
+
+pub fn test_moonrise_and_moonset(
+    local_date_day: f64,
+    local_date_month: u32,
+    local_date_year: u32,
+    is_daylight_saving: bool,
+    zone_correction_hours: i32,
+    geog_long_deg: f64,
+    geog_lat_deg: f64,
+) {
+    let (
+        mr_lt_hour,
+        mr_lt_min,
+        mr_local_date_day,
+        mr_local_date_month,
+        mr_local_date_year,
+        mr_azimuth_deg,
+        ms_lt_hour,
+        ms_lt_min,
+        ms_local_date_day,
+        ms_local_date_month,
+        ms_local_date_year,
+        ms_azimuth_deg,
+    ) = M::moonrise_and_moonset(
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        is_daylight_saving,
+        zone_correction_hours,
+        geog_long_deg,
+        geog_lat_deg,
+    );
+
+    println!(
+		"Moonrise and Moonset: [Local Date] {}/{}/{} [DST?] {} [Zone Correction] {} hours [Geographical Longitude/Latitude] {} degrees / {} degrees = [Moonrise] [Local Time] {}:{} [Local Date] {}/{}/{} [Azimuth] {} degrees [Moonset] [Local Time] {}:{} [Local Date] {}/{}/{} [Azimuth] {} degrees",
+		local_date_month,
+		local_date_day,
+		local_date_year,
+		is_daylight_saving,
+		zone_correction_hours,
+		geog_long_deg,
+		geog_lat_deg,
+		mr_lt_hour,
+		mr_lt_min,
+		mr_local_date_month,
+		mr_local_date_day,
+		mr_local_date_year,
+		mr_azimuth_deg,
+		ms_lt_hour,
+		ms_lt_min,
+		ms_local_date_month,
+		ms_local_date_day,
+		ms_local_date_year,
+		ms_azimuth_deg
+	);
+
+    assert_eq!(mr_lt_hour, 4.0, "Moonrise - Local Time (hours)");
+    assert_eq!(mr_lt_min, 21.0, "Moonrise - Local Time (minutes)");
+    assert_eq!(mr_local_date_day, 6.0, "Moonrise - Local Date (day)");
+    assert_eq!(mr_local_date_month, 3, "Moonrise - Local Date (month)");
+    assert_eq!(mr_local_date_year, 1986, "Moonrise - Local Date (year)");
+    assert_eq!(mr_azimuth_deg, 127.34, "Moonrise - Azimuth (degrees)");
+    assert_eq!(ms_lt_hour, 13.0, "Moonset - Local Time (hours)");
+    assert_eq!(ms_lt_min, 8.0, "Moonset - Local Time (minutes)");
+    assert_eq!(ms_local_date_day, 6.0, "Moonset - Local Date (day)");
+    assert_eq!(ms_local_date_month, 3, "Moonset - Local Date (month)");
+    assert_eq!(ms_local_date_year, 1986, "Moonset - Local Date (year)");
+    assert_eq!(ms_azimuth_deg, 234.05, "Moonset - Azimuth (degrees)");
+}

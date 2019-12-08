@@ -687,3 +687,143 @@ pub fn moon_dist_ang_diam_hor_parallax(
         hor_parallax_sec,
     );
 }
+
+/// Calculate date/time of local moonrise and moonset.
+///
+/// ## Arguments
+/// * `local_date_day` -- Local date, day part.
+/// * `local_date_month` -- Local date, month part.
+/// * `local_date_year` -- Local date, year part.
+/// * `is_daylight_saving` -- Is daylight savings in effect?
+/// * `zone_correction_hours` -- Time zone correction, in hours.
+/// * `geog_long_deg` -- Geographical longitude, in degrees.
+/// * `geog_lat_deg` -- Geographical latitude, in degrees.
+///
+/// ## Returns
+/// * `mr_lt_hour` -- Moonrise, local time (hour part)
+/// * `mr_lt_min` -- Moonrise, local time (minutes part)
+/// * `mr_local_date_day` -- Moonrise, local date (day)
+/// * `mr_local_date_month` -- Moonrise, local date (month)
+/// * `mr_local_date_year` -- Moonrise, local date (year)
+/// * `mr_azimuth_deg` -- Moonrise, azimuth (degrees)
+/// * `ms_lt_hour` -- Moonset, local time (hour part)
+/// * `ms_lt_min` -- Moonset, local time (minutes part)
+/// * `ms_local_date_day` -- Moonset, local date (day)
+/// * `ms_local_date_month` -- Moonset, local date (month)
+/// * `ms_local_date_year` -- Moonset, local date (year)
+/// * `ms_azimuth_deg` -- Moonset, azimuth (degrees)
+pub fn moonrise_and_moonset(
+    local_date_day: f64,
+    local_date_month: u32,
+    local_date_year: u32,
+    is_daylight_saving: bool,
+    zone_correction_hours: i32,
+    geog_long_deg: f64,
+    geog_lat_deg: f64,
+) -> (f64, f64, f64, u32, u32, f64, f64, f64, f64, u32, u32, f64) {
+    let daylight_saving = if is_daylight_saving == true { 1 } else { 0 };
+
+    let local_time_of_moonrise_hours = macros::moon_rise_lct(
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        daylight_saving,
+        zone_correction_hours,
+        geog_long_deg,
+        geog_lat_deg,
+    );
+    let _local_moonrise_status1 = macros::e_moon_rise(
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        daylight_saving,
+        zone_correction_hours,
+        geog_long_deg,
+        geog_lat_deg,
+    );
+    let (local_date_of_moonrise_day, local_date_of_moonrise_month, local_date_of_moonrise_year) =
+        macros::moon_rise_lc_dmy(
+            local_date_day,
+            local_date_month,
+            local_date_year,
+            daylight_saving,
+            zone_correction_hours,
+            geog_long_deg,
+            geog_lat_deg,
+        );
+    let local_azimuth_deg1 = macros::moon_rise_az(
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        daylight_saving,
+        zone_correction_hours,
+        geog_long_deg,
+        geog_lat_deg,
+    );
+
+    let local_time_of_moonset_hours = macros::moon_set_lct(
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        daylight_saving,
+        zone_correction_hours,
+        geog_long_deg,
+        geog_lat_deg,
+    );
+    let _local_moonset_status1 = macros::e_moon_set(
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        daylight_saving,
+        zone_correction_hours,
+        geog_long_deg,
+        geog_lat_deg,
+    );
+    let (local_date_of_moonset_day, local_date_of_moonset_month, local_date_of_moonset_year) =
+        macros::moon_set_lc_dmy(
+            local_date_day,
+            local_date_month,
+            local_date_year,
+            daylight_saving,
+            zone_correction_hours,
+            geog_long_deg,
+            geog_lat_deg,
+        );
+    let local_azimuth_deg2 = macros::moon_set_az(
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        daylight_saving,
+        zone_correction_hours,
+        geog_long_deg,
+        geog_lat_deg,
+    );
+
+    let mr_lt_hour = macros::dh_hour(local_time_of_moonrise_hours + 0.008333);
+    let mr_lt_min = macros::dh_min(local_time_of_moonrise_hours + 0.008333);
+    let mr_local_date_day = local_date_of_moonrise_day;
+    let mr_local_date_month = local_date_of_moonrise_month;
+    let mr_local_date_year = local_date_of_moonrise_year;
+    let mr_azimuth_deg = util::round_f64(local_azimuth_deg1, 2);
+    let ms_lt_hour = macros::dh_hour(local_time_of_moonset_hours + 0.008333);
+    let ms_lt_min = macros::dh_min(local_time_of_moonset_hours + 0.008333);
+    let ms_local_date_day = local_date_of_moonset_day;
+    let ms_local_date_month = local_date_of_moonset_month;
+    let ms_local_date_year = local_date_of_moonset_year;
+    let ms_azimuth_deg = util::round_f64(local_azimuth_deg2, 2);
+
+    return (
+        mr_lt_hour as f64,
+        mr_lt_min as f64,
+        mr_local_date_day,
+        mr_local_date_month,
+        mr_local_date_year,
+        mr_azimuth_deg,
+        ms_lt_hour as f64,
+        ms_lt_min as f64,
+        ms_local_date_day,
+        ms_local_date_month,
+        ms_local_date_year,
+        ms_azimuth_deg,
+    );
+}

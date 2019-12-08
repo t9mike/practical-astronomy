@@ -809,11 +809,11 @@ pub fn nutat_obl(greenwich_day: f64, greenwich_month: u32, greenwich_year: u32) 
 
     let n2 = 2.0 * n1;
 
-    let ddo = ((9.21 + 0.00091 * t) * n1.cos())
-        + ((0.5522 - 0.00029 * t) * l2.cos() - 0.0904 * n2.cos())
-        + (0.0884 * d2.cos() + 0.0216 * (l2 + m1).cos())
-        + (0.0183 * (d2 - n1).cos() + 0.0113 * (d2 + m2).cos())
-        - (0.0093 * (l2 - m1).cos() - 0.0066 * (l2 - n1).cos());
+    let ddo = (9.21 + 0.00091 * t) * n1.cos();
+    let ddo = ddo + (0.5522 - 0.00029 * t) * l2.cos() - 0.0904 * n2.cos();
+    let ddo = ddo + 0.0884 * d2.cos() + 0.0216 * (l2 + m1).cos();
+    let ddo = ddo + 0.0183 * (d2 - n1).cos() + 0.0113 * (d2 + m2).cos();
+    let ddo = ddo - 0.0093 * (l2 - m1).cos() - 0.0066 * (l2 - n1).cos();
 
     return ddo / 3600.0;
 }
@@ -3977,4 +3977,1258 @@ pub fn sgn(number_to_check: f64) -> f64 {
     }
 
     return sign_value;
+}
+
+/// Original macro name: UTDayAdjust
+pub fn ut_day_adjust(ut: f64, g1: f64) -> f64 {
+    let mut return_value = ut;
+
+    if (ut - g1) < -6.0 {
+        return_value = ut + 24.0;
+    }
+
+    if (ut - g1) > 6.0 {
+        return_value = ut - 24.0;
+    }
+
+    return return_value;
+}
+
+/// Local time of moonrise.
+///
+/// Original macro name: MoonRiseLCT
+///
+/// ## Returns
+/// * `hours`
+pub fn moon_rise_lct(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32, g_long: f64, g_lat: f64) -> f64 {
+    let mut gdy = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gmn = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gyr = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut lct = 12.0;
+    let mut dy1 = dy;
+    let mut mn1 = mn;
+    let mut yr1 = yr;
+
+    let (mm_temp, bm_temp, pm_temp, dp_temp, th_temp, di_temp, p_temp, q_temp, lu_temp, lct_temp) =
+        moon_rise_lct_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+    let _mm = mm_temp;
+    let _bm = bm_temp;
+    let _pm = pm_temp;
+    let _dp = dp_temp;
+    let _th = th_temp;
+    let _di = di_temp;
+    let _p = p_temp;
+    let _q = q_temp;
+    let mut lu = lu_temp;
+    lct = lct_temp;
+
+    if lct == -99.0 {
+        return lct;
+    }
+    let mut la = lu;
+
+    let mut x: f64;
+    let mut ut: f64;
+    let mut g1 = 0.0;
+    let mut gu = 0.0;
+    for k in 1..9 {
+        x = lst_gst(la, 0.0, 0.0, g_long);
+        ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+        g1 = if k == 1 { ut } else { gu };
+
+        gu = ut;
+        ut = gu;
+
+        let (_ut_temp, lct_temp, dy1_temp, mn1_temp, yr1_temp, gdy_temp, gmn_temp, gyr_temp) =
+            moon_rise_lct_l6680(x, ds, zc, gdy, gmn, gyr, g1, ut);
+        lct = lct_temp;
+        dy1 = dy1_temp;
+        mn1 = mn1_temp;
+        yr1 = yr1_temp;
+        gdy = gdy_temp;
+        gmn = gmn_temp;
+        gyr = gyr_temp;
+
+        let (
+            _mm_temp,
+            _bm_temp,
+            _pm_temp,
+            _dp_temp,
+            _th_temp,
+            _di_temp,
+            _p_temp,
+            _q_temp,
+            lu_temp,
+            lct_temp,
+        ) = moon_rise_lct_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+        lu = lu_temp;
+        lct = lct_temp;
+
+        if lct == -99.0 {
+            return lct;
+        }
+        la = lu;
+    }
+
+    x = lst_gst(la, 0.0, 0.0, g_long);
+    ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+
+    return lct;
+}
+
+/// Helper function for moon_rise_lct
+pub fn moon_rise_lct_l6680(
+    x: f64,
+    ds: i32,
+    zc: i32,
+    mut gdy: f64,
+    mut gmn: u32,
+    mut gyr: u32,
+    g1: f64,
+    mut ut: f64,
+) -> (f64, f64, f64, u32, u32, f64, u32, u32) {
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    gdy = lct_gday(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gmn = lct_gmonth(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gyr = lct_gyear(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    ut = ut - 24.0 * (ut / 24.0).floor();
+
+    return (ut, lct, dy1, mn1, yr1, gdy, gmn, gyr);
+}
+
+/// Helper function for moon_rise_lct
+pub fn moon_rise_lct_l6700(
+    mut lct: f64,
+    ds: i32,
+    zc: i32,
+    dy1: f64,
+    mn1: u32,
+    yr1: u32,
+    gdy: f64,
+    gmn: u32,
+    gyr: u32,
+    g_lat: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+    let mm = moon_long(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let bm = moon_lat(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let pm = (moon_hp(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1)).to_radians();
+    let dp = nutat_long(gdy, gmn, gyr);
+    let th = 0.27249 * pm.sin();
+    let di = th + 0.0098902 - pm;
+    let p = dd_dh(ec_ra(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr));
+    let q = ec_dec(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr);
+    let lu = rise_set_local_sidereal_time_rise(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+
+    if e_rs(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat) != "OK" {
+        lct = -99.0;
+    }
+
+    return (mm, bm, pm, dp, th, di, p, q, lu, lct);
+}
+
+/// Moonrise calculation status.
+///
+/// Original macro name: eMoonRise
+pub fn e_moon_rise(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32, g_long: f64, g_lat: f64) -> String {
+    let mut s4: String = "OK".to_string();
+    let mut gdy = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gmn = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gyr = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut lct = 12.0;
+    let mut dy1 = dy;
+    let mut mn1 = mn;
+    let mut yr1 = yr;
+
+    let (mm_temp, bm_temp, pm_temp, dp_temp, th_temp, di_temp, p_temp, q_temp, lu_temp, s1_temp) =
+        e_moon_rise_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+    let _mm = mm_temp;
+    let _bm = bm_temp;
+    let _pm = pm_temp;
+    let _dp = dp_temp;
+    let _th = th_temp;
+    let _di = di_temp;
+    let _p = p_temp;
+    let _q = q_temp;
+    let mut lu = lu_temp;
+    let mut s1 = s1_temp.to_string();
+
+    let mut la = lu;
+
+    if s1 != "OK" {
+        return s1;
+    }
+
+    let mut x: f64;
+    let mut ut: f64;
+    let mut s3: String;
+    let mut g1: f64;
+    let mut gu = 0.0;
+    for k in 1..9 {
+        x = lst_gst(la, 0.0, 0.0, g_long);
+        ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+        s3 = e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+        if s3 != "OK" {
+            s4 = ["GST conversion:", &s3].join(" ");
+        }
+
+        g1 = if k == 1 { ut } else { gu };
+
+        gu = ut;
+        ut = gu;
+        let (_ut_temp, lct_temp, dy1_temp, mn1_temp, yr1_temp, gdy_temp, gmn_temp, gyr_temp) =
+            e_moon_rise_l6680(s3, g1, ut, ds, zc, gdy, gmn, gyr, dy1, mn1, yr1);
+        lct = lct_temp;
+        dy1 = dy1_temp;
+        mn1 = mn1_temp;
+        yr1 = yr1_temp;
+        gdy = gdy_temp;
+        gmn = gmn_temp;
+        gyr = gyr_temp;
+
+        let (
+            _mm_temp,
+            _bm_temp,
+            _pm_temp,
+            _dp_temp,
+            _th_temp,
+            _di_temp,
+            _p_temp,
+            _q_temp,
+            lu_temp,
+            s1_temp,
+        ) = e_moon_rise_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+        lu = lu_temp;
+        s1 = s1_temp;
+
+        la = lu;
+
+        if s1 != "OK" {
+            return s1;
+        }
+    }
+
+    x = lst_gst(la, 0.0, 0.0, g_long);
+    s3 = e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+    if s3 != "OK" {
+        s4 = ["GST conversion:", &s3].join(" ");
+    }
+
+    return s4;
+}
+
+/// Helper function for e_moon_rise()
+pub fn e_moon_rise_l6680(
+    s3: String,
+    g1: f64,
+    mut ut: f64,
+    ds: i32,
+    zc: i32,
+    mut gdy: f64,
+    mut gmn: u32,
+    mut gyr: u32,
+    _dy1: f64,
+    _mn1: u32,
+    _yr1: u32,
+) -> (f64, f64, f64, u32, u32, f64, u32, u32) {
+    if s3 != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    gdy = lct_gday(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gmn = lct_gmonth(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gyr = lct_gyear(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    ut = ut - 24.0 * (ut / 24.0).floor();
+
+    return (ut, lct, dy1, mn1, yr1, gdy, gmn, gyr);
+}
+
+/// Helper function for e_moon_rise()
+pub fn e_moon_rise_l6700(
+    lct: f64,
+    ds: i32,
+    zc: i32,
+    dy1: f64,
+    mn1: u32,
+    yr1: u32,
+    gdy: f64,
+    gmn: u32,
+    gyr: u32,
+    g_lat: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, String) {
+    let mm = moon_long(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let bm = moon_lat(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let pm = (moon_hp(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1)).to_radians();
+    let dp = nutat_long(gdy, gmn, gyr);
+    let th = 0.27249 * pm.sin();
+    let di = th + 0.0098902 - pm;
+    let p = dd_dh(ec_ra(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr));
+    let q = ec_dec(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr);
+    let lu = rise_set_local_sidereal_time_rise(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+    let s1 = e_rs(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+
+    return (mm, bm, pm, dp, th, di, p, q, lu, s1);
+}
+
+/// Local date of moonrise.
+///
+/// Original macro names: MoonRiseLcDay, MoonRiseLcMonth, MoonRiseLcYear
+///
+/// ## Returns
+/// * Local date (day)
+/// * Local date (month)
+/// * Local date (year)
+pub fn moon_rise_lc_dmy(
+    dy: f64,
+    mn: u32,
+    yr: u32,
+    ds: i32,
+    zc: i32,
+    g_long: f64,
+    g_lat: f64,
+) -> (f64, u32, u32) {
+    let mut gdy = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gmn = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gyr = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut lct = 12.0;
+    let mut dy1 = dy;
+    let mut mn1 = mn;
+    let mut yr1 = yr;
+
+    let (mm_temp, bm_temp, pm_temp, dp_temp, th_temp, di_temp, p_temp, q_temp, lu_temp, lct_temp) =
+        moon_rise_lc_dmy_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+    let _mm = mm_temp;
+    let _bm = bm_temp;
+    let _pm = pm_temp;
+    let _dp = dp_temp;
+    let _th = th_temp;
+    let _di = di_temp;
+    let _p = p_temp;
+    let _q = q_temp;
+    let mut lu = lu_temp;
+    lct = lct_temp;
+
+    if lct == -99.0 {
+        return (lct, lct as u32, lct as u32);
+    }
+    let mut la = lu;
+
+    let mut x: f64;
+    let mut ut: f64;
+    let mut g1 = 0.0;
+    let mut gu = 0.0;
+    for k in 1..9 {
+        x = lst_gst(la, 0.0, 0.0, g_long);
+        ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+        g1 = if k == 1 { ut } else { gu };
+
+        gu = ut;
+        ut = gu;
+
+        let (_ut_temp, lct_temp, dy1_temp, mn1_temp, yr1_temp, gdy_temp, gmn_temp, gyr_temp) =
+            moon_rise_lc_dmy_l6680(x, ds, zc, gdy, gmn, gyr, g1, ut);
+        lct = lct_temp;
+        dy1 = dy1_temp;
+        mn1 = mn1_temp;
+        yr1 = yr1_temp;
+        gdy = gdy_temp;
+        gmn = gmn_temp;
+        gyr = gyr_temp;
+
+        let (
+            _mm_temp,
+            _bm_temp,
+            _pm_temp,
+            _dp_temp,
+            _th_temp,
+            _di_temp,
+            _p_temp,
+            _q_temp,
+            lu_temp,
+            lct_temp,
+        ) = moon_rise_lc_dmy_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+        lu = lu_temp;
+        lct = lct_temp;
+
+        if lct == -99.0 {
+            return (lct, lct as u32, lct as u32);
+        }
+        la = lu;
+    }
+
+    x = lst_gst(la, 0.0, 0.0, g_long);
+    ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+
+    return (dy1, mn1, yr1);
+}
+
+/// Helper function for moon_rise_lc_dmy
+pub fn moon_rise_lc_dmy_l6680(
+    x: f64,
+    ds: i32,
+    zc: i32,
+    mut gdy: f64,
+    mut gmn: u32,
+    mut gyr: u32,
+    g1: f64,
+    mut ut: f64,
+) -> (f64, f64, f64, u32, u32, f64, u32, u32) {
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    gdy = lct_gday(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gmn = lct_gmonth(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gyr = lct_gyear(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    ut = ut - 24.0 * (ut / 24.0).floor();
+
+    return (ut, lct, dy1, mn1, yr1, gdy, gmn, gyr);
+}
+
+/// Helper function for moon_rise_lc_dmy
+pub fn moon_rise_lc_dmy_l6700(
+    lct: f64,
+    ds: i32,
+    zc: i32,
+    dy1: f64,
+    mn1: u32,
+    yr1: u32,
+    gdy: f64,
+    gmn: u32,
+    gyr: u32,
+    g_lat: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+    let mm = moon_long(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let bm = moon_lat(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let pm = (moon_hp(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1)).to_radians();
+    let dp = nutat_long(gdy, gmn, gyr);
+    let th = 0.27249 * pm.sin();
+    let di = th + 0.0098902 - pm;
+    let p = dd_dh(ec_ra(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr));
+    let q = ec_dec(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr);
+    let lu = rise_set_local_sidereal_time_rise(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+
+    return (mm, bm, pm, dp, th, di, p, q, lu, lct);
+}
+
+/// Local azimuth of moonrise.
+///
+/// Original macro name: MoonRiseAz
+///
+/// ## Returns
+/// * degrees
+pub fn moon_rise_az(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32, g_long: f64, g_lat: f64) -> f64 {
+    let mut gdy = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gmn = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gyr = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut lct = 12.0;
+    let mut dy1 = dy;
+    let mut mn1 = mn;
+    let mut yr1 = yr;
+
+    let (
+        mm_temp,
+        bm_temp,
+        pm_temp,
+        dp_temp,
+        th_temp,
+        di_temp,
+        p_temp,
+        q_temp,
+        lu_temp,
+        lct_temp,
+        _au_temp,
+    ) = moon_rise_az_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+    let _mm = mm_temp;
+    let _bm = bm_temp;
+    let _pm = pm_temp;
+    let _dp = dp_temp;
+    let _th = th_temp;
+    let _di = di_temp;
+    let _p = p_temp;
+    let _q = q_temp;
+    let mut lu = lu_temp;
+    lct = lct_temp;
+    let mut au: f64;
+
+    if lct == -99.0 {
+        return lct;
+    }
+    let mut la = lu;
+
+    let mut x: f64;
+    let mut ut: f64;
+    let mut g1: f64;
+    let mut gu = 0.0;
+    let mut aa = 0.0;
+    for k in 1..9 {
+        x = lst_gst(la, 0.0, 0.0, g_long);
+        ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+        g1 = if k == 1 { ut } else { gu };
+
+        gu = ut;
+        ut = gu;
+
+        let (_ut_temp, lct_temp, dy1_temp, mn1_temp, yr1_temp, gdy_temp, gmn_temp, gyr_temp) =
+            moon_rise_az_l6680(x, ds, zc, gdy, gmn, gyr, g1, ut);
+        lct = lct_temp;
+        dy1 = dy1_temp;
+        mn1 = mn1_temp;
+        yr1 = yr1_temp;
+        gdy = gdy_temp;
+        gmn = gmn_temp;
+        gyr = gyr_temp;
+
+        let (
+            _mm_temp,
+            _bm_temp,
+            _pm_temp,
+            _dp_temp,
+            _th_temp,
+            _di_temp,
+            _p_temp,
+            _q_temp,
+            lu_temp,
+            lct_temp,
+            au_temp,
+        ) = moon_rise_az_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+        lu = lu_temp;
+        lct = lct_temp;
+        au = au_temp;
+
+        if lct == -99.0 {
+            return lct;
+        }
+        la = lu;
+        aa = au;
+    }
+
+    au = aa;
+
+    return au;
+}
+
+/// Helper function for moon_rise_az
+pub fn moon_rise_az_l6680(
+    x: f64,
+    ds: i32,
+    zc: i32,
+    mut gdy: f64,
+    mut gmn: u32,
+    mut gyr: u32,
+    g1: f64,
+    mut ut: f64,
+) -> (f64, f64, f64, u32, u32, f64, u32, u32) {
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    gdy = lct_gday(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gmn = lct_gmonth(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gyr = lct_gyear(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    ut = ut - 24.0 * (ut / 24.0).floor();
+
+    return (ut, lct, dy1, mn1, yr1, gdy, gmn, gyr);
+}
+
+/// Helper function for moon_rise_az
+pub fn moon_rise_az_l6700(
+    lct: f64,
+    ds: i32,
+    zc: i32,
+    dy1: f64,
+    mn1: u32,
+    yr1: u32,
+    gdy: f64,
+    gmn: u32,
+    gyr: u32,
+    g_lat: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+    let mm = moon_long(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let bm = moon_lat(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let pm = (moon_hp(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1)).to_radians();
+    let dp = nutat_long(gdy, gmn, gyr);
+    let th = 0.27249 * pm.sin();
+    let di = th + 0.0098902 - pm;
+    let p = dd_dh(ec_ra(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr));
+    let q = ec_dec(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr);
+    let lu = rise_set_local_sidereal_time_rise(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+    let au = rise_set_azimuth_rise(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+
+    return (mm, bm, pm, dp, th, di, p, q, lu, lct, au);
+}
+
+/// Local time of moonset.
+///
+/// Original macro name: MoonSetLCT
+///
+/// ## Returns
+/// * hours
+pub fn moon_set_lct(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32, g_long: f64, g_lat: f64) -> f64 {
+    let mut gdy = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gmn = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gyr = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut lct = 12.0;
+    let mut dy1 = dy;
+    let mut mn1 = mn;
+    let mut yr1 = yr;
+
+    let (mm_temp, bm_temp, pm_temp, dp_temp, th_temp, di_temp, p_temp, q_temp, lu_temp, lct_temp) =
+        moon_set_lct_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+    let _mm = mm_temp;
+    let _bm = bm_temp;
+    let _pm = pm_temp;
+    let _dp = dp_temp;
+    let _th = th_temp;
+    let _di = di_temp;
+    let _p = p_temp;
+    let _q = q_temp;
+    let mut lu = lu_temp;
+    lct = lct_temp;
+
+    if lct == -99.0 {
+        return lct;
+    }
+    let mut la = lu;
+
+    let mut x: f64;
+    let mut ut: f64;
+    let mut g1 = 0.0;
+    let mut gu = 0.0;
+    for k in 1..9 {
+        x = lst_gst(la, 0.0, 0.0, g_long);
+        ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+        g1 = if k == 1 { ut } else { gu };
+
+        gu = ut;
+        ut = gu;
+
+        let (_ut_temp, lct_temp, dy1_temp, mn1_temp, yr1_temp, gdy_temp, gmn_temp, gyr_temp) =
+            moon_set_lct_l6680(x, ds, zc, gdy, gmn, gyr, g1, ut);
+        lct = lct_temp;
+        dy1 = dy1_temp;
+        mn1 = mn1_temp;
+        yr1 = yr1_temp;
+        gdy = gdy_temp;
+        gmn = gmn_temp;
+        gyr = gyr_temp;
+
+        let (
+            _mm_temp,
+            _bm_temp,
+            _pm_temp,
+            _dp_temp,
+            _th_temp,
+            _di_temp,
+            _p_temp,
+            _q_temp,
+            lu_temp,
+            lct_temp,
+        ) = moon_set_lct_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+        lu = lu_temp;
+        lct = lct_temp;
+
+        if lct == -99.0 {
+            return lct;
+        }
+        la = lu;
+    }
+
+    x = lst_gst(la, 0.0, 0.0, g_long);
+    ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "ok" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+
+    return lct;
+}
+
+/// Helper function for moon_set_lct
+pub fn moon_set_lct_l6680(
+    x: f64,
+    ds: i32,
+    zc: i32,
+    mut gdy: f64,
+    mut gmn: u32,
+    mut gyr: u32,
+    g1: f64,
+    mut ut: f64,
+) -> (f64, f64, f64, u32, u32, f64, u32, u32) {
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    gdy = lct_gday(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gmn = lct_gmonth(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gyr = lct_gyear(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    ut = ut - 24.0 * (ut / 24.0).floor();
+
+    return (ut, lct, dy1, mn1, yr1, gdy, gmn, gyr);
+}
+
+/// Helper function for moon_set_lct
+pub fn moon_set_lct_l6700(
+    mut lct: f64,
+    ds: i32,
+    zc: i32,
+    dy1: f64,
+    mn1: u32,
+    yr1: u32,
+    gdy: f64,
+    gmn: u32,
+    gyr: u32,
+    g_lat: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+    let mm = moon_long(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let bm = moon_lat(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let pm = (moon_hp(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1)).to_radians();
+    let dp = nutat_long(gdy, gmn, gyr);
+    let th = 0.27249 * pm.sin();
+    let di = th + 0.0098902 - pm;
+    let p = dd_dh(ec_ra(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr));
+    let q = ec_dec(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr);
+    let lu = rise_set_local_sidereal_time_set(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+
+    if e_rs(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat) != "OK" {
+        lct = -99.0;
+    }
+
+    return (mm, bm, pm, dp, th, di, p, q, lu, lct);
+}
+
+/// Moonset calculation status.
+///
+/// Original macro name: eMoonSet
+pub fn e_moon_set(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32, g_long: f64, g_lat: f64) -> String {
+    let mut s4: String = "OK".to_string();
+    let mut gdy = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gmn = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gyr = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut lct = 12.0;
+    let mut dy1 = dy;
+    let mut mn1 = mn;
+    let mut yr1 = yr;
+
+    let (mm_temp, bm_temp, pm_temp, dp_temp, th_temp, di_temp, p_temp, q_temp, lu_temp, s1_temp) =
+        e_moon_rise_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+    let _mm = mm_temp;
+    let _bm = bm_temp;
+    let _pm = pm_temp;
+    let _dp = dp_temp;
+    let _th = th_temp;
+    let _di = di_temp;
+    let _p = p_temp;
+    let _q = q_temp;
+    let mut lu = lu_temp;
+    let mut s1 = s1_temp.to_string();
+
+    let mut la = lu;
+
+    if s1 != "OK" {
+        return s1;
+    }
+
+    let mut x: f64;
+    let mut ut: f64;
+    let mut s3: String;
+    let mut g1: f64;
+    let mut gu = 0.0;
+    for k in 1..9 {
+        x = lst_gst(la, 0.0, 0.0, g_long);
+        ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+        s3 = e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+        if s3 != "OK" {
+            s4 = ["GST conversion:", &s3].join(" ");
+        }
+
+        g1 = if k == 1 { ut } else { gu };
+
+        gu = ut;
+        ut = gu;
+
+        let (_ut_temp, lct_temp, dy1_temp, mn1_temp, yr1_temp, gdy_temp, gmn_temp, gyr_temp) =
+            e_moon_set_l6680(x, g1, ut, ds, zc, gdy, gmn, gyr, dy1, mn1, yr1);
+        lct = lct_temp;
+        dy1 = dy1_temp;
+        mn1 = mn1_temp;
+        yr1 = yr1_temp;
+        gdy = gdy_temp;
+        gmn = gmn_temp;
+        gyr = gyr_temp;
+
+        let (
+            _mm_temp,
+            _bm_temp,
+            _pm_temp,
+            _dp_temp,
+            _th_temp,
+            _di_temp,
+            _p_temp,
+            _q_temp,
+            lu_temp,
+            s1_temp,
+        ) = e_moon_set_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+        lu = lu_temp;
+        s1 = s1_temp;
+
+        la = lu;
+
+        if s1 != "OK" {
+            return s1;
+        }
+    }
+
+    x = lst_gst(la, 0.0, 0.0, g_long);
+    s3 = e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+    if s3 != "OK" {
+        s4 = ["GST conversion:", &s3].join(" ");
+    }
+
+    return s4;
+}
+
+/// Helper function for e_moon_set()
+pub fn e_moon_set_l6680(
+    x: f64,
+    g1: f64,
+    mut ut: f64,
+    ds: i32,
+    zc: i32,
+    mut gdy: f64,
+    mut gmn: u32,
+    mut gyr: u32,
+    _dy1: f64,
+    _mn1: u32,
+    _yr1: u32,
+) -> (f64, f64, f64, u32, u32, f64, u32, u32) {
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    gdy = lct_gday(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gmn = lct_gmonth(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gyr = lct_gyear(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    ut = ut - 24.0 * (ut / 24.0).floor();
+
+    return (ut, lct, dy1, mn1, yr1, gdy, gmn, gyr);
+}
+
+/// Helper function for e_moon_set()
+pub fn e_moon_set_l6700(
+    lct: f64,
+    ds: i32,
+    zc: i32,
+    dy1: f64,
+    mn1: u32,
+    yr1: u32,
+    gdy: f64,
+    gmn: u32,
+    gyr: u32,
+    g_lat: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, String) {
+    let mm = moon_long(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let bm = moon_lat(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let pm = (moon_hp(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1)).to_radians();
+    let dp = nutat_long(gdy, gmn, gyr);
+    let th = 0.27249 * pm.sin();
+    let di = th + 0.0098902 - pm;
+    let p = dd_dh(ec_ra(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr));
+    let q = ec_dec(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr);
+    let lu = rise_set_local_sidereal_time_set(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+    let s1 = e_rs(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+
+    return (mm, bm, pm, dp, th, di, p, q, lu, s1);
+}
+
+/// Local date of moonset.
+///
+/// Original macro names: MoonSetLcDay, MoonSetLcMonth, MoonSetLcYear
+///
+/// ## Returns
+/// * Local date (day)
+/// * Local date (month)
+/// * Local date (year)
+pub fn moon_set_lc_dmy(
+    dy: f64,
+    mn: u32,
+    yr: u32,
+    ds: i32,
+    zc: i32,
+    g_long: f64,
+    g_lat: f64,
+) -> (f64, u32, u32) {
+    let mut gdy = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gmn = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gyr = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut lct = 12.0;
+    let mut dy1 = dy;
+    let mut mn1 = mn;
+    let mut yr1 = yr;
+
+    let (mm_temp, bm_temp, pm_temp, dp_temp, th_temp, di_temp, p_temp, q_temp, lu_temp, lct_temp) =
+        moon_set_lc_dmy_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+    let _mm = mm_temp;
+    let _bm = bm_temp;
+    let _pm = pm_temp;
+    let _dp = dp_temp;
+    let _th = th_temp;
+    let _di = di_temp;
+    let _p = p_temp;
+    let _q = q_temp;
+    let mut lu = lu_temp;
+    lct = lct_temp;
+
+    if lct == -99.0 {
+        return (lct, lct as u32, lct as u32);
+    }
+    let mut la = lu;
+
+    let mut x: f64;
+    let mut ut: f64;
+    let mut g1 = 0.0;
+    let mut gu = 0.0;
+    for k in 1..9 {
+        x = lst_gst(la, 0.0, 0.0, g_long);
+        ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+        g1 = if k == 1 { ut } else { gu };
+
+        gu = ut;
+        ut = gu;
+
+        let (_ut_temp, lct_temp, dy1_temp, mn1_temp, yr1_temp, gdy_temp, gmn_temp, gyr_temp) =
+            moon_set_lc_dmy_l6680(x, ds, zc, gdy, gmn, gyr, g1, ut);
+        lct = lct_temp;
+        dy1 = dy1_temp;
+        mn1 = mn1_temp;
+        yr1 = yr1_temp;
+        gdy = gdy_temp;
+        gmn = gmn_temp;
+        gyr = gyr_temp;
+
+        let (
+            _mm_temp,
+            _bm_temp,
+            _pm_temp,
+            _dp_temp,
+            _th_temp,
+            _di_temp,
+            _p_temp,
+            _q_temp,
+            lu_temp,
+            lct_temp,
+        ) = moon_set_lc_dmy_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+        lu = lu_temp;
+        lct = lct_temp;
+
+        if lct == -99.0 {
+            return (lct, lct as u32, lct as u32);
+        }
+        la = lu;
+    }
+
+    x = lst_gst(la, 0.0, 0.0, g_long);
+    ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+
+    return (dy1, mn1, yr1);
+}
+
+/// Helper function for moon_set_lc_dmy
+pub fn moon_set_lc_dmy_l6680(
+    x: f64,
+    ds: i32,
+    zc: i32,
+    mut gdy: f64,
+    mut gmn: u32,
+    mut gyr: u32,
+    g1: f64,
+    mut ut: f64,
+) -> (f64, f64, f64, u32, u32, f64, u32, u32) {
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    gdy = lct_gday(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gmn = lct_gmonth(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gyr = lct_gyear(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    ut = ut - 24.0 * (ut / 24.0).floor();
+
+    return (ut, lct, dy1, mn1, yr1, gdy, gmn, gyr);
+}
+
+/// Helper function for moon_set_lc_dmy
+pub fn moon_set_lc_dmy_l6700(
+    lct: f64,
+    ds: i32,
+    zc: i32,
+    dy1: f64,
+    mn1: u32,
+    yr1: u32,
+    gdy: f64,
+    gmn: u32,
+    gyr: u32,
+    g_lat: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+    let mm = moon_long(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let bm = moon_lat(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let pm = (moon_hp(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1)).to_radians();
+    let dp = nutat_long(gdy, gmn, gyr);
+    let th = 0.27249 * pm.sin();
+    let di = th + 0.0098902 - pm;
+    let p = dd_dh(ec_ra(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr));
+    let q = ec_dec(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr);
+    let lu = rise_set_local_sidereal_time_set(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+
+    return (mm, bm, pm, dp, th, di, p, q, lu, lct);
+}
+
+/// Local azimuth of moonset.
+///
+/// Original macro name: MoonSetAz
+///
+/// ## Returns
+/// * degrees
+pub fn moon_set_az(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32, g_long: f64, g_lat: f64) -> f64 {
+    let mut gdy = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gmn = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut gyr = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let mut lct = 12.0;
+    let mut dy1 = dy;
+    let mut mn1 = mn;
+    let mut yr1 = yr;
+
+    let (
+        mm_temp,
+        bm_temp,
+        pm_temp,
+        dp_temp,
+        th_temp,
+        di_temp,
+        p_temp,
+        q_temp,
+        lu_temp,
+        lct_temp,
+        _au_temp,
+    ) = moon_set_az_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+    let _mm = mm_temp;
+    let _bm = bm_temp;
+    let _pm = pm_temp;
+    let _dp = dp_temp;
+    let _th = th_temp;
+    let _di = di_temp;
+    let _p = p_temp;
+    let _q = q_temp;
+    let mut lu = lu_temp;
+    lct = lct_temp;
+    let mut au: f64;
+
+    if lct == -99.0 {
+        return lct;
+    }
+    let mut la = lu;
+
+    let mut x: f64;
+    let mut ut: f64;
+    let mut g1: f64;
+    let mut gu = 0.0;
+    let mut aa = 0.0;
+    for k in 1..9 {
+        x = lst_gst(la, 0.0, 0.0, g_long);
+        ut = gst_ut(x, 0.0, 0.0, gdy, gmn, gyr);
+
+        g1 = if k == 1 { ut } else { gu };
+
+        gu = ut;
+        ut = gu;
+
+        let (_ut_temp, lct_temp, dy1_temp, mn1_temp, yr1_temp, gdy_temp, gmn_temp, gyr_temp) =
+            moon_set_az_l6680(x, ds, zc, gdy, gmn, gyr, g1, ut);
+        lct = lct_temp;
+        dy1 = dy1_temp;
+        mn1 = mn1_temp;
+        yr1 = yr1_temp;
+        gdy = gdy_temp;
+        gmn = gmn_temp;
+        gyr = gyr_temp;
+
+        let (
+            _mm_temp,
+            _bm_temp,
+            _pm_temp,
+            _dp_temp,
+            _th_temp,
+            _di_temp,
+            _p_temp,
+            _q_temp,
+            lu_temp,
+            lct_temp,
+            au_temp,
+        ) = moon_set_az_l6700(lct, ds, zc, dy1, mn1, yr1, gdy, gmn, gyr, g_lat);
+        lu = lu_temp;
+        lct = lct_temp;
+        au = au_temp;
+
+        if lct == -99.0 {
+            return lct;
+        }
+        la = lu;
+        aa = au;
+    }
+
+    au = aa;
+
+    return au;
+}
+
+/// Helper function for moon_set_az
+pub fn moon_set_az_l6680(
+    x: f64,
+    ds: i32,
+    zc: i32,
+    mut gdy: f64,
+    mut gmn: u32,
+    mut gyr: u32,
+    g1: f64,
+    mut ut: f64,
+) -> (f64, f64, f64, u32, u32, f64, u32, u32) {
+    if e_gst_ut(x, 0.0, 0.0, gdy, gmn, gyr) != "OK" {
+        if (g1 - ut).abs() > 0.5 {
+            ut = ut + 23.93447;
+        }
+    }
+
+    ut = ut_day_adjust(ut, g1);
+    let lct = ut_lct(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let dy1 = ut_lc_day(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let mn1 = ut_lc_month(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    let yr1 = ut_lc_year(ut, 0.0, 0.0, ds, zc, gdy, gmn, gyr);
+    gdy = lct_gday(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gmn = lct_gmonth(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    gyr = lct_gyear(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    ut = ut - 24.0 * (ut / 24.0).floor();
+
+    return (ut, lct, dy1, mn1, yr1, gdy, gmn, gyr);
+}
+
+/// Helper function for moon_set_az
+pub fn moon_set_az_l6700(
+    lct: f64,
+    ds: i32,
+    zc: i32,
+    dy1: f64,
+    mn1: u32,
+    yr1: u32,
+    gdy: f64,
+    gmn: u32,
+    gyr: u32,
+    g_lat: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+    let mm = moon_long(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let bm = moon_lat(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1);
+    let pm = (moon_hp(lct, 0.0, 0.0, ds, zc, dy1, mn1, yr1)).to_radians();
+    let dp = nutat_long(gdy, gmn, gyr);
+    let th = 0.27249 * pm.sin();
+    let di = th + 0.0098902 - pm;
+    let p = dd_dh(ec_ra(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr));
+    let q = ec_dec(mm + dp, 0.0, 0.0, bm, 0.0, 0.0, gdy, gmn, gyr);
+    let lu = rise_set_local_sidereal_time_set(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+    let au = rise_set_azimuth_set(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
+
+    return (mm, bm, pm, dp, th, di, p, q, lu, lct, au);
 }

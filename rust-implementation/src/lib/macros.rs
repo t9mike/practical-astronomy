@@ -3994,6 +3994,11 @@ pub fn ut_day_adjust(ut: f64, g1: f64) -> f64 {
     return return_value;
 }
 
+/// Original macro name: Fpart
+pub fn f_part(w: f64) -> f64 {
+    return w - lint(w);
+}
+
 /// Local time of moonrise.
 ///
 /// Original macro name: MoonRiseLCT
@@ -5231,4 +5236,872 @@ pub fn moon_set_az_l6700(
     let au = rise_set_azimuth_set(p, 0.0, 0.0, q, 0.0, 0.0, degrees(di), g_lat);
 
     return (mm, bm, pm, dp, th, di, p, q, lu, lct, au);
+}
+
+/// Determine if a lunar eclipse is likely to occur.
+///
+/// Original macro name: LEOccurrence
+pub fn lunar_eclipse_occurrence(ds: i32, zc: i32, dy: f64, mn: u32, yr: u32) -> String {
+    let d0 = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let m0 = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let y0 = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+
+    /* Comparison is impossible because of type limits
+    if y0 < 0 {
+        y0 = y0 + 1;
+    }
+    */
+
+    let j0 = cd_jd(0.0, 1, y0);
+    let dj = cd_jd(d0, m0, y0);
+    let mut k = (y0 as f64 - 1900.0 + ((dj - j0) * 1.0 / 365.0)) * 12.3685;
+    k = lint(k + 0.5);
+    let tn = k / 1236.85;
+    let tf = (k + 0.5) / 1236.85;
+    let mut t = tn;
+    let (f, _dd, _e1, _b1, a, b) = lunar_eclipse_occurrence_l6855(t, k);
+    let _ni = a;
+    let _nf = b;
+    let _nb = f;
+    t = tf;
+    k = k + 0.5;
+    let (f, _dd, _e1, _b1, a, b) = lunar_eclipse_occurrence_l6855(t, k);
+    let _fi = a;
+    let _ff = b;
+    let fb = f;
+
+    let mut df = (fb - 3.141592654 * lint(fb / 3.141592654)).abs();
+
+    if df > 0.37 {
+        df = 3.141592654 - df;
+    }
+
+    let mut s = "Lunar eclipse certain";
+    if df >= 0.242600766 {
+        s = "Lunar eclipse possible";
+        if df > 0.37 {
+            s = "No lunar eclipse"
+        }
+    }
+
+    return s.to_string();
+}
+
+/// Helper function for lunar_eclipse_occurrence
+pub fn lunar_eclipse_occurrence_l6855(t: f64, k: f64) -> (f64, f64, f64, f64, f64, f64) {
+    let t2 = t * t;
+    let e = 29.53 * k;
+    let c = 166.56 + (132.87 - 0.009173 * t) * t;
+    let c = c.to_radians();
+    let b = 0.00058868 * k + (0.0001178 - 0.000000155 * t) * t2;
+    let b = b + 0.00033 * c.sin() + 0.75933;
+    let a = k / 12.36886;
+    let a1 = 359.2242 + 360.0 * f_part(a) - (0.0000333 + 0.00000347 * t) * t2;
+    let a2 = 306.0253 + 360.0 * f_part(k / 0.9330851);
+    let a2 = a2 + (0.0107306 + 0.00001236 * t) * t2;
+    let a = k / 0.9214926;
+    let f = 21.2964 + 360.0 * f_part(a) - (0.0016528 + 0.00000239 * t) * t2;
+    let a1 = unwind_deg(a1);
+    let a2 = unwind_deg(a2);
+    let f = unwind_deg(f);
+    let a1 = a1.to_radians();
+    let a2 = a2.to_radians();
+    let f = f.to_radians();
+
+    let dd = (0.1734 - 0.000393 * t) * a1.sin() + 0.0021 * (2.0 * a1).sin();
+    let dd = dd - 0.4068 * a2.sin() + 0.0161 * (2.0 * a2).sin() - 0.0004 * (3.0 * a2).sin();
+    let dd = dd + 0.0104 * (2.0 * f).sin() - 0.0051 * (a1 + a2).sin();
+    let dd = dd - 0.0074 * (a1 - a2).sin() + 0.0004 * (2.0 * f + a1).sin();
+    let dd = dd - 0.0004 * (2.0 * f - a1).sin() - 0.0006 * (2.0 * f + a2).sin()
+        + 0.001 * (2.0 * f - a2).sin();
+    let dd = dd + 0.0005 * (a1 + 2.0 * a2).sin();
+    let e1 = e.floor();
+    let b = b + dd + (e - e1);
+    let b1 = b.floor();
+    let a = e1 + b1;
+    let b = b - b1;
+
+    return (f, dd, e1, b1, a, b);
+}
+
+/// Calculate time of maximum shadow for lunar eclipse (UT)
+///
+/// Original macro name: UTMaxLunarEclipse
+pub fn ut_max_lunar_eclipse(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if lunar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No lunar eclipse" {
+        return -99.0;
+    }
+
+    let dj = full_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utfm = xi * 24.0;
+    let ut = utfm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utfm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utfm;
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let sr = sr + std::f64::consts::PI - lint((sr + std::f64::consts::PI) / tp) * tp;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let _ru = (hd - rn + ps) * 1.02;
+    let rp = (hd + rn + ps) * 1.02;
+    let _pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rp;
+    let mut dd = z1 - x0;
+    dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    return z1;
+}
+
+/// Calculate time of first shadow contact for lunar eclipse (UT)
+///
+/// Original macro name: UTFirstContactLunarEclipse
+pub fn ut_first_contact_lunar_eclipse(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if lunar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No lunar eclipse" {
+        return -99.0;
+    }
+
+    let dj = full_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utfm = xi * 24.0;
+    let ut = utfm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utfm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utfm;
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let sr = sr + std::f64::consts::PI - lint((sr + std::f64::consts::PI) / tp) * tp;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let _ru = (hd - rn + ps) * 1.02;
+    let rp = (hd + rn + ps) * 1.02;
+    let _pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rp;
+    let mut dd = z1 - x0;
+    dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let mut z6 = z1 - zd;
+
+    if z6 < 0.0 {
+        z6 = z6 + 24.0;
+    }
+
+    return z6;
+}
+
+/// Calculate time of last shadow contact for lunar eclipse (UT)
+///
+/// Original macro name: UTLastContactLunarEclipse
+pub fn ut_last_contact_lunar_eclipse(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if lunar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No lunar eclipse" {
+        return -99.0;
+    }
+
+    let dj = full_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utfm = xi * 24.0;
+    let ut = utfm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utfm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utfm;
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let sr = sr + std::f64::consts::PI - lint((sr + std::f64::consts::PI) / tp) * tp;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let _ru = (hd - rn + ps) * 1.02;
+    let rp = (hd + rn + ps) * 1.02;
+    let _pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rp;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let _z6 = z1 - zd;
+    let z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    return z7;
+}
+
+/// Calculate start time of umbra phase of lunar eclipse (UT)
+///
+/// Original macro name: UTStartUmbraLunarEclipse
+pub fn ut_start_umbra_lunar_eclipse(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if lunar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No lunar eclipse" {
+        return -99.0;
+    }
+
+    let dj = full_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utfm = xi * 24.0;
+    let ut = utfm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utfm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utfm;
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let sr = sr + std::f64::consts::PI - lint((sr + std::f64::consts::PI) / tp) * tp;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let ru = (hd - rn + ps) * 1.02;
+    let rp = (hd + rn + ps) * 1.02;
+    let pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rp;
+    let mut dd = z1 - x0;
+    dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let z6 = z1 - zd;
+    let _z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z6 < 0.0 {
+        let _z6 = z6 + 24.0;
+    }
+
+    let r = rm + ru;
+    dd = z1 - x0;
+    dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+    let _mg = (rm + rp - pj) / (2.0 * rm);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let mut z8 = z1 - zd;
+    let _z9 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z8 < 0.0 {
+        z8 = z8 + 24.0;
+    }
+
+    return z8;
+}
+
+/// Calculate end time of umbra phase of lunar eclipse (UT)
+///
+/// Original macro name: UTEndUmbraLunarEclipse
+pub fn ut_end_umbra_lunar_eclipse(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if lunar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No lunar eclipse" {
+        return -99.0;
+    }
+
+    let dj = full_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utfm = xi * 24.0;
+    let ut = utfm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utfm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utfm;
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let sr = sr + std::f64::consts::PI - lint((sr + std::f64::consts::PI) / tp) * tp;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let ru = (hd - rn + ps) * 1.02;
+    let rp = (hd + rn + ps) * 1.02;
+    let pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rp;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let z6 = z1 - zd;
+    let _z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z6 < 0.0 {
+        let _z6 = z6 + 24.0;
+    }
+
+    let r = rm + ru;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+    let _mg = (rm + rp - pj) / (2.0 * rm);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let _z8 = z1 - zd;
+    let z9 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    return z9;
+}
+
+/// Calculate start time of total phase of lunar eclipse (UT)
+///
+/// Original macro name: UTStartTotalLunarEclipse
+pub fn ut_start_total_lunar_eclipse(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if lunar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No lunar eclipse" {
+        return -99.0;
+    }
+
+    let dj = full_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utfm = xi * 24.0;
+    let ut = utfm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utfm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utfm;
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let sr = sr + std::f64::consts::PI - lint((sr + std::f64::consts::PI) / tp) * tp;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let ru = (hd - rn + ps) * 1.02;
+    let rp = (hd + rn + ps) * 1.02;
+    let pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rp;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = (dd).sqrt();
+    let z6 = z1 - zd;
+    let _z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z6 < 0.0 {
+        let _z6 = z6 + 24.0;
+    }
+
+    let r = rm + ru;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+    let _mg = (rm + rp - pj) / (2.0 * rm);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = (dd).sqrt();
+    let z8 = z1 - zd;
+    let _z9 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z8 < 0.0 {
+        let _z8 = z8 + 24.0;
+    }
+
+    let r = ru - rm;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+    let _mg = (rm + ru - pj) / (2.0 * rm);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = (dd).sqrt();
+    let mut zcc = z1 - zd;
+    let _zb = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if zcc < 0.0 {
+        zcc = zc as f64 + 24.0;
+    }
+
+    return zcc;
+}
+
+/// Calculate end time of total phase of lunar eclipse (UT)
+///
+/// Original macro name: UTEndTotalLunarEclipse
+pub fn ut_end_total_lunar_eclipse(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if lunar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No lunar eclipse" {
+        return -99.0;
+    }
+
+    let dj = full_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utfm = xi * 24.0;
+    let ut = utfm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utfm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utfm;
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let sr = sr + std::f64::consts::PI - lint((sr + std::f64::consts::PI) / tp) * tp;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let ru = (hd - rn + ps) * 1.02;
+    let rp = (hd + rn + ps) * 1.02;
+    let pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rp;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let z6 = z1 - zd;
+    let _z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z6 < 0.0 {
+        let _z6 = z6 + 24.0;
+    }
+
+    let r = rm + ru;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+    let _mg = (rm + rp - pj) / (2.0 * rm);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let z8 = z1 - zd;
+    let _z9 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z8 < 0.0 {
+        let _z8 = z8 + 24.0;
+    }
+
+    let r = ru - rm;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+    let _mg = (rm + ru - pj) / (2.0 * rm);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let zb = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    return zb;
+}
+
+/// Calculate magnitude of lunar eclipse.
+///
+/// Original macro name: MagLunarEclipse
+pub fn mag_lunar_eclipse(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if lunar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No lunar eclipse" {
+        return -99.0;
+    }
+
+    let dj = full_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utfm = xi * 24.0;
+    let ut = utfm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utfm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utfm;
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let sr = sr + std::f64::consts::PI - lint((sr + std::f64::consts::PI) / tp) * tp;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let ru = (hd - rn + ps) * 1.02;
+    let rp = (hd + rn + ps) * 1.02;
+    let pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rp;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let z6 = z1 - zd;
+    let _z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z6 < 0.0 {
+        let _z6 = z6 + 24.0;
+    }
+
+    let r = rm + ru;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+    let mg = (rm + rp - pj) / (2.0 * rm);
+
+    if dd < 0.0 {
+        return mg;
+    }
+
+    let zd = dd.sqrt();
+    let z8 = z1 - zd;
+    let _z9 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z8 < 0.0 {
+        let _z8 = z8 + 24.0;
+    }
+
+    let r = ru - rm;
+    let dd = z1 - x0;
+    let _dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+    let mg = (rm + ru - pj) / (2.0 * rm);
+
+    return mg;
 }

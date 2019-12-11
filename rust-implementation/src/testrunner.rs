@@ -3,6 +3,7 @@ use crate::tests::binary as BINS;
 use crate::tests::comet as COMT;
 use crate::tests::coordinates as CST;
 use crate::tests::datetime as DTT;
+use crate::tests::eclipses as ECL;
 use crate::tests::moon as MOONT;
 use crate::tests::planet as PLANETT;
 use crate::tests::sun as SUNT;
@@ -22,6 +23,8 @@ pub fn run_tests() {
     run_binary_tests();
 
     run_moon_tests();
+
+    run_eclipse_tests();
 }
 
 pub fn run_datetime_tests() {
@@ -315,4 +318,16 @@ pub fn run_moon_tests() {
 
     MOONT::test_times_of_new_moon_and_full_moon(false, 0, 1.0, 9, 2003);
     MOONT::test_moonrise_and_moonset(6.0, 3, 1986, false, -5, -71.05, 42.3667);
+}
+
+pub fn run_eclipse_tests() {
+    let mut test_eclipses = ECL::TestLunarEclipseScaffold {
+        local_date_day: 1.0,
+        local_date_month: 4,
+        local_date_year: 2015,
+        is_daylight_saving: false,
+        zone_correction_hours: 10,
+    };
+    test_eclipses.test_lunar_eclipse_occurrence();
+    test_eclipses.test_lunar_eclipse_circumstances();
 }

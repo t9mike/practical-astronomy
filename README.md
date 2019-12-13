@@ -12,4 +12,12 @@ The only Python 3 dependency is [Numpy](https://numpy.org/).
 
 ## Roadmap
 
-The Python 3 implementation is intended as a learning tool.  The code is easier to read and understand, but won't hold up as well where speed is required.  So, the next step will be re-implementing the Python code in [Rust](https://www.rust-lang.org/).  You can follow that work in the [rust-implementation branch](https://github.com/jfcarr-astronomy/practical-astronomy/tree/rust-implementation/rust-implementation).
+### Current State
+
+- [x] Python implementation -> Complete.
+- [x] Rust implementation -> Complete.
+
+### Future
+
+- [ ] Build a more comprehensive suite of unit tests.
+- [ ] Finish CLI argument support.

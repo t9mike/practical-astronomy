@@ -4,18 +4,14 @@ Algorithms from "[Practical Astronomy with your Calculator or Spreadsheet](https
 
 If you're interested in this topic, please buy the book!  It provides far more detail and context.
 
-## Done
-
-All spreadsheets and macros from the book, implemented in Python 3.  (See details in lib/README.md)
-
-The only Python 3 dependency is [Numpy](https://numpy.org/).
-
 ## Roadmap
 
 ### Current State
 
-- [x] Python implementation -> Complete.
-- [x] Rust implementation -> Complete.
+All spreadsheets and macros from the book, implemented in:
+
+- [x] **Python 3**  (See details in lib/README.md)  The only Python 3 dependency is [Numpy](https://numpy.org/)
+- [x] **Rust** (See details in rust-implementation/README.md)
 
 ### Future
 

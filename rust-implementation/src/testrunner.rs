@@ -321,13 +321,24 @@ pub fn run_moon_tests() {
 }
 
 pub fn run_eclipse_tests() {
-    let mut test_eclipses = ECL::TestLunarEclipseScaffold {
+    let mut test_lunar_eclipse = ECL::TestLunarEclipseScaffold {
         local_date_day: 1.0,
         local_date_month: 4,
         local_date_year: 2015,
         is_daylight_saving: false,
         zone_correction_hours: 10,
     };
-    test_eclipses.test_lunar_eclipse_occurrence();
-    test_eclipses.test_lunar_eclipse_circumstances();
+    test_lunar_eclipse.test_lunar_eclipse_occurrence();
+    test_lunar_eclipse.test_lunar_eclipse_circumstances();
+
+    let mut test_solar_eclipse = ECL::TestSolarEclipseScaffold {
+        local_date_day: 1.0,
+        local_date_month: 4,
+        local_date_year: 2015,
+        is_daylight_saving: false,
+        zone_correction_hours: 0,
+    };
+    test_solar_eclipse.test_solar_eclipse_occurrence();
+
+    ECL::test_solar_eclipse_circumstances(20.0, 3, 2015, false, 0, 0.0, 68.65);
 }

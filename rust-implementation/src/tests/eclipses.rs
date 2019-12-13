@@ -129,3 +129,104 @@ impl TestLunarEclipseScaffold {
         assert_eq!(eclipse_magnitude, 1.01, "Eclipse Magnitude");
     }
 }
+
+pub struct TestSolarEclipseScaffold {
+    pub local_date_day: f64,
+    pub local_date_month: u32,
+    pub local_date_year: u32,
+    pub is_daylight_saving: bool,
+    pub zone_correction_hours: i32,
+}
+impl TestSolarEclipseScaffold {
+    pub fn test_solar_eclipse_occurrence(&mut self) {
+        let (status, event_date_day, event_date_month, event_date_year) =
+            ECL::solar_eclipse_occurrence(
+                self.local_date_day,
+                self.local_date_month,
+                self.local_date_year,
+                self.is_daylight_saving,
+                self.zone_correction_hours,
+            );
+
+        println!(
+			"Solar eclipse occurrence: [Local Date] {}/{}/{} [DST?] {} [Zone Correction] {} = [Status] {:} [Event Date] {}/{}/{}",
+			self.local_date_month,
+			self.local_date_day,
+			self.local_date_year,
+			self.is_daylight_saving,
+			self.zone_correction_hours,
+			status,
+			event_date_month,
+			event_date_day,
+			event_date_year
+		);
+
+        assert_eq!(status, "Solar eclipse certain", "Lunar eclipse status");
+        assert_eq!(event_date_day, 20.0, "Solar eclipse event date (day)");
+        assert_eq!(event_date_month, 3, "Solar eclipse event date (month)");
+        assert_eq!(event_date_year, 2015, "Solar eclipse event date (year)");
+    }
+}
+
+pub fn test_solar_eclipse_circumstances(
+    local_date_day: f64,
+    local_date_month: u32,
+    local_date_year: u32,
+    is_daylight_saving: bool,
+    zone_correction_hours: i32,
+    geog_longitude_deg: f64,
+    geog_latitude_deg: f64,
+) {
+    let (
+        solar_eclipse_certain_date_day,
+        solar_eclipse_certain_date_month,
+        solar_eclipse_certain_date_year,
+        ut_first_contact_hour,
+        ut_first_contact_minutes,
+        ut_mid_eclipse_hour,
+        ut_mid_eclipse_minutes,
+        ut_last_contact_hour,
+        ut_last_contact_minutes,
+        eclipse_magnitude,
+    ) = ECL::solar_eclipse_circumstances(
+        local_date_day,
+        local_date_month,
+        local_date_year,
+        is_daylight_saving,
+        zone_correction_hours,
+        geog_longitude_deg,
+        geog_latitude_deg,
+    );
+
+    println!(
+		"Solar eclipse circumstances: [Local Date] {}/{}/{} [DST?] {} [Zone Correction] {} hours [Geographical Longitude/Latitude] {} degrees / {} degrees = [Certain Date] {}/{}/{} [First Contact] {}:{} [Mid Eclipse] {}:{} [Last Contact] {}:{} [Magnitude] {}",
+		local_date_month,
+		local_date_day,
+		local_date_year,
+		is_daylight_saving,
+		zone_correction_hours,
+		geog_longitude_deg,
+		geog_latitude_deg,
+		solar_eclipse_certain_date_month,
+		solar_eclipse_certain_date_day,
+		solar_eclipse_certain_date_year,
+		ut_first_contact_hour,
+		ut_first_contact_minutes,
+		ut_mid_eclipse_hour,
+		ut_mid_eclipse_minutes,
+		ut_last_contact_hour,
+		ut_last_contact_minutes,
+		eclipse_magnitude
+	);
+
+    assert_eq!(solar_eclipse_certain_date_day, 20.0, "Eclipse Date (day)");
+    assert_eq!(solar_eclipse_certain_date_month, 3, "Eclipse Date (month)");
+    assert_eq!(solar_eclipse_certain_date_year, 2015, "Eclipse Date (year)");
+    assert_eq!(ut_first_contact_hour, 8.0, "First Contact (hour)");
+    assert_eq!(ut_first_contact_minutes, 55.0, "First Contact (minutes)");
+    assert_eq!(ut_mid_eclipse_hour, 9.0, "Mid Eclipse (hour)");
+    assert_eq!(ut_mid_eclipse_minutes, 57.0, "Mid Eclipse (minutes)");
+    assert_eq!(ut_last_contact_hour, 10.0, "Last Contact (hour)");
+    assert_eq!(ut_last_contact_minutes, 58.0, "Last Contact (minutes)");
+    assert_eq!(eclipse_magnitude, 1.016, "Eclipse Magnitude");
+}

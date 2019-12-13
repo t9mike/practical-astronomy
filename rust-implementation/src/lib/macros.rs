@@ -3999,6 +3999,48 @@ pub fn f_part(w: f64) -> f64 {
     return w - lint(w);
 }
 
+/// Original macro name: EQElat
+pub fn eq_e_lat(
+    rah: f64,
+    ram: f64,
+    ras: f64,
+    dd: f64,
+    dm: f64,
+    ds: f64,
+    gd: f64,
+    gm: u32,
+    gy: u32,
+) -> f64 {
+    let a = (dh_dd(hms_dh(rah, ram, ras))).to_radians();
+    let b = (dms_dd(dd, dm, ds)).to_radians();
+    let c = (obliq(gd, gm, gy)).to_radians();
+    let d = b.sin() * c.cos() - b.cos() * c.sin() * a.sin();
+
+    return degrees((d).asin());
+}
+
+/// Original macro name: EQElong
+pub fn eq_e_long(
+    rah: f64,
+    ram: f64,
+    ras: f64,
+    dd: f64,
+    dm: f64,
+    ds: f64,
+    gd: f64,
+    gm: u32,
+    gy: u32,
+) -> f64 {
+    let a = (dh_dd(hms_dh(rah, ram, ras))).to_radians();
+    let b = (dms_dd(dd, dm, ds)).to_radians();
+    let c = (obliq(gd, gm, gy)).to_radians();
+    let d = a.sin() * c.cos() + b.tan() * c.sin();
+    let e = a.cos();
+    let f = degrees(d.atan2(e));
+
+    return f - 360.0 * (f / 360.0).floor();
+}
+
 /// Local time of moonrise.
 ///
 /// Original macro name: MoonRiseLCT
@@ -6104,4 +6146,886 @@ pub fn mag_lunar_eclipse(dy: f64, mn: u32, yr: u32, ds: i32, zc: i32) -> f64 {
     let mg = (rm + ru - pj) / (2.0 * rm);
 
     return mg;
+}
+
+/// Determine if a solar eclipse is likely to occur.
+///
+/// Original macro name: SEOccurrence
+pub fn solar_eclipse_occurrence(ds: i32, zc: i32, dy: f64, mn: u32, yr: u32) -> String {
+    let d0 = lct_gday(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let m0 = lct_gmonth(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+    let y0 = lct_gyear(12.0, 0.0, 0.0, ds, zc, dy, mn, yr);
+
+    let j0 = cd_jd(0.0, 1, y0);
+    let dj = cd_jd(d0, m0, y0);
+    let k = (y0 as f64 - 1900.0 + ((dj - j0) * 1.0 / 365.0)) * 12.3685;
+    let k = lint(k + 0.5);
+    let tn = k / 1236.85;
+    let tf = (k + 0.5) / 1236.85;
+    let t = tn;
+    let (f, _dd, _e1, _b1, a, b) = solar_eclipse_occurrence_l6855(t, k);
+    let _ni = a;
+    let _nf = b;
+    let nb = f;
+    let t = tf;
+    let k = k + 0.5;
+    let (f, _dd, _e1, _b1, a, b) = solar_eclipse_occurrence_l6855(t, k);
+    let _fi = a;
+    let _ff = b;
+    let _fb = f;
+
+    let mut df = (nb - 3.141592654 * lint(nb / 3.141592654)).abs();
+
+    if df > 0.37 {
+        df = 3.141592654 - df;
+    }
+
+    let mut s = "Solar eclipse certain";
+    if df >= 0.242600766 {
+        s = "Solar eclipse possible";
+        if df > 0.37 {
+            s = "No solar eclipse";
+        }
+    }
+
+    return s.to_string();
+}
+
+/// Helper function for solar_eclipse_occurrence
+pub fn solar_eclipse_occurrence_l6855(t: f64, k: f64) -> (f64, f64, f64, f64, f64, f64) {
+    let t2 = t * t;
+    let e = 29.53 * k;
+    let c = 166.56 + (132.87 - 0.009173 * t) * t;
+    let c = c.to_radians();
+    let b = 0.00058868 * k + (0.0001178 - 0.000000155 * t) * t2;
+    let b = b + 0.00033 * c.sin() + 0.75933;
+    let a = k / 12.36886;
+    let a1 = 359.2242 + 360.0 * f_part(a) - (0.0000333 + 0.00000347 * t) * t2;
+    let a2 = 306.0253 + 360.0 * f_part(k / 0.9330851);
+    let a2 = a2 + (0.0107306 + 0.00001236 * t) * t2;
+    let a = k / 0.9214926;
+    let f = 21.2964 + 360.0 * f_part(a) - (0.0016528 + 0.00000239 * t) * t2;
+    let a1 = unwind_deg(a1);
+    let a2 = unwind_deg(a2);
+    let f = unwind_deg(f);
+    let a1 = a1.to_radians();
+    let a2 = a2.to_radians();
+    let f = f.to_radians();
+
+    let dd = (0.1734 - 0.000393 * t) * (a1).sin() + 0.0021 * (2.0 * a1).sin();
+    let dd = dd - 0.4068 * (a2).sin() + 0.0161 * (2.0 * a2).sin() - 0.0004 * (3.0 * a2).sin();
+    let dd = dd + 0.0104 * (2.0 * f).sin() - 0.0051 * (a1 + a2).sin();
+    let dd = dd - 0.0074 * (a1 - a2).sin() + 0.0004 * (2.0 * f + a1).sin();
+    let dd = dd - 0.0004 * (2.0 * f - a1).sin() - 0.0006 * (2.0 * f + a2).sin()
+        + 0.001 * (2.0 * f - a2).sin();
+    let dd = dd + 0.0005 * (a1 + 2.0 * a2).sin();
+    let e1 = e.floor();
+    let b = b + dd + (e - e1);
+    let b1 = b.floor();
+    let a = e1 + b1;
+    let b = b - b1;
+
+    return (f, dd, e1, b1, a, b);
+}
+
+/// Calculate time of maximum shadow for solar eclipse (UT)
+///
+/// Original macro name: UTMaxSolarEclipse
+pub fn ut_max_solar_eclipse(
+    dy: f64,
+    mn: u32,
+    yr: u32,
+    ds: i32,
+    zc: i32,
+    glong: f64,
+    glat: f64,
+) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if solar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No solar eclipse" {
+        return -99.0;
+    }
+
+    let dj = new_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utnm = xi * 24.0;
+    let ut = utnm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utnm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utnm;
+    let x = my;
+    let y = by;
+    let tm = xh - 1.0;
+    let hp = hy;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        ut_max_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let my = p;
+    let by = q;
+    let x = mz;
+    let y = bz;
+    let tm = xh + 1.0;
+    let hp = hz;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        ut_max_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let mz = p;
+    let bz = q;
+
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let _q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let x = sr;
+    let y = 0.0;
+    let tm = ut;
+    let hp = 0.00004263452 / rr;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        ut_max_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let sr = p;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let _ru = (hd - rn + ps) * 1.02;
+    let _rp = (hd + rn + ps) * 1.02;
+    let pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rn;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let _z6 = z1 - zd;
+    let _z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    /*
+    if z6 < 0.0 {
+        z6 = z6 + 24.0;
+    }
+    */
+
+    let _mg = (rm + rn - pj) / (2.0 * rn);
+
+    return z1;
+}
+
+/// Helper function for ut_max_solar_eclipse
+pub fn ut_max_solar_eclipse_l7390(
+    x: f64,
+    y: f64,
+    igday: f64,
+    gmonth: u32,
+    gyear: u32,
+    tm: f64,
+    glong: f64,
+    glat: f64,
+    hp: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64) {
+    let paa = ec_ra(
+        degrees(x),
+        0.0,
+        0.0,
+        degrees(y),
+        0.0,
+        0.0,
+        igday,
+        gmonth,
+        gyear,
+    );
+    let qaa = ec_dec(
+        degrees(x),
+        0.0,
+        0.0,
+        degrees(y),
+        0.0,
+        0.0,
+        igday,
+        gmonth,
+        gyear,
+    );
+    let xaa = ra_ha(
+        dd_dh(paa),
+        0.0,
+        0.0,
+        tm,
+        0.0,
+        0.0,
+        0,
+        0,
+        igday,
+        gmonth,
+        gyear,
+        glong,
+    );
+    let pbb = parallax_ha(
+        xaa,
+        0.0,
+        0.0,
+        qaa,
+        0.0,
+        0.0,
+        "true".to_string(),
+        glat,
+        0.0,
+        degrees(hp),
+    );
+    let qbb = parallax_dec(
+        xaa,
+        0.0,
+        0.0,
+        qaa,
+        0.0,
+        0.0,
+        "true".to_string(),
+        glat,
+        0.0,
+        degrees(hp),
+    );
+    let xbb = ha_ra(
+        pbb, 0.0, 0.0, tm, 0.0, 0.0, 0, 0, igday, gmonth, gyear, glong,
+    );
+    let p = (eq_e_long(xbb, 0.0, 0.0, qbb, 0.0, 0.0, igday, gmonth, gyear)).to_radians();
+    let q = (eq_e_lat(xbb, 0.0, 0.0, qbb, 0.0, 0.0, igday, gmonth, gyear)).to_radians();
+
+    return (paa, qaa, xaa, pbb, qbb, xbb, p, q);
+}
+
+/// Calculate time of first contact for solar eclipse (UT)
+///
+/// Original macro name: UTFirstContactSolarEclipse
+pub fn ut_first_contact_solar_eclipse(
+    dy: f64,
+    mn: u32,
+    yr: u32,
+    ds: i32,
+    zc: i32,
+    glong: f64,
+    glat: f64,
+) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if solar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No solar eclipse" {
+        return -99.0;
+    }
+
+    let dj = new_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utnm = xi * 24.0;
+    let ut = utnm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utnm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utnm;
+    let x = my;
+    let y = by;
+    let tm = xh - 1.0;
+    let hp = hy;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        ut_first_contact_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let my = p;
+    let by = q;
+    let x = mz;
+    let y = bz;
+    let tm = xh + 1.0;
+    let hp = hz;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        ut_first_contact_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let mz = p;
+    let bz = q;
+
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let _q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let x = sr;
+    let y = 0.0;
+    let tm = ut;
+    let hp = 0.00004263452 / rr;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        ut_first_contact_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let sr = p;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let _ru = (hd - rn + ps) * 1.02;
+    let _rp = (hd + rn + ps) * 1.02;
+    let pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rn;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let mut z6 = z1 - zd;
+    let _z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    if z6 < 0.0 {
+        z6 = z6 + 24.0;
+    }
+
+    let _mg = (rm + rn - pj) / (2.0 * rn);
+
+    return z6;
+}
+
+/// Helper function for ut_first_contact_solar_eclipse
+pub fn ut_first_contact_solar_eclipse_l7390(
+    x: f64,
+    y: f64,
+    igday: f64,
+    gmonth: u32,
+    gyear: u32,
+    tm: f64,
+    glong: f64,
+    glat: f64,
+    hp: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64) {
+    let paa = ec_ra(
+        degrees(x),
+        0.0,
+        0.0,
+        degrees(y),
+        0.0,
+        0.0,
+        igday,
+        gmonth,
+        gyear,
+    );
+    let qaa = ec_dec(
+        degrees(x),
+        0.0,
+        0.0,
+        degrees(y),
+        0.0,
+        0.0,
+        igday,
+        gmonth,
+        gyear,
+    );
+    let xaa = ra_ha(
+        dd_dh(paa),
+        0.0,
+        0.0,
+        tm,
+        0.0,
+        0.0,
+        0,
+        0,
+        igday,
+        gmonth,
+        gyear,
+        glong,
+    );
+    let pbb = parallax_ha(
+        xaa,
+        0.0,
+        0.0,
+        qaa,
+        0.0,
+        0.0,
+        "true".to_string(),
+        glat,
+        0.0,
+        degrees(hp),
+    );
+    let qbb = parallax_dec(
+        xaa,
+        0.0,
+        0.0,
+        qaa,
+        0.0,
+        0.0,
+        "true".to_string(),
+        glat,
+        0.0,
+        degrees(hp),
+    );
+    let xbb = ha_ra(
+        pbb, 0.0, 0.0, tm, 0.0, 0.0, 0, 0, igday, gmonth, gyear, glong,
+    );
+    let p = (eq_e_long(xbb, 0.0, 0.0, qbb, 0.0, 0.0, igday, gmonth, gyear)).to_radians();
+    let q = (eq_e_lat(xbb, 0.0, 0.0, qbb, 0.0, 0.0, igday, gmonth, gyear)).to_radians();
+
+    return (paa, qaa, xaa, pbb, qbb, xbb, p, q);
+}
+
+/// Calculate time of last contact for solar eclipse (UT)
+///
+/// Original macro name: UTLastContactSolarEclipse
+pub fn ut_last_contact_solar_eclipse(
+    dy: f64,
+    mn: u32,
+    yr: u32,
+    ds: i32,
+    zc: i32,
+    glong: f64,
+    glat: f64,
+) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if solar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No solar eclipse" {
+        return -99.0;
+    }
+
+    let dj = new_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utnm = xi * 24.0;
+    let ut = utnm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utnm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utnm;
+    let x = my;
+    let y = by;
+    let tm = xh - 1.0;
+    let hp = hy;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        ut_last_contact_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let my = p;
+    let by = q;
+    let x = mz;
+    let y = bz;
+    let tm = xh + 1.0;
+    let hp = hz;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        ut_last_contact_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let mz = p;
+    let bz = q;
+
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let _q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let x = sr;
+    let y = 0.0;
+    let tm = ut;
+    let hp = 0.00004263452 / rr;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        ut_last_contact_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let sr = p;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let _ru = (hd - rn + ps) * 1.02;
+    let _rp = (hd + rn + ps) * 1.02;
+    let pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rn;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let _z6 = z1 - zd;
+    let z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    /*
+    if z6 < 0.0 {
+        z6 = z6 + 24.0;
+    }
+    */
+
+    let _mg = (rm + rn - pj) / (2.0 * rn);
+
+    return z7;
+}
+
+/// Helper function for ut_last_contact_solar_eclipse
+pub fn ut_last_contact_solar_eclipse_l7390(
+    x: f64,
+    y: f64,
+    igday: f64,
+    gmonth: u32,
+    gyear: u32,
+    tm: f64,
+    glong: f64,
+    glat: f64,
+    hp: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64) {
+    let paa = ec_ra(
+        degrees(x),
+        0.0,
+        0.0,
+        degrees(y),
+        0.0,
+        0.0,
+        igday,
+        gmonth,
+        gyear,
+    );
+    let qaa = ec_dec(
+        degrees(x),
+        0.0,
+        0.0,
+        degrees(y),
+        0.0,
+        0.0,
+        igday,
+        gmonth,
+        gyear,
+    );
+    let xaa = ra_ha(
+        dd_dh(paa),
+        0.0,
+        0.0,
+        tm,
+        0.0,
+        0.0,
+        0,
+        0,
+        igday,
+        gmonth,
+        gyear,
+        glong,
+    );
+    let pbb = parallax_ha(
+        xaa,
+        0.0,
+        0.0,
+        qaa,
+        0.0,
+        0.0,
+        "true".to_string(),
+        glat,
+        0.0,
+        degrees(hp),
+    );
+    let qbb = parallax_dec(
+        xaa,
+        0.0,
+        0.0,
+        qaa,
+        0.0,
+        0.0,
+        "true".to_string(),
+        glat,
+        0.0,
+        degrees(hp),
+    );
+    let xbb = ha_ra(
+        pbb, 0.0, 0.0, tm, 0.0, 0.0, 0, 0, igday, gmonth, gyear, glong,
+    );
+    let p = (eq_e_long(xbb, 0.0, 0.0, qbb, 0.0, 0.0, igday, gmonth, gyear)).to_radians();
+    let q = (eq_e_lat(xbb, 0.0, 0.0, qbb, 0.0, 0.0, igday, gmonth, gyear)).to_radians();
+
+    return (paa, qaa, xaa, pbb, qbb, xbb, p, q);
+}
+
+/// Calculate magnitude of solar eclipse.
+///
+/// Original macro name: MagSolarEclipse
+pub fn mag_solar_eclipse(
+    dy: f64,
+    mn: u32,
+    yr: u32,
+    ds: i32,
+    zc: i32,
+    glong: f64,
+    glat: f64,
+) -> f64 {
+    let tp = 2.0 * std::f64::consts::PI;
+
+    if solar_eclipse_occurrence(ds, zc, dy, mn, yr) == "No solar eclipse" {
+        return -99.0;
+    }
+
+    let dj = new_moon(ds, zc, dy, mn, yr);
+    let _dp = 0.0;
+    let gday = jdc_day(dj);
+    let gmonth = jdc_month(dj);
+    let gyear = jdc_year(dj);
+    let igday = gday.floor();
+    let xi = gday - igday;
+    let utnm = xi * 24.0;
+    let ut = utnm - 1.0;
+    let ly = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let my = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let by = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hy = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let ut = utnm + 1.0;
+    let mut sb = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians() - ly;
+    let mz = (moon_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let bz = (moon_lat(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let hz = (moon_hp(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+
+    if sb < 0.0 {
+        sb = sb + tp;
+    }
+
+    let xh = utnm;
+    let x = my;
+    let y = by;
+    let tm = xh - 1.0;
+    let hp = hy;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        mag_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let my = p;
+    let by = q;
+    let x = mz;
+    let y = bz;
+    let tm = xh + 1.0;
+    let hp = hz;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        mag_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let mz = p;
+    let bz = q;
+
+    let x0 = xh + 1.0 - (2.0 * bz / (bz - by));
+    let mut dm = mz - my;
+
+    if dm < 0.0 {
+        dm = dm + tp;
+    }
+
+    let lj = (dm - sb) / 2.0;
+    let _q = 0.0;
+    let mr = my + (dm * (x0 - xh + 1.0) / 2.0);
+    let ut = x0 - 0.13851852;
+    let rr = sun_dist(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear);
+    let sr = (sun_long(ut, 0.0, 0.0, 0, 0, igday, gmonth, gyear)).to_radians();
+    let sr = sr + (nutat_long(igday, gmonth, gyear) - 0.00569).to_radians();
+    let x = sr;
+    let y = 0.0;
+    let tm = ut;
+    let hp = 0.00004263452 / rr;
+    let (_paa, _qaa, _xaa, _pbb, _qbb, _xbb, p, q) =
+        mag_solar_eclipse_l7390(x, y, igday, gmonth, gyear, tm, glong, glat, hp);
+    let sr = p;
+    let by = by - q;
+    let bz = bz - q;
+    let p3 = 0.00004263;
+    let zh = (sr - mr) / lj;
+    let tc = x0 + zh;
+    let sh = (((bz - by) * (tc - xh - 1.0) / 2.0) + bz) / lj;
+    let s2 = sh * sh;
+    let z2 = zh * zh;
+    let ps = p3 / (rr * lj);
+    let z1 = (zh * z2 / (z2 + s2)) + x0;
+    let h0 = (hy + hz) / (2.0 * lj);
+    let rm = 0.272446 * h0;
+    let rn = 0.00465242 / (lj * rr);
+    let hd = h0 * 0.99834;
+    let _ru = (hd - rn + ps) * 1.02;
+    let _rp = (hd + rn + ps) * 1.02;
+    let pj = (sh * zh / (s2 + z2).sqrt()).abs();
+    let r = rm + rn;
+    let dd = z1 - x0;
+    let dd = dd * dd - ((z2 - (r * r)) * dd / zh);
+
+    if dd < 0.0 {
+        return -99.0;
+    }
+
+    let zd = dd.sqrt();
+    let _z6 = z1 - zd;
+    let _z7 = z1 + zd - lint((z1 + zd) / 24.0) * 24.0;
+
+    /*
+    if z6 < 0.0 {
+        z6 = z6 + 24.0;
+    }
+    */
+
+    let mg = (rm + rn - pj) / (2.0 * rn);
+
+    return mg;
+}
+
+/// Helper function for mag_solar_eclipse
+pub fn mag_solar_eclipse_l7390(
+    x: f64,
+    y: f64,
+    igday: f64,
+    gmonth: u32,
+    gyear: u32,
+    tm: f64,
+    glong: f64,
+    glat: f64,
+    hp: f64,
+) -> (f64, f64, f64, f64, f64, f64, f64, f64) {
+    let paa = ec_ra(
+        degrees(x),
+        0.0,
+        0.0,
+        degrees(y),
+        0.0,
+        0.0,
+        igday,
+        gmonth,
+        gyear,
+    );
+    let qaa = ec_dec(
+        degrees(x),
+        0.0,
+        0.0,
+        degrees(y),
+        0.0,
+        0.0,
+        igday,
+        gmonth,
+        gyear,
+    );
+    let xaa = ra_ha(
+        dd_dh(paa),
+        0.0,
+        0.0,
+        tm,
+        0.0,
+        0.0,
+        0,
+        0,
+        igday,
+        gmonth,
+        gyear,
+        glong,
+    );
+    let pbb = parallax_ha(
+        xaa,
+        0.0,
+        0.0,
+        qaa,
+        0.0,
+        0.0,
+        "true".to_string(),
+        glat,
+        0.0,
+        degrees(hp),
+    );
+    let qbb = parallax_dec(
+        xaa,
+        0.0,
+        0.0,
+        qaa,
+        0.0,
+        0.0,
+        "true".to_string(),
+        glat,
+        0.0,
+        degrees(hp),
+    );
+    let xbb = ha_ra(
+        pbb, 0.0, 0.0, tm, 0.0, 0.0, 0, 0, igday, gmonth, gyear, glong,
+    );
+    let p = (eq_e_long(xbb, 0.0, 0.0, qbb, 0.0, 0.0, igday, gmonth, gyear)).to_radians();
+    let q = (eq_e_lat(xbb, 0.0, 0.0, qbb, 0.0, 0.0, igday, gmonth, gyear)).to_radians();
+
+    return (paa, qaa, xaa, pbb, qbb, xbb, p, q);
 }

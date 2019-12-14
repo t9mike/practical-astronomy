@@ -10,7 +10,7 @@ If you're interested in this topic, please buy the book!  It provides far more d
 
 All spreadsheets and macros from the book, implemented in:
 
-- [x] **Python 3**  (See details in lib/README.md)  The only Python 3 dependency is [Numpy](https://numpy.org/)
+- [x] **Python 3**  (See details in python-implementation/lib/README.md)  The only Python 3 dependency is [Numpy](https://numpy.org/)
 - [x] **Rust** (See details in rust-implementation/README.md)
 
 ### Future

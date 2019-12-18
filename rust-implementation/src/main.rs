@@ -1,5 +1,6 @@
 extern crate clap;
 extern crate num;
+extern crate sqlite;
 
 use crate::lib::coordinates as CS;
 use crate::lib::macros as MA;
@@ -9,6 +10,8 @@ mod testrunner;
 mod tests;
 
 use clap::{App, Arg};
+
+macro_rules! ok(($result:expr) => ($result.unwrap()));
 
 fn main() {
     let matches = App::new("Practical Astronomy")
@@ -43,9 +46,24 @@ fn main() {
         let local_month = 12;
         let local_year = 2019;
 
-        // Sirius
-        let right_ascension_input = 6.75257;
-        let declination_input = -16.7131;
+        let connection = ok!(sqlite::open("hygdata.db"));
+
+        let statement =
+            "select ProperName,Magnitude,RightAscension,Declination from hygdata where ProperName != '' and ProperName != 'Sol' order by Magnitude";
+
+        ok!(connection.iterate(statement, |pairs| {
+            /*
+            println!(
+                "{} has a magnitude of {}, with RA/Dec of {}/{}",
+                pairs[0].1.unwrap(),
+                pairs[1].1.unwrap(),
+                pairs[2].1.unwrap(),
+                pairs[3].1.unwrap(),
+            );
+            */
+
+        let right_ascension_input = pairs[2].1.unwrap().to_string().parse::<f64>().unwrap();
+        let declination_input = pairs[3].1.unwrap().to_string().parse::<f64>().unwrap();
 
         let (hour_angle_hours, hour_angle_minutes, hour_angle_seconds) =
             CS::right_ascension_to_hour_angle(
@@ -81,14 +99,18 @@ fn main() {
         );
 
         println!(
-            "Observing results: [Azimuth] {} degrees {} minutes {} seconds [Altitude] {} degrees {} minutes {} seconds",
+            "Observing results for {}: [Azimuth] {} degrees {} minutes {} seconds [Altitude] {} degrees {} minutes {} seconds",
+            pairs[0].1.unwrap(),
             azimuth_degrees,
             azimuth_minutes,
             azimuth_seconds,
             altitude_degrees,
             altitude_minutes,
             altitude_seconds
-        )
+        );
+
+        return true;
+        }));
     }
     if matches.is_present("tests") {
         testrunner::run_tests();

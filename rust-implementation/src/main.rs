@@ -48,19 +48,9 @@ fn main() {
 
         let connection = ok!(sqlite::open("hygdata.db"));
 
-        let statement =
-            "select ProperName,Magnitude,RightAscension,Declination from hygdata where ProperName != '' and ProperName != 'Sol' order by Magnitude";
+        let statement = "select ProperName,Magnitude,RightAscension,Declination from hygdata where Magnitude <= 6 and ProperName != 'Sol' order by Magnitude";
 
         ok!(connection.iterate(statement, |pairs| {
-            /*
-            println!(
-                "{} has a magnitude of {}, with RA/Dec of {}/{}",
-                pairs[0].1.unwrap(),
-                pairs[1].1.unwrap(),
-                pairs[2].1.unwrap(),
-                pairs[3].1.unwrap(),
-            );
-            */
 
         let right_ascension_input = pairs[2].1.unwrap().to_string().parse::<f64>().unwrap();
         let declination_input = pairs[3].1.unwrap().to_string().parse::<f64>().unwrap();
@@ -99,8 +89,10 @@ fn main() {
         );
 
         println!(
-            "Observing results for {}: [Azimuth] {} degrees {} minutes {} seconds [Altitude] {} degrees {} minutes {} seconds",
+            "Observing results for {}: [Right Ascension/Declination] {}/{} = [Azimuth] {} degrees {} minutes {} seconds [Altitude] {} degrees {} minutes {} seconds",
             pairs[0].1.unwrap(),
+            right_ascension_input,
+            declination_input,
             azimuth_degrees,
             azimuth_minutes,
             azimuth_seconds,

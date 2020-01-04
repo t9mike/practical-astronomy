@@ -1,7 +1,10 @@
 package datetime
 
-import "math"
-import "../util"
+import (
+	"../macros"
+	"../util"
+	"math"
+)
 
 // GetDateOfEaster calculates the date upon which Easter falls for a given year.
 func GetDateOfEaster(inputYear int) (int, int, int) {
@@ -51,4 +54,20 @@ func CivilDateToDayNumber(month int, day int, year int) int {
 	}
 
 	return month + day
+}
+
+// CivilTimeToDecimalHours converts a Civil Time (hours,minutes,seconds) to Decimal Hours
+func CivilTimeToDecimalHours(hours float64, minutes float64, seconds float64) float64 {
+	return macros.HmsDh(hours, minutes, seconds)
+}
+
+// DecimalHoursToCivilTime converts decimal hours to civil time.
+//
+// Returns hours, minutes, and seconds.
+func DecimalHoursToCivilTime(decimalHours float64) (int, int, int) {
+	hours := macros.DhHour(decimalHours)
+	minutes := macros.DhMin(decimalHours)
+	seconds := macros.DhSec(decimalHours)
+
+	return hours, minutes, int(seconds)
 }

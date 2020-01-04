@@ -2,6 +2,7 @@ package datetime_test
 
 import "testing"
 import "fmt"
+import "../lib/util"
 import "../lib/datetime"
 
 func TestDateOfEaster(t *testing.T) {
@@ -28,5 +29,39 @@ func CivilDateToDayNumber(t *testing.T, month int, day int, year int, expectedVa
 		fmt.Printf("Day number: [Date] %d/%d/%d = [Day Number] %d\n", month, day, year, dayNumber)
 	} else {
 		t.Errorf("Expected %d, actual is %d\n", expectedValue, dayNumber)
+	}
+}
+
+func TestCivilTimeToDecimalHours(t *testing.T) {
+	civilHours := 18.0
+	civilMinutes := 31.0
+	civilSeconds := 27.0
+
+	expectedResult := 18.52416667
+
+	decimalHours := datetime.CivilTimeToDecimalHours(civilHours, civilMinutes, civilSeconds)
+	decimalHours = util.RoundFloat64(decimalHours, 8)
+
+	if decimalHours == expectedResult {
+		fmt.Printf("Civil time to decimal hours: [Time] %d:%d:%d = [Decimal Hours] %.8f\n", int(civilHours), int(civilMinutes), int(civilSeconds), decimalHours)
+
+	} else {
+		t.Errorf("Expected %.8f, actual is %.8f\n", expectedResult, decimalHours)
+	}
+}
+
+func TestDecimalHoursToCivilTime(t *testing.T) {
+	decimalHours := 18.52416667
+
+	expectedCivilHours := 18
+	expectedCivilMinutes := 31
+	expectedCivilSeconds := 27
+
+	civilHours, civilMinutes, civilSeconds := datetime.DecimalHoursToCivilTime(decimalHours)
+
+	if civilHours == expectedCivilHours && civilMinutes == expectedCivilMinutes && civilSeconds == expectedCivilSeconds {
+		fmt.Printf("Decimal hours to civil time: [Decimal Hours] %.8f = [Civil Time] %d:%d:%d\n", decimalHours, civilHours, civilMinutes, civilSeconds)
+	} else {
+		t.Errorf("Expected %d:%d:%d, actual is %d:%d:%d\n", expectedCivilHours, expectedCivilMinutes, expectedCivilSeconds, civilHours, civilMinutes, civilSeconds)
 	}
 }

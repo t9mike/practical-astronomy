@@ -1,6 +1,8 @@
 package util
 
 import "math"
+import "strconv"
+import "fmt"
 
 // IsLeapYear determines if a given year is a leap year.
 func IsLeapYear(inputYear int) bool {
@@ -16,4 +18,11 @@ func IsLeapYear(inputYear int) bool {
 		return true
 	}
 	return false
+}
+
+// RoundFloat64 rounds a float to a specified number of decimal places.
+func RoundFloat64(inputValue float64, places int) float64 {
+	returnValue, _ := strconv.ParseFloat(fmt.Sprintf("%.*f", places, inputValue), 64)
+
+	return returnValue
 }

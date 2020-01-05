@@ -58,16 +58,74 @@ func CivilDateToDayNumber(month int, day int, year int) int {
 
 // CivilTimeToDecimalHours converts a Civil Time (hours,minutes,seconds) to Decimal Hours
 func CivilTimeToDecimalHours(hours float64, minutes float64, seconds float64) float64 {
-	return macros.HmsDh(hours, minutes, seconds)
+	return macros.HMSDH(hours, minutes, seconds)
 }
 
 // DecimalHoursToCivilTime converts decimal hours to civil time.
 //
 // Returns hours, minutes, and seconds.
 func DecimalHoursToCivilTime(decimalHours float64) (int, int, int) {
-	hours := macros.DhHour(decimalHours)
-	minutes := macros.DhMin(decimalHours)
-	seconds := macros.DhSec(decimalHours)
+	hours := macros.DHHour(decimalHours)
+	minutes := macros.DHMin(decimalHours)
+	seconds := macros.DHSec(decimalHours)
 
 	return hours, minutes, int(seconds)
+}
+
+// LocalCivilTimeToUniversalTime converts local Civil Time to Universal Time
+//
+// Returns UT hours, UT mins, UT secs, GW day, GW month, GW year
+func LocalCivilTimeToUniversalTime(
+	lctHours float64,
+	lctMinutes float64,
+	lctSeconds float64,
+	isDayLightSavings bool,
+	zoneCorrection int,
+	localDay float64,
+	localMonth int,
+	localYear int) (int, int, int, int, int, int) {
+	lct := CivilTimeToDecimalHours(lctHours, lctMinutes, lctSeconds)
+
+	daylightSavingsOffset := 0
+	if isDayLightSavings == true {
+		daylightSavingsOffset = 1
+	}
+
+	utInterim := lct - float64(daylightSavingsOffset) - float64(zoneCorrection)
+	gdayInterim := float64(localDay) + (utInterim / 24)
+
+	jd := macros.CDJD(gdayInterim, localMonth, localYear)
+
+	gDay := float64(macros.JDCDay(jd))
+	gMonth := macros.JDCMonth(jd)
+	gYear := macros.JDCYear(jd)
+
+	ut := 24 * (gDay - math.Floor(gDay))
+
+	return macros.DHHour(ut), macros.DHMin(ut), int(macros.DHSec(ut)), int(math.Floor(gDay)), gMonth, gYear
+}
+
+// UniversalTimeToLocalCivilTime converts Universal Time to local Civil Time
+//
+// Returns LCT hours, LCT minutes, LCT seconds, day, month, year
+func UniversalTimeToLocalCivilTime(utHours float64, utMinutes float64, utSeconds float64, isDaylightSavings bool, zoneCorrection int, gwDay int, gwMonth int, gwYear int) (int, int, int, int, int, int) {
+	var dstValue int
+	if isDaylightSavings == true {
+		dstValue = 1
+	} else {
+		dstValue = 0
+	}
+
+	ut := macros.HMSDH(utHours, utMinutes, utSeconds)
+	zoneTime := ut + float64(zoneCorrection)
+	localTime := zoneTime + float64(dstValue)
+	localJDPlusLocalTime := macros.CDJD(float64(gwDay), gwMonth, gwYear) + (localTime / 24)
+	localDay := macros.JDCDay(localJDPlusLocalTime)
+	integerDay := math.Floor(localDay)
+	localMonth := macros.JDCMonth(localJDPlusLocalTime)
+	localYear := macros.JDCYear(localJDPlusLocalTime)
+
+	lct := 24.0 * (localDay - integerDay)
+
+	return macros.DHHour(lct), macros.DHMin(lct), int(macros.DHSec(lct)), int(integerDay), localMonth, localYear
 }

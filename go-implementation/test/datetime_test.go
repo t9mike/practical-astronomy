@@ -65,3 +65,55 @@ func TestDecimalHoursToCivilTime(t *testing.T) {
 		t.Errorf("Expected %d:%d:%d, actual is %d:%d:%d\n", expectedCivilHours, expectedCivilMinutes, expectedCivilSeconds, civilHours, civilMinutes, civilSeconds)
 	}
 }
+
+func TestLocalCivilTimeToUniversalTime(t *testing.T) {
+	lctHours := 3.0
+	lctMinutes := 37.0
+	lctSeconds := 0.0
+	isDaylightSavings := true
+	zoneCorrection := 4
+	localDay := 1.0
+	localMonth := 7
+	localYear := 2013
+
+	expectedUTHours := 22
+	expectedUTMinutes := 37
+	expectedUTSeconds := 0
+	expectedGWDay := 30
+	expectedGWMonth := 6
+	expectedGWYear := 2013
+
+	utHours, utMinutes, utSeconds, gwDay, gwMonth, gwYear := datetime.LocalCivilTimeToUniversalTime(lctHours, lctMinutes, lctSeconds, isDaylightSavings, zoneCorrection, localDay, localMonth, localYear)
+
+	if utHours == expectedUTHours && utMinutes == expectedUTMinutes && utSeconds == expectedUTSeconds && gwDay == expectedGWDay && gwMonth == expectedGWMonth && gwYear == expectedGWYear {
+		fmt.Printf("Civil time to universal time: [LCT] %d:%d:%d [DST?] %t [ZC] %d [Local Date] %d/%d/%d = [UT] %d:%d:%d [GWD] %d/%d/%d\n", int(lctHours), int(lctMinutes), int(lctSeconds), isDaylightSavings, zoneCorrection, int(localMonth), int(localDay), int(localYear), utHours, utMinutes, utSeconds, gwMonth, gwDay, gwYear)
+	} else {
+		t.Errorf("Expected [UT] %d:%d:%d [GWD] %d/%d/%d, actual is [UT] %d:%d:%d [GWD] %d/%d/%d\n", expectedUTHours, expectedUTMinutes, expectedUTSeconds, expectedGWMonth, expectedGWDay, expectedGWYear, utHours, utMinutes, utSeconds, gwMonth, gwDay, gwYear)
+	}
+}
+func TestUniversalTimeToLocalCivilTime(t *testing.T) {
+	utHours := 22.0
+	utMinutes := 37.0
+	utSeconds := 0.0
+	isDaylightSavings := true
+	zoneCorrection := 4
+	gwDay := 30
+	gwMonth := 6
+	gwYear := 2013
+
+	expectedLCTHours := 3
+	expectedLCTMinutes := 37
+	expectedLCTSeconds := 0
+	expectedLocalDay := 1
+	expectedLocalMonth := 7
+	expectedLocalYear := 2013
+
+	lctHours, lctMinutes, lctSeconds, localDay, localMonth, localYear := datetime.UniversalTimeToLocalCivilTime(utHours, utMinutes, utSeconds, isDaylightSavings, zoneCorrection, gwDay, gwMonth, gwYear)
+
+	if lctHours == expectedLCTHours && lctMinutes == expectedLCTMinutes && lctSeconds == expectedLCTSeconds && localDay == expectedLocalDay && localMonth == expectedLocalMonth && localYear == expectedLocalYear {
+		fmt.Printf("Universal time to civil time: [UT] %d:%d:%d [DST?] %t [ZC] %d [GWD] %d/%d/%d = [LCT] %d:%d:%d [Local Date] %d/%d/%d\n", int(utHours), int(utMinutes), int(utSeconds), isDaylightSavings, zoneCorrection, gwMonth, gwDay, gwYear, int(lctHours), int(lctMinutes), int(lctSeconds), int(localMonth), int(localDay), int(localYear))
+	} else {
+		t.Errorf("Expected [LCT] %d:%d:%d [Local Date] %d/%d/%d, actual is [LCT] %d:%d:%d [Local Date] %d/%d/%d\n", expectedLCTHours, expectedLCTMinutes, expectedLCTSeconds, expectedLocalMonth, expectedLocalDay, expectedLocalYear, lctHours, lctMinutes, lctSeconds, localMonth, localDay, localYear)
+
+	}
+}

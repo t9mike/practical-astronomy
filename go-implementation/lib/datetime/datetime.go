@@ -129,3 +129,52 @@ func UniversalTimeToLocalCivilTime(utHours float64, utMinutes float64, utSeconds
 
 	return macros.DHHour(lct), macros.DHMin(lct), int(macros.DHSec(lct)), int(integerDay), localMonth, localYear
 }
+
+// UniversalTimeToGreenwichSiderealTime converts Universal Time to Greenwich Sidereal Time.
+//
+// Returns GST hours, GST minutes, GST seconds
+func UniversalTimeToGreenwichSiderealTime(utHours float64, utMinutes float64, utSeconds float64, gwDay float64, gwMonth int, gwYear int) (int, int, float64) {
+	jd := macros.CDJD(gwDay, gwMonth, gwYear)
+	s := jd - 2451545
+	t := s / 36525
+	t01 := 6.697374558 + (2400.051336 * t) + (0.000025862 * t * t)
+	t02 := t01 - (24 * math.Floor(t01/24))
+	ut := macros.HMSDH(utHours, utMinutes, utSeconds)
+	a := ut * 1.002737909
+	gst1 := t02 + a
+	gst2 := gst1 - (24 * math.Floor(gst1/24))
+
+	gstHours := macros.DHHour(gst2)
+	gstMinutes := macros.DHMin(gst2)
+	gstSeconds := macros.DHSec(gst2)
+
+	return int(gstHours), int(gstMinutes), gstSeconds
+}
+
+// GreenwichSiderealTimeToUniversalTime converts Greenwich Sidereal Time to Universal Time.
+//
+// Returns UT hours, UT minutes, UT seconds, Warning Flag
+func GreenwichSiderealTimeToUniversalTime(gstHours float64, gstMinutes float64, gstSeconds float64, gwDay float64, gwMonth int, gwYear int) (int, int, float64, string) {
+	jd := macros.CDJD(gwDay, gwMonth, gwYear)
+	s := jd - 2451545
+	t := s / 36525
+	t01 := 6.697374558 + (2400.051336 * t) + (0.000025862 * t * t)
+	t02 := t01 - (24 * math.Floor(t01/24))
+	gstHours1 := macros.HMSDH(gstHours, gstMinutes, gstSeconds)
+
+	a := gstHours1 - t02
+	b := a - (24 * math.Floor(a/24))
+	ut := b * 0.9972695663
+	utHours := macros.DHHour(ut)
+	utMinutes := macros.DHMin(ut)
+	utSeconds := macros.DHSec(ut)
+
+	var warningFlag string
+	if ut < 0.065574 {
+		warningFlag = "Warning"
+	} else {
+		warningFlag = "OK"
+	}
+
+	return utHours, utMinutes, utSeconds, warningFlag
+}

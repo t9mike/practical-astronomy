@@ -117,3 +117,47 @@ func TestUniversalTimeToLocalCivilTime(t *testing.T) {
 
 	}
 }
+
+func TestUniversalTimeToGreenwichSiderealTime(t *testing.T) {
+	utHours := 14.0
+	utMinutes := 36.0
+	utSeconds := 51.67
+	gwDay := 22.0
+	gwMonth := 4
+	gwYear := 1980
+
+	expectedGSTHours := 4
+	expectedGSTMinutes := 40
+	expectedGSTSeconds := 5.23
+
+	gstHours, gstMinutes, gstSeconds := datetime.UniversalTimeToGreenwichSiderealTime(utHours, utMinutes, utSeconds, gwDay, gwMonth, gwYear)
+
+	if gstHours == expectedGSTHours && gstMinutes == expectedGSTMinutes && gstSeconds == expectedGSTSeconds {
+		fmt.Printf("Universal time to Greenwich sidereal time: [UT] %d:%d:%.2f [Greenwich Date] %d/%d/%d = [Greenwich Sidereal Time] %d:%d:%.2f\n", int(utHours), int(utMinutes), utSeconds, gwMonth, int(gwDay), gwYear, gstHours, gstMinutes, gstSeconds)
+	} else {
+		t.Errorf("Expected GST %d:%d:%.2f, actual %d:%d:%.2f\n", expectedGSTHours, expectedGSTMinutes, expectedGSTSeconds, gstHours, gstMinutes, gstSeconds)
+	}
+
+}
+
+func TestGreenwichSiderealTimeToUniversalTime(t *testing.T) {
+	gstHours := 4.0
+	gstMinutes := 40.0
+	gstSeconds := 5.23
+	gwDay := 22.0
+	gwMonth := 4
+	gwYear := 1980
+
+	expectedUTHours := 14
+	expectedUTMinutes := 36
+	expectedUTSeconds := 51.67
+	expectedWarningFlag := "OK"
+
+	utHours, utMinutes, utSeconds, warningFlag := datetime.GreenwichSiderealTimeToUniversalTime(gstHours, gstMinutes, gstSeconds, gwDay, gwMonth, gwYear)
+
+	if utHours == expectedUTHours && utMinutes == expectedUTMinutes && utSeconds == expectedUTSeconds && warningFlag == expectedWarningFlag {
+		fmt.Printf("Greenwich sidereal time to universal time: [Greenwich Sidereal Time] %d:%d:%.2f [Greenwich Date] %d/%d/%d = [UT] %d:%d:%.2f [Warning Flag] %s\n", int(gstHours), int(gstMinutes), gstSeconds, gwMonth, int(gwDay), gwYear, utHours, utMinutes, utSeconds, warningFlag)
+	} else {
+		t.Errorf("Expected [UT] %d:%d:%.2f [Warning Flag] %s, actual [UT] %d:%d:%.2f [Warning Flag] %s\n", expectedUTHours, expectedUTMinutes, expectedUTSeconds, expectedWarningFlag, utHours, utMinutes, utSeconds, warningFlag)
+	}
+}

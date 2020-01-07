@@ -178,3 +178,35 @@ func GreenwichSiderealTimeToUniversalTime(gstHours float64, gstMinutes float64, 
 
 	return utHours, utMinutes, utSeconds, warningFlag
 }
+
+// GreenwichSiderealTimeToLocalSiderealTime converts Greenwich Sidereal Time to Local Sidereal Time
+//
+// Returns LST hours, LST minutes, LST seconds
+func GreenwichSiderealTimeToLocalSiderealTime(gstHour float64, gstMinutes float64, gstSeconds float64, geographicalLongitude float64) (int, int, float64) {
+	gst := macros.HMSDH(gstHour, gstMinutes, gstSeconds)
+	offset := geographicalLongitude / 15
+	lstHours1 := gst + offset
+	lstHours2 := lstHours1 - (24 * math.Floor(lstHours1/24))
+
+	lstHours := macros.DHHour(lstHours2)
+	lstMinutes := macros.DHMin(lstHours2)
+	lstSeconds := macros.DHSec(lstHours2)
+
+	return lstHours, lstMinutes, lstSeconds
+}
+
+// LocalSiderealTimeToGreenwichSiderealTime converts Local Sidereal Time to Greenwich Sidereal Time
+//
+// Returns GST hours, GST minutes, GST seconds
+func LocalSiderealTimeToGreenwichSiderealTime(lstHours float64, lstMinutes float64, lstSeconds float64, geographicalLongitude float64) (int, int, float64) {
+	gst := macros.HMSDH(lstHours, lstMinutes, lstSeconds)
+	longHours := geographicalLongitude / 15
+	gst1 := gst - longHours
+	gst2 := gst1 - (24 * math.Floor(gst1/24))
+
+	gstHours := macros.DHHour(gst2)
+	gstMinutes := macros.DHMin(gst2)
+	gstSeconds := macros.DHSec(gst2)
+
+	return gstHours, gstMinutes, gstSeconds
+}

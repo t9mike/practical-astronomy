@@ -3,6 +3,7 @@ package datetime_test
 import "testing"
 import "fmt"
 import "../lib/util"
+import "../lib/macros"
 import "../lib/datetime"
 
 func TestDateOfEaster(t *testing.T) {
@@ -159,5 +160,57 @@ func TestGreenwichSiderealTimeToUniversalTime(t *testing.T) {
 		fmt.Printf("Greenwich sidereal time to universal time: [Greenwich Sidereal Time] %d:%d:%.2f [Greenwich Date] %d/%d/%d = [UT] %d:%d:%.2f [Warning Flag] %s\n", int(gstHours), int(gstMinutes), gstSeconds, gwMonth, int(gwDay), gwYear, utHours, utMinutes, utSeconds, warningFlag)
 	} else {
 		t.Errorf("Expected [UT] %d:%d:%.2f [Warning Flag] %s, actual [UT] %d:%d:%.2f [Warning Flag] %s\n", expectedUTHours, expectedUTMinutes, expectedUTSeconds, expectedWarningFlag, utHours, utMinutes, utSeconds, warningFlag)
+	}
+}
+
+func TestGreenwichSiderealTimeToLocalSiderealTime(t *testing.T) {
+	gstHour := 4.0
+	gstMinutes := 40.0
+	gstSeconds := 5.23
+	geographicalLongitude := -64.0
+
+	expectedLSTHours := 0
+	expectedLSTMinutes := 24
+	expectedLSTSeconds := 5.23
+
+	lstHours, lstMinutes, lstSeconds := datetime.GreenwichSiderealTimeToLocalSiderealTime(gstHour, gstMinutes, gstSeconds, geographicalLongitude)
+
+	if lstHours == expectedLSTHours && lstMinutes == expectedLSTMinutes && lstSeconds == expectedLSTSeconds {
+		fmt.Printf("Greenwich sidereal time to local sidereal time: [GST] %.0f:%.0f:%.2f [Geographical Longitude] %.1f = [LST] %d:%d:%.2f\n", gstHour, gstMinutes, gstSeconds, geographicalLongitude, lstHours, lstMinutes, lstSeconds)
+	} else {
+		t.Errorf("Expected [LST] %d:%d:%.2f, actual %d:%d:%.2f\n", expectedLSTHours, expectedLSTMinutes, expectedLSTSeconds, lstHours, lstMinutes, lstSeconds)
+	}
+}
+
+func TestLocalSiderealTimeToGreenwichSiderealTime(t *testing.T) {
+	lstHour := 0.0
+	lstMinutes := 24.0
+	lstSeconds := 5.23
+	geographicalLongitude := -64.0
+
+	expectedGSTHours := 4
+	expectedGSTMinutes := 40
+	expectedGSTSeconds := 5.23
+
+	gstHours, gstMinutes, gstSeconds := datetime.LocalSiderealTimeToGreenwichSiderealTime(lstHour, lstMinutes, lstSeconds, geographicalLongitude)
+
+	if gstHours == expectedGSTHours && gstMinutes == expectedGSTMinutes && gstSeconds == expectedGSTSeconds {
+		fmt.Printf("Local sidereal time to greenwich sidereal time: [LST] %.0f:%.0f:%.2f [Geographical Longitude] %.1f = [GST] %d:%d:%.2f\n", lstHour, lstMinutes, lstSeconds, geographicalLongitude, gstHours, gstMinutes, gstSeconds)
+	} else {
+		t.Errorf("Expected %d:%d:%.2f, actual %d:%d:%.2f\n", expectedGSTHours, expectedGSTMinutes, expectedGSTSeconds, gstHours, gstMinutes, gstSeconds)
+	}
+}
+
+func TestJulianDateToDayOfWeek(t *testing.T) {
+	julianDate := 2455001.5
+
+	expectedDayOfWeek := "Friday"
+
+	dayOfWeek := macros.FDOW(julianDate)
+
+	if dayOfWeek == expectedDayOfWeek {
+		fmt.Printf("Julian date to day of week: [Julian Date] %.1f = [Day of Week] %s\n", julianDate, dayOfWeek)
+	} else {
+		t.Errorf("Expected %s, actual %s\n", expectedDayOfWeek, dayOfWeek)
 	}
 }

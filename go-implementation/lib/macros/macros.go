@@ -202,3 +202,33 @@ func JDCYear(julianDate float64) int {
 
 	return int(returnValue)
 }
+
+// FDOW converts a Julian Date to Day-of-Week (e.g., Sunday)
+//
+// Original macro name: FDOW
+func FDOW(julianDate float64) string {
+	j := math.Floor(julianDate-0.5) + 0.5
+	n := math.Mod(j+1.5, 7)
+
+	var returnValue string
+	switch n {
+	case 0:
+		returnValue = "Sunday"
+	case 1:
+		returnValue = "Monday"
+	case 2:
+		returnValue = "Tuesday"
+	case 3:
+		returnValue = "Wednesday"
+	case 4:
+		returnValue = "Thursday"
+	case 5:
+		returnValue = "Friday"
+	case 6:
+		returnValue = "Saturday"
+	default:
+		returnValue = "Unknown"
+	}
+
+	return returnValue
+}

@@ -1,13 +1,12 @@
-package datetime_test
+package datetime
 
 import "testing"
 import "fmt"
-import "../lib/util"
-import "../lib/macros"
-import "../lib/datetime"
+import "../util"
+import "../macros"
 
 func TestDateOfEaster(t *testing.T) {
-	var month, day, year int = datetime.GetDateOfEaster(2009)
+	var month, day, year int = GetDateOfEaster(2009)
 
 	if month == 4 && day == 12 && year == 2009 {
 		fmt.Printf("Date of Easter for %d is %d/%d/%d\n", year, month, day, year)
@@ -17,14 +16,14 @@ func TestDateOfEaster(t *testing.T) {
 }
 
 func TestCivilDateToDayNumbers(t *testing.T) {
-	CivilDateToDayNumber(t, 1, 1, 2000, 1)
-	CivilDateToDayNumber(t, 3, 1, 2000, 61)
-	CivilDateToDayNumber(t, 6, 1, 2003, 152)
-	CivilDateToDayNumber(t, 11, 27, 2009, 331)
+	testCivilDateToDayNumber(t, 1, 1, 2000, 1)
+	testCivilDateToDayNumber(t, 3, 1, 2000, 61)
+	testCivilDateToDayNumber(t, 6, 1, 2003, 152)
+	testCivilDateToDayNumber(t, 11, 27, 2009, 331)
 }
 
-func CivilDateToDayNumber(t *testing.T, month int, day int, year int, expectedValue int) {
-	dayNumber := datetime.CivilDateToDayNumber(month, day, year)
+func testCivilDateToDayNumber(t *testing.T, month int, day int, year int, expectedValue int) {
+	dayNumber := CivilDateToDayNumber(month, day, year)
 
 	if dayNumber == expectedValue {
 		fmt.Printf("Day number: [Date] %d/%d/%d = [Day Number] %d\n", month, day, year, dayNumber)
@@ -40,7 +39,7 @@ func TestCivilTimeToDecimalHours(t *testing.T) {
 
 	expectedResult := 18.52416667
 
-	decimalHours := datetime.CivilTimeToDecimalHours(civilHours, civilMinutes, civilSeconds)
+	decimalHours := CivilTimeToDecimalHours(civilHours, civilMinutes, civilSeconds)
 	decimalHours = util.RoundFloat64(decimalHours, 8)
 
 	if decimalHours == expectedResult {
@@ -58,7 +57,7 @@ func TestDecimalHoursToCivilTime(t *testing.T) {
 	expectedCivilMinutes := 31
 	expectedCivilSeconds := 27
 
-	civilHours, civilMinutes, civilSeconds := datetime.DecimalHoursToCivilTime(decimalHours)
+	civilHours, civilMinutes, civilSeconds := DecimalHoursToCivilTime(decimalHours)
 
 	if civilHours == expectedCivilHours && civilMinutes == expectedCivilMinutes && civilSeconds == expectedCivilSeconds {
 		fmt.Printf("Decimal hours to civil time: [Decimal Hours] %.8f = [Civil Time] %d:%d:%d\n", decimalHours, civilHours, civilMinutes, civilSeconds)
@@ -84,7 +83,7 @@ func TestLocalCivilTimeToUniversalTime(t *testing.T) {
 	expectedGWMonth := 6
 	expectedGWYear := 2013
 
-	utHours, utMinutes, utSeconds, gwDay, gwMonth, gwYear := datetime.LocalCivilTimeToUniversalTime(lctHours, lctMinutes, lctSeconds, isDaylightSavings, zoneCorrection, localDay, localMonth, localYear)
+	utHours, utMinutes, utSeconds, gwDay, gwMonth, gwYear := LocalCivilTimeToUniversalTime(lctHours, lctMinutes, lctSeconds, isDaylightSavings, zoneCorrection, localDay, localMonth, localYear)
 
 	if utHours == expectedUTHours && utMinutes == expectedUTMinutes && utSeconds == expectedUTSeconds && gwDay == expectedGWDay && gwMonth == expectedGWMonth && gwYear == expectedGWYear {
 		fmt.Printf("Civil time to universal time: [LCT] %d:%d:%d [DST?] %t [ZC] %d [Local Date] %d/%d/%d = [UT] %d:%d:%d [GWD] %d/%d/%d\n", int(lctHours), int(lctMinutes), int(lctSeconds), isDaylightSavings, zoneCorrection, int(localMonth), int(localDay), int(localYear), utHours, utMinutes, utSeconds, gwMonth, gwDay, gwYear)
@@ -109,7 +108,7 @@ func TestUniversalTimeToLocalCivilTime(t *testing.T) {
 	expectedLocalMonth := 7
 	expectedLocalYear := 2013
 
-	lctHours, lctMinutes, lctSeconds, localDay, localMonth, localYear := datetime.UniversalTimeToLocalCivilTime(utHours, utMinutes, utSeconds, isDaylightSavings, zoneCorrection, gwDay, gwMonth, gwYear)
+	lctHours, lctMinutes, lctSeconds, localDay, localMonth, localYear := UniversalTimeToLocalCivilTime(utHours, utMinutes, utSeconds, isDaylightSavings, zoneCorrection, gwDay, gwMonth, gwYear)
 
 	if lctHours == expectedLCTHours && lctMinutes == expectedLCTMinutes && lctSeconds == expectedLCTSeconds && localDay == expectedLocalDay && localMonth == expectedLocalMonth && localYear == expectedLocalYear {
 		fmt.Printf("Universal time to civil time: [UT] %d:%d:%d [DST?] %t [ZC] %d [GWD] %d/%d/%d = [LCT] %d:%d:%d [Local Date] %d/%d/%d\n", int(utHours), int(utMinutes), int(utSeconds), isDaylightSavings, zoneCorrection, gwMonth, gwDay, gwYear, int(lctHours), int(lctMinutes), int(lctSeconds), int(localMonth), int(localDay), int(localYear))
@@ -131,7 +130,7 @@ func TestUniversalTimeToGreenwichSiderealTime(t *testing.T) {
 	expectedGSTMinutes := 40
 	expectedGSTSeconds := 5.23
 
-	gstHours, gstMinutes, gstSeconds := datetime.UniversalTimeToGreenwichSiderealTime(utHours, utMinutes, utSeconds, gwDay, gwMonth, gwYear)
+	gstHours, gstMinutes, gstSeconds := UniversalTimeToGreenwichSiderealTime(utHours, utMinutes, utSeconds, gwDay, gwMonth, gwYear)
 
 	if gstHours == expectedGSTHours && gstMinutes == expectedGSTMinutes && gstSeconds == expectedGSTSeconds {
 		fmt.Printf("Universal time to Greenwich sidereal time: [UT] %d:%d:%.2f [Greenwich Date] %d/%d/%d = [Greenwich Sidereal Time] %d:%d:%.2f\n", int(utHours), int(utMinutes), utSeconds, gwMonth, int(gwDay), gwYear, gstHours, gstMinutes, gstSeconds)
@@ -154,7 +153,7 @@ func TestGreenwichSiderealTimeToUniversalTime(t *testing.T) {
 	expectedUTSeconds := 51.67
 	expectedWarningFlag := "OK"
 
-	utHours, utMinutes, utSeconds, warningFlag := datetime.GreenwichSiderealTimeToUniversalTime(gstHours, gstMinutes, gstSeconds, gwDay, gwMonth, gwYear)
+	utHours, utMinutes, utSeconds, warningFlag := GreenwichSiderealTimeToUniversalTime(gstHours, gstMinutes, gstSeconds, gwDay, gwMonth, gwYear)
 
 	if utHours == expectedUTHours && utMinutes == expectedUTMinutes && utSeconds == expectedUTSeconds && warningFlag == expectedWarningFlag {
 		fmt.Printf("Greenwich sidereal time to universal time: [Greenwich Sidereal Time] %d:%d:%.2f [Greenwich Date] %d/%d/%d = [UT] %d:%d:%.2f [Warning Flag] %s\n", int(gstHours), int(gstMinutes), gstSeconds, gwMonth, int(gwDay), gwYear, utHours, utMinutes, utSeconds, warningFlag)
@@ -173,7 +172,7 @@ func TestGreenwichSiderealTimeToLocalSiderealTime(t *testing.T) {
 	expectedLSTMinutes := 24
 	expectedLSTSeconds := 5.23
 
-	lstHours, lstMinutes, lstSeconds := datetime.GreenwichSiderealTimeToLocalSiderealTime(gstHour, gstMinutes, gstSeconds, geographicalLongitude)
+	lstHours, lstMinutes, lstSeconds := GreenwichSiderealTimeToLocalSiderealTime(gstHour, gstMinutes, gstSeconds, geographicalLongitude)
 
 	if lstHours == expectedLSTHours && lstMinutes == expectedLSTMinutes && lstSeconds == expectedLSTSeconds {
 		fmt.Printf("Greenwich sidereal time to local sidereal time: [GST] %.0f:%.0f:%.2f [Geographical Longitude] %.1f = [LST] %d:%d:%.2f\n", gstHour, gstMinutes, gstSeconds, geographicalLongitude, lstHours, lstMinutes, lstSeconds)
@@ -192,7 +191,7 @@ func TestLocalSiderealTimeToGreenwichSiderealTime(t *testing.T) {
 	expectedGSTMinutes := 40
 	expectedGSTSeconds := 5.23
 
-	gstHours, gstMinutes, gstSeconds := datetime.LocalSiderealTimeToGreenwichSiderealTime(lstHour, lstMinutes, lstSeconds, geographicalLongitude)
+	gstHours, gstMinutes, gstSeconds := LocalSiderealTimeToGreenwichSiderealTime(lstHour, lstMinutes, lstSeconds, geographicalLongitude)
 
 	if gstHours == expectedGSTHours && gstMinutes == expectedGSTMinutes && gstSeconds == expectedGSTSeconds {
 		fmt.Printf("Local sidereal time to greenwich sidereal time: [LST] %.0f:%.0f:%.2f [Geographical Longitude] %.1f = [GST] %d:%d:%.2f\n", lstHour, lstMinutes, lstSeconds, geographicalLongitude, gstHours, gstMinutes, gstSeconds)

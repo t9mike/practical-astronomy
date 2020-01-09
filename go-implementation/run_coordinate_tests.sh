@@ -1,4 +1,4 @@
 #!/usr/bin/bash
 
-cd test
+cd lib/coordinates
 go test

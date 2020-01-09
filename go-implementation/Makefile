@@ -7,4 +7,5 @@ format:
 	@gofmt -s -w .
 
 tests:
-	@./run_tests.sh
+	@./run_datetime_tests.sh
+	@./run_coordinate_tests.sh

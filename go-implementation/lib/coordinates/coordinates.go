@@ -90,3 +90,37 @@ func HourAngleToRightAscension(hourAngleHours float64, hourAngleMinutes float64,
 
 	return float64(rightAscensionHours), float64(rightAscensionMinutes), rightAscensionSeconds
 }
+
+// EquatorialCoordinatesToHorizonCoordinates converts Equatorial Coordinates to Horizon Coordinates
+func EquatorialCoordinatesToHorizonCoordinates(hourAngleHours float64, hourAngleMinutes float64, hourAngleSeconds float64, declinationDegrees float64, declinationMinutes float64, declinationSeconds float64, geographicalLatitude float64) (float64, float64, float64, float64, float64, float64) {
+	azimuthInDecimalDegrees := macros.EqToAz(hourAngleHours, hourAngleMinutes, hourAngleSeconds, declinationDegrees, declinationMinutes, declinationSeconds, geographicalLatitude)
+
+	altitudeInDecimalDegrees := macros.EqToAlt(hourAngleHours, hourAngleMinutes, hourAngleSeconds, declinationDegrees, declinationMinutes, declinationSeconds, geographicalLatitude)
+
+	azimuthDegrees := macros.DDDeg(azimuthInDecimalDegrees)
+	azimuthMinutes := macros.DDMin(azimuthInDecimalDegrees)
+	azimuthSeconds := macros.DDSec(azimuthInDecimalDegrees)
+
+	altitudeDegrees := macros.DDDeg(altitudeInDecimalDegrees)
+	altitudeMinutes := macros.DDMin(altitudeInDecimalDegrees)
+	altitudeSeconds := macros.DDSec(altitudeInDecimalDegrees)
+
+	return azimuthDegrees, azimuthMinutes, azimuthSeconds, altitudeDegrees, altitudeMinutes, altitudeSeconds
+}
+
+// HorizonCoordinatesToEquatorialCoordinates converts Horizon Coordinates to Equatorial Coordinates
+func HorizonCoordinatesToEquatorialCoordinates(azimuthDegrees float64, azimuthMinutes float64, azimuthSeconds float64, altitudeDegrees float64, altitudeMinutes float64, altitudeSeconds float64, geographicalLatitude float64) (float64, float64, float64, float64, float64, float64) {
+	hourAngleInDecimalDegrees := macros.HorToHA(azimuthDegrees, azimuthMinutes, azimuthSeconds, altitudeDegrees, altitudeMinutes, altitudeSeconds, geographicalLatitude)
+
+	declinationInDecimalDegrees := macros.HorToDec(azimuthDegrees, azimuthMinutes, azimuthSeconds, altitudeDegrees, altitudeMinutes, altitudeSeconds, geographicalLatitude)
+
+	hourAngleHours := macros.DHHour(hourAngleInDecimalDegrees)
+	hourAngleMinutes := macros.DHMin(hourAngleInDecimalDegrees)
+	hourAngleSeconds := macros.DHSec(hourAngleInDecimalDegrees)
+
+	declinationDegrees := macros.DDDeg(declinationInDecimalDegrees)
+	declinationMinutes := macros.DDMin(declinationInDecimalDegrees)
+	declinationSeconds := macros.DDSec(declinationInDecimalDegrees)
+
+	return float64(hourAngleHours), float64(hourAngleMinutes), hourAngleSeconds, declinationDegrees, declinationMinutes, declinationSeconds
+}

@@ -367,3 +367,160 @@ func GSTToLST(
 
 	return c - (24.0 * math.Floor(c/24.0))
 }
+
+// EqToAz converts Equatorial Coordinates to Azimuth (in decimal degrees)
+//
+// Original macro name: EQAz
+func EqToAz(hourAngleHours float64, hourAngleMinutes float64, hourAngleSeconds float64, declinationDegrees float64, declinationMinutes float64, declinationSeconds float64, geographicalLatitude float64) float64 {
+	a := HMSToDH(hourAngleHours, hourAngleMinutes, hourAngleSeconds)
+	b := a * 15.0
+	c := util.DegreesToRadians(b)
+	d := DMSToDD(declinationDegrees, declinationMinutes, declinationSeconds)
+	e := util.DegreesToRadians(d)
+	f := util.DegreesToRadians(geographicalLatitude)
+	g := math.Sin(e)*math.Sin(f) + math.Cos(e)*math.Cos(f)*math.Cos(c)
+	h := -math.Cos(e) * math.Cos(f) * math.Sin(c)
+	i := math.Sin(e) - (math.Sin(f) * g)
+	j := Degrees(math.Atan2(h, i))
+
+	return j - 360.0*math.Floor(j/360.0)
+}
+
+// EqToAlt converts Equatorial Coordinates to Altitude (in decimal degrees)
+//
+// Original macro name: EQAlt
+func EqToAlt(hourAngleHours float64, hourAngleMinutes float64, hourAngleSeconds float64, declinationDegrees float64, declinationMinutes float64, declinationSeconds float64, geographicalLatitude float64) float64 {
+	a := HMSToDH(hourAngleHours, hourAngleMinutes, hourAngleSeconds)
+	b := a * 15.0
+	c := util.DegreesToRadians(b)
+	d := DMSToDD(declinationDegrees, declinationMinutes, declinationSeconds)
+	e := util.DegreesToRadians(d)
+	f := util.DegreesToRadians(geographicalLatitude)
+	g := math.Sin(e)*math.Sin(f) + math.Cos(e)*math.Cos(f)*math.Cos(c)
+
+	return Degrees(math.Asin(g))
+}
+
+// DMSToDD converts Degrees Minutes Seconds to Decimal Degrees
+//
+// Original macro name: DMSDD
+func DMSToDD(degrees float64, minutes float64, seconds float64) float64 {
+	a := math.Abs(seconds) / 60.0
+	b := (math.Abs(minutes) + a) / 60.0
+	c := math.Abs(degrees) + b
+
+	if degrees < 0.0 || minutes < 0.0 || seconds < 0.0 {
+		return -c
+	}
+	return c
+}
+
+// Degrees converts W to Degrees
+//
+// Original macro name: Degrees
+func Degrees(w float64) float64 {
+	return w * 57.29577951
+}
+
+// DDDeg returns Degrees part of Decimal Degrees
+//
+// Original macro name: DDDeg
+func DDDeg(decimalDegrees float64) float64 {
+	a := math.Abs(decimalDegrees)
+	b := a * 3600.0
+	c := util.RoundFloat64(b-60.0*math.Floor(b/60.0), 2)
+
+	var e float64
+	if c == 60.0 {
+		e = 60.0
+	} else {
+		e = b
+	}
+
+	if decimalDegrees < 0.0 {
+		return -math.Floor(e / 3600.0)
+	}
+	return math.Floor(e / 3600.0)
+}
+
+// DDMin returns Minutes part of Decimal Degrees
+//
+// Original macro name: DDMin
+func DDMin(decimalDegrees float64) float64 {
+	a := math.Abs(decimalDegrees)
+	b := a * 3600.0
+	c := util.RoundFloat64(b-60.0*math.Floor(b/60.0), 2)
+
+	var e float64
+	if c == 60.0 {
+		e = b + 60.0
+	} else {
+		e = b
+	}
+
+	return math.Mod(math.Floor(e/60.0), 60.0)
+}
+
+// DDSec returns Seconds part of Decimal Degrees
+//
+// Original macro name: DDSec
+func DDSec(decimalDegrees float64) float64 {
+	a := math.Abs(decimalDegrees)
+	b := a * 3600.0
+
+	c := util.RoundFloat64(b-60.0*math.Floor(b/60.0), 2)
+
+	var d float64
+	if c == 60.0 {
+		d = 0.0
+	} else {
+		d = c
+	}
+
+	return d
+}
+
+// DDToDH converts Decimal Degrees to Degree-Hours
+//
+// Original macro name: DDDH
+func DDToDH(decimalDegrees float64) float64 {
+	return decimalDegrees / 15.0
+}
+
+// DHToDD converts Degree-Hours to Decimal Degrees
+//
+// Original macro name: DHDD
+func DHToDD(degreeHours float64) float64 {
+	return degreeHours * 15.0
+}
+
+// HorToDec converts Horizon Coordinates to Declination (in decimal degrees)
+//
+// Original macro name: HORDec
+func HorToDec(azimuthDegrees float64, azimuthMinutes float64, azimuthSeconds float64, altitudeDegrees float64, altitudeMinutes float64, altitudeSeconds float64, geographicalLatitude float64) float64 {
+	a := DMSToDD(azimuthDegrees, azimuthMinutes, azimuthSeconds)
+	b := DMSToDD(altitudeDegrees, altitudeMinutes, altitudeSeconds)
+	c := util.DegreesToRadians(a)
+	d := util.DegreesToRadians(b)
+	e := util.DegreesToRadians(geographicalLatitude)
+	f := math.Sin(d)*math.Sin(e) + math.Cos(d)*math.Cos(e)*math.Cos(c)
+
+	return Degrees(math.Asin(f))
+}
+
+// HorToHA converts Horizon Coordinates to Hour Angle (in decimal degrees)
+//
+// Original macro name: HORHa
+func HorToHA(azimuthDegrees float64, azimuthMinutes float64, azimuthSeconds float64, altitudeDegrees float64, altitudeMinutes float64, altitudeSeconds float64, geographicalLatitude float64) float64 {
+	a := DMSToDD(azimuthDegrees, azimuthMinutes, azimuthSeconds)
+	b := DMSToDD(altitudeDegrees, altitudeMinutes, altitudeSeconds)
+	c := util.DegreesToRadians(a)
+	d := util.DegreesToRadians(b)
+	e := util.DegreesToRadians(geographicalLatitude)
+	f := math.Sin(d)*math.Sin(e) + math.Cos(d)*math.Cos(e)*math.Cos(c)
+	g := -math.Cos(d) * math.Cos(e) * math.Sin(c)
+	h := math.Sin(d) - math.Sin(e)*f
+	i := DDToDH(Degrees(math.Atan2(g, h)))
+
+	return i - 24.0*math.Floor(i/24.0)
+}

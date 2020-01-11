@@ -26,3 +26,8 @@ func RoundFloat64(inputValue float64, places int) float64 {
 
 	return returnValue
 }
+
+// DegreesToRadians converts units from degrees to radians
+func DegreesToRadians(inputDegrees float64) float64 {
+	return inputDegrees * (math.Pi / 180)
+}

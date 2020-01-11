@@ -129,3 +129,73 @@ func TestHourAngleToRightAscension(t *testing.T) {
 		})
 	}
 }
+
+func TestEquatorialCoordinatesToHorizonCoordinates(t *testing.T) {
+	type args struct {
+		hourAngleHours       float64
+		hourAngleMinutes     float64
+		hourAngleSeconds     float64
+		declinationDegrees   float64
+		declinationMinutes   float64
+		declinationSeconds   float64
+		geographicalLatitude float64
+	}
+	tests := []struct {
+		name                string
+		args                args
+		wantAzimuthDegrees  float64
+		wantAzimuthMinutes  float64
+		wantAzimuthSeconds  float64
+		wantAltitudeDegrees float64
+		wantAltitudeMinutes float64
+		wantAltitudeSeconds float64
+	}{
+		{name: "EquatorialCoordinatesToHorizonCoordinates", args: args{hourAngleHours: 5, hourAngleMinutes: 51, hourAngleSeconds: 44, declinationDegrees: 23, declinationMinutes: 13, declinationSeconds: 10, geographicalLatitude: 52}, wantAzimuthDegrees: 283, wantAzimuthMinutes: 16, wantAzimuthSeconds: 15.7, wantAltitudeDegrees: 19, wantAltitudeMinutes: 20, wantAltitudeSeconds: 3.64},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			azimuthDegrees, azimuthMinutes, azimuthSeconds, altitudeDegrees, altitudeMinutes, altitudeSeconds := EquatorialCoordinatesToHorizonCoordinates(tt.args.hourAngleHours, tt.args.hourAngleMinutes, tt.args.hourAngleSeconds, tt.args.declinationDegrees, tt.args.declinationMinutes, tt.args.declinationSeconds, tt.args.geographicalLatitude)
+
+			if azimuthDegrees != tt.wantAzimuthDegrees || azimuthMinutes != tt.wantAzimuthMinutes || azimuthSeconds != tt.wantAzimuthSeconds || altitudeDegrees != tt.wantAltitudeDegrees || altitudeMinutes != tt.wantAltitudeMinutes || altitudeSeconds != tt.wantAltitudeSeconds {
+				t.Errorf("EquatorialCoordinatesToHorizonCoordinates() got = [Az] %v degrees %v minutes %v seconds [Alt] %v degrees %v minutes %v seconds, want [Az] %v degrees %v minutes %v seconds [Alt] %v degrees %v minutes %v seconds\n", azimuthDegrees, azimuthMinutes, azimuthSeconds, altitudeDegrees, altitudeMinutes, altitudeSeconds, tt.wantAzimuthDegrees, tt.wantAzimuthMinutes, tt.wantAzimuthSeconds, tt.wantAltitudeDegrees, tt.wantAltitudeMinutes, tt.wantAltitudeSeconds)
+			} else {
+				fmt.Printf("Equatorial Coordinates to Horizon Coordinates: [Hour Angle] %v:%v:%v [Declination] %v degrees %v minutes %v seconds [Geog Lat] %v = [Azimuth] %v degrees %v minutes %v seconds [Altitude] %v degrees %v minutes %v seconds\n", tt.args.hourAngleHours, tt.args.hourAngleMinutes, tt.args.hourAngleSeconds, tt.args.declinationDegrees, tt.args.declinationMinutes, tt.args.declinationSeconds, tt.args.geographicalLatitude, azimuthDegrees, azimuthMinutes, azimuthSeconds, altitudeDegrees, altitudeMinutes, altitudeSeconds)
+			}
+		})
+	}
+}
+
+func TestHorizonCoordinatesToEquatorialCoordinates(t *testing.T) {
+	type args struct {
+		azimuthDegrees       float64
+		azimuthMinutes       float64
+		azimuthSeconds       float64
+		altitudeDegrees      float64
+		altitudeMinutes      float64
+		altitudeSeconds      float64
+		geographicalLatitude float64
+	}
+	tests := []struct {
+		name                   string
+		args                   args
+		wantHourAngleHours     float64
+		wantHourAngleMinutes   float64
+		wantHourAngleSeconds   float64
+		wantDeclinationDegrees float64
+		wantDeclinationMinutes float64
+		wantDeclinationSeconds float64
+	}{
+		{name: "HorizonCoordinatesToEquatorialCoordinates", args: args{azimuthDegrees: 283, azimuthMinutes: 16, azimuthSeconds: 15.7, altitudeDegrees: 19, altitudeMinutes: 20, altitudeSeconds: 3.64, geographicalLatitude: 52}, wantHourAngleHours: 5, wantHourAngleMinutes: 51, wantHourAngleSeconds: 44, wantDeclinationDegrees: 23, wantDeclinationMinutes: 13, wantDeclinationSeconds: 10},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hourAngleHours, hourAngleMinutes, hourAngleSeconds, declinationDegrees, declinationMinutes, declinationSeconds := HorizonCoordinatesToEquatorialCoordinates(tt.args.azimuthDegrees, tt.args.azimuthMinutes, tt.args.azimuthSeconds, tt.args.altitudeDegrees, tt.args.altitudeMinutes, tt.args.altitudeSeconds, tt.args.geographicalLatitude)
+
+			if hourAngleHours != tt.wantHourAngleHours || hourAngleMinutes != tt.wantHourAngleMinutes || hourAngleSeconds != tt.wantHourAngleSeconds || declinationDegrees != tt.wantDeclinationDegrees || declinationMinutes != tt.wantDeclinationMinutes || declinationSeconds != tt.wantDeclinationSeconds {
+				t.Errorf("HorizonCoordinatesToEquatorialCoordinates() got = [Hour Angle] %v:%v:%v [Declination] %v degrees %v minutes %v seconds, want [Hour Angle] %v:%v:%v [Declination] %v degrees %v minutes %v seconds", hourAngleHours, hourAngleMinutes, hourAngleSeconds, declinationDegrees, declinationMinutes, declinationSeconds, tt.wantHourAngleHours, tt.wantHourAngleMinutes, tt.wantHourAngleSeconds, tt.wantDeclinationDegrees, tt.wantDeclinationMinutes, tt.wantDeclinationSeconds)
+			} else {
+				fmt.Printf("Horizon Coordinates to Equatorial Coordinates: [Azimuth] %v degrees %v minutes %v seconds [Altitude] %v degrees %v minutes %v seconds [Geog Latitude] %v = [Hour Angle] %v:%v:%v [Declination] %v degrees %v minutes %v seconds\n", tt.args.azimuthDegrees, tt.args.azimuthMinutes, tt.args.azimuthSeconds, tt.args.altitudeDegrees, tt.args.altitudeMinutes, tt.args.altitudeSeconds, tt.args.geographicalLatitude, hourAngleHours, hourAngleMinutes, hourAngleSeconds, declinationDegrees, declinationMinutes, declinationSeconds)
+			}
+		})
+	}
+}

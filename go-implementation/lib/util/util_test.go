@@ -22,9 +22,9 @@ func TestIsLeapYear(t *testing.T) {
 			isLeapYear := IsLeapYear(tt.args.inputYear)
 
 			if isLeapYear != tt.wantIsLeapYear {
-				t.Errorf("IsLeapYear() = %t, want %t", isLeapYear, tt.wantIsLeapYear)
+				t.Errorf("IsLeapYear() = %v, want %v", isLeapYear, tt.wantIsLeapYear)
 			} else {
-				fmt.Printf("IsLeapYear: [Year] %d = [IsLeapYear] %t\n", tt.args.inputYear, isLeapYear)
+				fmt.Printf("IsLeapYear: [Year] %v = [IsLeapYear] %v\n", tt.args.inputYear, isLeapYear)
 			}
 		})
 	}
@@ -50,7 +50,7 @@ func TestRoundFloat64(t *testing.T) {
 			if roundedFloat != tt.wantRoundedFloat {
 				t.Errorf("RoundFloat64() = %v, want %v", roundedFloat, tt.wantRoundedFloat)
 			} else {
-				fmt.Printf("Round float value: [Original] %v [Places] %d = [Rounded] %v\n", tt.args.inputValue, tt.args.places, roundedFloat)
+				fmt.Printf("Round float value: [Original] %v [Places] %v = [Rounded] %v\n", tt.args.inputValue, tt.args.places, roundedFloat)
 			}
 		})
 	}

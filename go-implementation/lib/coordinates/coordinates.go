@@ -1,6 +1,7 @@
 package coordinates
 
 import (
+	"../macros"
 	"../util"
 	"math"
 )
@@ -52,4 +53,40 @@ func DecimalDegreesToAngle(decimalDegrees float64) (float64, float64, float64) {
 	}
 
 	return signedDegrees, minutes, math.Floor(correctedSeconds)
+}
+
+// RightAscensionToHourAngle converts Right Ascension to Hour Angle
+func RightAscensionToHourAngle(raHours float64, raMinutes float64, raSeconds float64, lctHours float64, lctMinutes float64, lctSeconds float64, isDaylightSaving bool, zoneCorrection int, localDay float64, localMonth int, localYear int, geographicalLongitude float64) (float64, float64, float64) {
+	var daylightSaving int
+	if isDaylightSaving == true {
+		daylightSaving = 1
+	} else {
+		daylightSaving = 0
+	}
+
+	hourAngle := macros.RAToHA(raHours, raMinutes, raSeconds, lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear, geographicalLongitude)
+
+	hourAngleHours := macros.DHHour(hourAngle)
+	hourAngleMinutes := macros.DHMin(hourAngle)
+	hourAngleSeconds := macros.DHSec(hourAngle)
+
+	return float64(hourAngleHours), float64(hourAngleMinutes), hourAngleSeconds
+}
+
+// HourAngleToRightAscension converts Hour Angle to Right Ascension
+func HourAngleToRightAscension(hourAngleHours float64, hourAngleMinutes float64, hourAngleSeconds float64, lctHours float64, lctMinutes float64, lctSeconds float64, isDaylightSaving bool, zoneCorrection int, localDay float64, localMonth int, localYear int, geographicalLongitude float64) (float64, float64, float64) {
+	var daylightSaving int
+	if isDaylightSaving == true {
+		daylightSaving = 1
+	} else {
+		daylightSaving = 0
+	}
+
+	rightAscension := macros.HAToRA(hourAngleHours, hourAngleMinutes, hourAngleSeconds, lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear, geographicalLongitude)
+
+	rightAscensionHours := macros.DHHour(rightAscension)
+	rightAscensionMinutes := macros.DHMin(rightAscension)
+	rightAscensionSeconds := macros.DHSec(rightAscension)
+
+	return float64(rightAscensionHours), float64(rightAscensionMinutes), rightAscensionSeconds
 }

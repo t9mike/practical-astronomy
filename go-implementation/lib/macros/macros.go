@@ -3,10 +3,10 @@ package macros
 import "math"
 import "../util"
 
-// HMSDH converts a Civil Time (hours,minutes,seconds) to Decimal Hours
+// HMSToDH converts a Civil Time (hours,minutes,seconds) to Decimal Hours
 //
 // Original macro name: HMSDH
-func HMSDH(hours float64, minutes float64, seconds float64) float64 {
+func HMSToDH(hours float64, minutes float64, seconds float64) float64 {
 	fHours := hours
 	fMinutes := minutes
 	fSeconds := seconds
@@ -71,10 +71,10 @@ func DHSec(decimalHours float64) float64 {
 	return d
 }
 
-// CDJD converts a Greenwich Date/Civil Date (day,month,year) to Julian Date
+// CDToJD converts a Greenwich Date/Civil Date (day,month,year) to Julian Date
 //
 // Original macro name: CDJD
-func CDJD(day float64, month int, year int) float64 {
+func CDToJD(day float64, month int, year int) float64 {
 	fDay := float64(day)
 	fMonth := float64(month)
 	fYear := float64(year)
@@ -231,4 +231,139 @@ func FDOW(julianDate float64) string {
 	}
 
 	return returnValue
+}
+
+// RAToHA converts Right Ascension to Hour Angle
+//
+// Original macro name: RAHA
+func RAToHA(raHours float64, raMinutes float64, raSeconds float64, lctHours float64, lctMinutes float64, lctSeconds float64, daylightSaving int, zoneCorrection int, localDay float64, localMonth int, localYear int, geographicalLongitude float64) float64 {
+	a := LCTToUT(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	b := LCTGreenwichDay(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	c := LCTGreenwichMonth(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	d := LCTGreenwichYear(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	e := UTToGST(a, 0.0, 0.0, b, c, d)
+	f := GSTToLST(e, 0.0, 0.0, geographicalLongitude)
+	g := HMSToDH(raHours, raMinutes, raSeconds)
+	h := f - g
+
+	if h < 0.0 {
+		return 24.0 + h
+	}
+	return h
+}
+
+// HAToRA converts Hour Angle to Right Ascension
+//
+// Original macro name: HARA
+func HAToRA(hourAngleHours float64, hourAngleMinutes float64, hourAngleSeconds float64, lctHours float64, lctMinutes float64, lctSeconds float64, daylightSaving int, zoneCorrection int, localDay float64, localMonth int, localYear int, geographicalLongitude float64) float64 {
+	a := LCTToUT(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	b := LCTGreenwichDay(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	c := LCTGreenwichMonth(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	d := LCTGreenwichYear(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	e := UTToGST(a, 0.0, 0.0, b, c, d)
+	f := GSTToLST(e, 0.0, 0.0, geographicalLongitude)
+	g := HMSToDH(hourAngleHours, hourAngleMinutes, hourAngleSeconds)
+	h := f - g
+
+	if h < 0.0 {
+		return 24.0 + h
+	}
+	return h
+}
+
+// LCTToUT converts Local Civil Time to Universal Time
+//
+// Original macro name: LctUT
+func LCTToUT(lctHours float64, lctMinutes float64, lctSeconds float64, daylightSaving int, zoneCorrection int, localDay float64, localMonth int, localYear int) float64 {
+	a := HMSToDH(lctHours, lctMinutes, lctSeconds)
+	b := a - float64(daylightSaving) - float64(zoneCorrection)
+	c := localDay + (b / 24.0)
+	d := CDToJD(c, localMonth, localYear)
+	e := JDCDay(d)
+	e1 := math.Floor(e)
+
+	return 24.0 * (e - e1)
+}
+
+// UTToLCT converts Universal Time to Local Civil Time
+//
+// Original macro name: UTLct
+func UTToLCT(uHours float64, uMinutes float64, uSeconds float64, daylightSaving int, zoneCorrection int, greenwichDay float64, greenwichMonth int, greenwichYear int) float64 {
+	a := HMSToDH(uHours, uMinutes, uSeconds)
+	b := a + float64(zoneCorrection)
+	c := b + float64(daylightSaving)
+	d := CDToJD(greenwichDay, greenwichMonth, greenwichYear) + (c / 24.0)
+	e := JDCDay(d)
+	e1 := math.Floor(e)
+
+	return 24.0 * (e - e1)
+}
+
+// LCTGreenwichDay determines Greenwich Day for Local Time
+//
+// Original macro name: LctGDay
+func LCTGreenwichDay(lctHours float64, lctMinutes float64, lctSeconds float64, daylightSaving int, zoneCorrection int, localDay float64, localMonth int, localYear int) float64 {
+	a := HMSToDH(lctHours, lctMinutes, lctSeconds)
+	b := a - float64(daylightSaving) - float64(zoneCorrection)
+	c := localDay + (b / 24.0)
+	d := CDToJD(c, localMonth, localYear)
+	e := JDCDay(d)
+
+	return math.Floor(e)
+}
+
+// LCTGreenwichMonth determines Greenwich Month for Local Time
+//
+// Original macro name: LctGMonth
+func LCTGreenwichMonth(lctHours float64, lctMinutes float64, lctSeconds float64, daylightSaving int, zoneCorrection int, localDay float64, localMonth int, localYear int) int {
+	a := HMSToDH(lctHours, lctMinutes, lctSeconds)
+	b := a - float64(daylightSaving) - float64(zoneCorrection)
+	c := localDay + (b / 24.0)
+	d := CDToJD(c, localMonth, localYear)
+
+	return JDCMonth(d)
+}
+
+// LCTGreenwichYear determines Greenwich Year for Local Time
+//
+// Original macro name: LctGYear
+func LCTGreenwichYear(lctHours float64, lctMinutes float64, lctSeconds float64, daylightSaving int, zoneCorrection int, localDay float64, localMonth int, localYear int) int {
+	a := HMSToDH(lctHours, lctMinutes, lctSeconds)
+	b := a - float64(daylightSaving) - float64(zoneCorrection)
+	c := localDay + (b / 24.0)
+	d := CDToJD(c, localMonth, localYear)
+
+	return JDCYear(d)
+}
+
+// UTToGST converts Universal Time to Greenwich Sidereal Time
+//
+// Original macro name: UTGST
+func UTToGST(uHours float64, uMinutes float64, uSeconds float64, greenwichDay float64, greenwichMonth int, greenwichYear int) float64 {
+	a := CDToJD(greenwichDay, greenwichMonth, greenwichYear)
+	b := a - 2451545.0
+	c := b / 36525.0
+	d := 6.697374558 + (2400.051336 * c) + (0.000025862 * c * c)
+	e := d - (24.0 * math.Floor(d/24.0))
+	f := HMSToDH(uHours, uMinutes, uSeconds)
+	g := f * 1.002737909
+	h := e + g
+
+	return h - (24.0 * math.Floor(h/24.0))
+}
+
+// GSTToLST converts Greenwich Sidereal Time to Local Sidereal Time
+//
+// Original macro name: GSTLST
+func GSTToLST(
+	greenwichHours float64,
+	greenwichMinutes float64,
+	greenwichSeconds float64,
+	geographicalLongitude float64,
+) float64 {
+	a := HMSToDH(greenwichHours, greenwichMinutes, greenwichSeconds)
+	b := geographicalLongitude / 15.0
+	c := a + b
+
+	return c - (24.0 * math.Floor(c/24.0))
 }

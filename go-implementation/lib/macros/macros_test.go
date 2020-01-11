@@ -21,9 +21,9 @@ func TestFDOW(t *testing.T) {
 			dayOfWeek := FDOW(tt.args.julianDate)
 
 			if dayOfWeek != tt.wantDayOfWeek {
-				t.Errorf("FDOW() = %s, want %s", dayOfWeek, tt.wantDayOfWeek)
+				t.Errorf("FDOW() = %v, want %v", dayOfWeek, tt.wantDayOfWeek)
 			} else {
-				fmt.Printf("Julian date to day of week: [Julian Date] %.1f = [Day of Week] %s\n", tt.args.julianDate, dayOfWeek)
+				fmt.Printf("Julian date to day of week: [Julian Date] %v = [Day of Week] %v\n", tt.args.julianDate, dayOfWeek)
 			}
 		})
 	}

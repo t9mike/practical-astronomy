@@ -58,7 +58,7 @@ func CivilDateToDayNumber(month int, day int, year int) int {
 
 // CivilTimeToDecimalHours converts a Civil Time (hours,minutes,seconds) to Decimal Hours
 func CivilTimeToDecimalHours(hours float64, minutes float64, seconds float64) float64 {
-	return macros.HMSDH(hours, minutes, seconds)
+	return macros.HMSToDH(hours, minutes, seconds)
 }
 
 // DecimalHoursToCivilTime converts decimal hours to civil time.
@@ -94,7 +94,7 @@ func LocalCivilTimeToUniversalTime(
 	utInterim := lct - float64(daylightSavingsOffset) - float64(zoneCorrection)
 	gdayInterim := float64(localDay) + (utInterim / 24)
 
-	jd := macros.CDJD(gdayInterim, localMonth, localYear)
+	jd := macros.CDToJD(gdayInterim, localMonth, localYear)
 
 	gDay := float64(macros.JDCDay(jd))
 	gMonth := macros.JDCMonth(jd)
@@ -116,10 +116,10 @@ func UniversalTimeToLocalCivilTime(utHours float64, utMinutes float64, utSeconds
 		dstValue = 0
 	}
 
-	ut := macros.HMSDH(utHours, utMinutes, utSeconds)
+	ut := macros.HMSToDH(utHours, utMinutes, utSeconds)
 	zoneTime := ut + float64(zoneCorrection)
 	localTime := zoneTime + float64(dstValue)
-	localJDPlusLocalTime := macros.CDJD(float64(gwDay), gwMonth, gwYear) + (localTime / 24)
+	localJDPlusLocalTime := macros.CDToJD(float64(gwDay), gwMonth, gwYear) + (localTime / 24)
 	localDay := macros.JDCDay(localJDPlusLocalTime)
 	integerDay := math.Floor(localDay)
 	localMonth := macros.JDCMonth(localJDPlusLocalTime)
@@ -134,12 +134,12 @@ func UniversalTimeToLocalCivilTime(utHours float64, utMinutes float64, utSeconds
 //
 // Returns GST hours, GST minutes, GST seconds
 func UniversalTimeToGreenwichSiderealTime(utHours float64, utMinutes float64, utSeconds float64, gwDay float64, gwMonth int, gwYear int) (int, int, float64) {
-	jd := macros.CDJD(gwDay, gwMonth, gwYear)
+	jd := macros.CDToJD(gwDay, gwMonth, gwYear)
 	s := jd - 2451545
 	t := s / 36525
 	t01 := 6.697374558 + (2400.051336 * t) + (0.000025862 * t * t)
 	t02 := t01 - (24 * math.Floor(t01/24))
-	ut := macros.HMSDH(utHours, utMinutes, utSeconds)
+	ut := macros.HMSToDH(utHours, utMinutes, utSeconds)
 	a := ut * 1.002737909
 	gst1 := t02 + a
 	gst2 := gst1 - (24 * math.Floor(gst1/24))
@@ -155,12 +155,12 @@ func UniversalTimeToGreenwichSiderealTime(utHours float64, utMinutes float64, ut
 //
 // Returns UT hours, UT minutes, UT seconds, Warning Flag
 func GreenwichSiderealTimeToUniversalTime(gstHours float64, gstMinutes float64, gstSeconds float64, gwDay float64, gwMonth int, gwYear int) (int, int, float64, string) {
-	jd := macros.CDJD(gwDay, gwMonth, gwYear)
+	jd := macros.CDToJD(gwDay, gwMonth, gwYear)
 	s := jd - 2451545
 	t := s / 36525
 	t01 := 6.697374558 + (2400.051336 * t) + (0.000025862 * t * t)
 	t02 := t01 - (24 * math.Floor(t01/24))
-	gstHours1 := macros.HMSDH(gstHours, gstMinutes, gstSeconds)
+	gstHours1 := macros.HMSToDH(gstHours, gstMinutes, gstSeconds)
 
 	a := gstHours1 - t02
 	b := a - (24 * math.Floor(a/24))
@@ -183,7 +183,7 @@ func GreenwichSiderealTimeToUniversalTime(gstHours float64, gstMinutes float64, 
 //
 // Returns LST hours, LST minutes, LST seconds
 func GreenwichSiderealTimeToLocalSiderealTime(gstHour float64, gstMinutes float64, gstSeconds float64, geographicalLongitude float64) (int, int, float64) {
-	gst := macros.HMSDH(gstHour, gstMinutes, gstSeconds)
+	gst := macros.HMSToDH(gstHour, gstMinutes, gstSeconds)
 	offset := geographicalLongitude / 15
 	lstHours1 := gst + offset
 	lstHours2 := lstHours1 - (24 * math.Floor(lstHours1/24))
@@ -199,7 +199,7 @@ func GreenwichSiderealTimeToLocalSiderealTime(gstHour float64, gstMinutes float6
 //
 // Returns GST hours, GST minutes, GST seconds
 func LocalSiderealTimeToGreenwichSiderealTime(lstHours float64, lstMinutes float64, lstSeconds float64, geographicalLongitude float64) (int, int, float64) {
-	gst := macros.HMSDH(lstHours, lstMinutes, lstSeconds)
+	gst := macros.HMSToDH(lstHours, lstMinutes, lstSeconds)
 	longHours := geographicalLongitude / 15
 	gst1 := gst - longHours
 	gst2 := gst1 - (24 * math.Floor(gst1/24))

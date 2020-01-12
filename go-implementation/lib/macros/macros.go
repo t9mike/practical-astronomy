@@ -524,3 +524,62 @@ func HorToHA(azimuthDegrees float64, azimuthMinutes float64, azimuthSeconds floa
 
 	return i - 24.0*math.Floor(i/24.0)
 }
+
+// Obliq returns Obliquity of the Ecliptic for a Greenwich Date
+//
+// Original macro name: Obliq
+func Obliq(greenwichDay float64, greenwichMonth int, greenwichYear int) float64 {
+	a := CDToJD(greenwichDay, greenwichMonth, greenwichYear)
+	b := a - 2415020.0
+	c := (b / 36525.0) - 1.0
+	d := c * (46.815 + c*(0.0006-(c*0.00181)))
+	e := d / 3600.0
+
+	return 23.43929167 - e + NutationOfObliquity(greenwichDay, greenwichMonth, greenwichYear)
+}
+
+// NutationOfObliquity returns Nutation of Obliquity
+//
+// Original macro name: NutatObl
+func NutationOfObliquity(greenwichDay float64, greenwichMonth int, greenwichYear int) float64 {
+	dj := CDToJD(greenwichDay, greenwichMonth, greenwichYear) - 2415020.0
+	t := dj / 36525.0
+	t2 := t * t
+
+	a := 100.0021358 * t
+	b := 360.0 * (a - math.Floor(a))
+
+	l1 := 279.6967 + 0.000303*t2 + b
+	l2 := 2.0 * util.DegreesToRadians(l1)
+
+	a = 1336.855231 * t
+	b = 360.0 * (a - math.Floor(a))
+
+	d1 := 270.4342 - 0.001133*t2 + b
+	d2 := 2.0 * util.DegreesToRadians(d1)
+
+	a = 99.99736056 * t
+	b = 360.0 * (a - math.Floor(a))
+
+	m1 := util.DegreesToRadians(358.4758 - 0.00015*t2 + b)
+
+	a = 1325.552359 * t
+	b = 360.0 * (a - math.Floor(a))
+
+	m2 := util.DegreesToRadians(296.1046 + 0.009192*t2 + b)
+
+	a = 5.372616667 * t
+	b = 360.0 * (a - math.Floor(a))
+
+	n1 := util.DegreesToRadians(259.1833 + 0.002078*t2 - b)
+
+	n2 := 2.0 * n1
+
+	ddo := (9.21 + 0.00091*t) * math.Cos(n1)
+	ddo = ddo + (0.5522-0.00029*t)*math.Cos(l2) - 0.0904*math.Cos(n2)
+	ddo = ddo + 0.0884*math.Cos(d2) + 0.0216*math.Cos(l2+m1)
+	ddo = ddo + 0.0183*math.Cos(d2-n1) + 0.0113*math.Cos(d2+m2)
+	ddo = ddo - 0.0093*math.Cos(l2-m1) - 0.0066*math.Cos(l2-n1)
+
+	return ddo / 3600.0
+}

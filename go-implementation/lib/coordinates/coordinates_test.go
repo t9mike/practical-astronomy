@@ -225,3 +225,77 @@ func TestMeanObliquityOfTheEcliptic(t *testing.T) {
 		})
 	}
 }
+
+func TestEclipticCoordinateToEquatorialCoordinate(t *testing.T) {
+	type args struct {
+		eclipticLongitudeDegrees float64
+		eclipticLongitudeMinutes float64
+		eclipticLongitudeSeconds float64
+		eclipticLatitudeDegrees  float64
+		eclipticLatitudeMinutes  float64
+		eclipticLatitudeSeconds  float64
+		greenwichDay             float64
+		greenwichMonth           int
+		greenwichYear            int
+	}
+	tests := []struct {
+		name           string
+		args           args
+		wantRAHours    float64
+		wantRAMinutes  float64
+		wantRASeconds  float64
+		wantDecDegrees float64
+		wantDecMinutes float64
+		wantDecSeconds float64
+	}{
+		{name: "EclipticCoordinateToEquatorialCoordinate", args: args{eclipticLongitudeDegrees: 139, eclipticLongitudeMinutes: 41, eclipticLongitudeSeconds: 10, eclipticLatitudeDegrees: 4, eclipticLatitudeMinutes: 52, eclipticLatitudeSeconds: 31, greenwichDay: 6, greenwichMonth: 7, greenwichYear: 2009}, wantRAHours: 9, wantRAMinutes: 34, wantRASeconds: 53.4, wantDecDegrees: 19, wantDecMinutes: 32, wantDecSeconds: 8.52},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			raHours, raMinutes, raSeconds, decDegrees, decMinutes, decSeconds := EclipticCoordinateToEquatorialCoordinate(tt.args.eclipticLongitudeDegrees, tt.args.eclipticLongitudeMinutes, tt.args.eclipticLongitudeSeconds, tt.args.eclipticLatitudeDegrees, tt.args.eclipticLatitudeMinutes, tt.args.eclipticLatitudeSeconds, tt.args.greenwichDay, tt.args.greenwichMonth, tt.args.greenwichYear)
+
+			if raHours != tt.wantRAHours || raMinutes != tt.wantRAMinutes || raSeconds != tt.wantRASeconds || decDegrees != tt.wantDecDegrees || decMinutes != tt.wantDecMinutes || decSeconds != tt.wantDecSeconds {
+				t.Errorf("EclipticCoordinateToEquatorialCoordinate() got = [RA] %v hours %v minutes %v seconds [Dec] %v degrees %v minutes %v seconds, want [RA] %v hours %v minutes %v seconds [Dec] %v degrees %v minutes %v seconds", raHours, raMinutes, raSeconds, decDegrees, decMinutes, decSeconds, tt.wantRAHours, tt.wantRAMinutes, tt.wantRASeconds, tt.wantDecDegrees, tt.wantDecMinutes, tt.wantDecSeconds)
+			} else {
+				fmt.Printf("Ecliptic coordinate to equatorial coordinate: [Ecliptic] [Longitude] %v degrees %v minutes %v seconds [Latitude] %v degrees %v minutes %v seconds [Greenwich Date] %v/%v/%v = [Right Ascension] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds\n", tt.args.eclipticLongitudeDegrees, tt.args.eclipticLongitudeMinutes, tt.args.eclipticLongitudeSeconds, tt.args.eclipticLatitudeDegrees, tt.args.eclipticLatitudeMinutes, tt.args.eclipticLatitudeSeconds, tt.args.greenwichMonth, tt.args.greenwichDay, tt.args.greenwichYear, raHours, raMinutes, raSeconds, decDegrees, decMinutes, decSeconds)
+			}
+		})
+	}
+}
+
+func TestEquatorialCoordinateToEclipticCoordinate(t *testing.T) {
+	type args struct {
+		raHours    float64
+		raMinutes  float64
+		raSeconds  float64
+		decDegrees float64
+		decMinutes float64
+		decSeconds float64
+		gwDay      float64
+		gwMonth    int
+		gwYear     int
+	}
+	tests := []struct {
+		name                         string
+		args                         args
+		wantEclipticLongitudeDegrees float64
+		wantEclipticLongitudeMinutes float64
+		wantEclipticLongitudeSeconds float64
+		wantEclipticLatitudeDegrees  float64
+		wantEclipticLatitudeMinutes  float64
+		wantEclipticLatitudeSeconds  float64
+	}{
+		{name: "EquatorialCoordinateToEclipticCoordinate", args: args{raHours: 9, raMinutes: 34, raSeconds: 53.4, decDegrees: 19, decMinutes: 32, decSeconds: 8.52, gwDay: 6, gwMonth: 7, gwYear: 2009}, wantEclipticLongitudeDegrees: 139, wantEclipticLongitudeMinutes: 41, wantEclipticLongitudeSeconds: 9.97, wantEclipticLatitudeDegrees: 4, wantEclipticLatitudeMinutes: 52, wantEclipticLatitudeSeconds: 30.99},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			eclipticLongitudeDegrees, eclipticLongitudeMinutes, eclipticLongitudeSeconds, eclipticLatitudeDegrees, eclipticLatitudeMinutes, eclipticLatitudeSeconds := EquatorialCoordinateToEclipticCoordinate(tt.args.raHours, tt.args.raMinutes, tt.args.raSeconds, tt.args.decDegrees, tt.args.decMinutes, tt.args.decSeconds, tt.args.gwDay, tt.args.gwMonth, tt.args.gwYear)
+
+			if eclipticLongitudeDegrees != tt.wantEclipticLongitudeDegrees || eclipticLongitudeMinutes != tt.wantEclipticLongitudeMinutes || eclipticLongitudeSeconds != tt.wantEclipticLongitudeSeconds || eclipticLatitudeDegrees != tt.wantEclipticLatitudeDegrees || eclipticLatitudeMinutes != tt.wantEclipticLatitudeMinutes || eclipticLatitudeSeconds != tt.wantEclipticLatitudeSeconds {
+				t.Errorf("EquatorialCoordinateToEclipticCoordinate() got = [Ecliptic] [Longitude] %v degrees %v minutes %v seconds [Latitude] %v degrees %v minutes %v seconds, want [Ecliptic] [Longitude] %v degrees %v minutes %v seconds [Latitude] %v degrees %v minutes %v seconds\\", eclipticLongitudeDegrees, eclipticLongitudeMinutes, eclipticLongitudeSeconds, eclipticLatitudeDegrees, eclipticLatitudeMinutes, eclipticLatitudeSeconds, tt.wantEclipticLongitudeDegrees, tt.wantEclipticLongitudeMinutes, tt.wantEclipticLongitudeSeconds, tt.wantEclipticLatitudeDegrees, tt.wantEclipticLatitudeMinutes, tt.wantEclipticLatitudeSeconds)
+			} else {
+				fmt.Printf("Equatorial coordinate to ecliptic coordinate: [Right Ascension] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds [Greenwich Date] %v/%v/%v = [Ecliptic] [Longitude] %v degrees %v minutes %v seconds [Latitude] %v degrees %v minutes %v seconds\n", tt.args.raHours, tt.args.raMinutes, tt.args.raSeconds, tt.args.decDegrees, tt.args.decMinutes, tt.args.decSeconds, tt.args.gwMonth, tt.args.gwDay, tt.args.gwYear, eclipticLongitudeDegrees, eclipticLongitudeMinutes, eclipticLongitudeSeconds, eclipticLatitudeDegrees, eclipticLatitudeMinutes, eclipticLatitudeSeconds)
+			}
+		})
+	}
+}

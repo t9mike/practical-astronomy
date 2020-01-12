@@ -124,3 +124,14 @@ func HorizonCoordinatesToEquatorialCoordinates(azimuthDegrees float64, azimuthMi
 
 	return float64(hourAngleHours), float64(hourAngleMinutes), hourAngleSeconds, declinationDegrees, declinationMinutes, declinationSeconds
 }
+
+// MeanObliquityOfTheEcliptic calculates Mean Obliquity of the Ecliptic for a Greenwich Date
+func MeanObliquityOfTheEcliptic(greenwichDay float64, greenwichMonth int, greenwichYear int) float64 {
+	jd := macros.CDToJD(greenwichDay, greenwichMonth, greenwichYear)
+	mjd := jd - 2451545.0
+	t := mjd / 36525.0
+	de1 := t * (46.815 + t*(0.0006-(t*0.00181)))
+	de2 := de1 / 3600.0
+
+	return 23.439292 - de2
+}

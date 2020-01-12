@@ -199,3 +199,29 @@ func TestHorizonCoordinatesToEquatorialCoordinates(t *testing.T) {
 		})
 	}
 }
+
+func TestMeanObliquityOfTheEcliptic(t *testing.T) {
+	type args struct {
+		greenwichDay   float64
+		greenwichMonth int
+		greenwichYear  int
+	}
+	tests := []struct {
+		name              string
+		args              args
+		wantMeanObliquity float64
+	}{
+		{name: "MeanObliquityOfTheEcliptic", args: args{greenwichDay: 6, greenwichMonth: 7, greenwichYear: 2009}, wantMeanObliquity: 23.43805531},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			meanObliquity := util.RoundFloat64(MeanObliquityOfTheEcliptic(tt.args.greenwichDay, tt.args.greenwichMonth, tt.args.greenwichYear), 8)
+
+			if meanObliquity != tt.wantMeanObliquity {
+				t.Errorf("MeanObliquityOfTheEcliptic() = %v, want %v", meanObliquity, tt.wantMeanObliquity)
+			} else {
+				fmt.Printf("Mean obliquity of the ecliptic: [Greenwich Date] %v/%v/%v = [Mean Obliquity] %v\n", tt.args.greenwichMonth, tt.args.greenwichDay, tt.args.greenwichYear, meanObliquity)
+			}
+		})
+	}
+}

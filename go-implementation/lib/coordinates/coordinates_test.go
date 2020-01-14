@@ -299,3 +299,71 @@ func TestEquatorialCoordinateToEclipticCoordinate(t *testing.T) {
 		})
 	}
 }
+
+func TestEquatorialCoordinateToGalacticCoordinate(t *testing.T) {
+	type args struct {
+		raHours    float64
+		raMinutes  float64
+		raSeconds  float64
+		decDegrees float64
+		decMinutes float64
+		decSeconds float64
+	}
+	tests := []struct {
+		name                         string
+		args                         args
+		wantGalacticLongitudeDegrees float64
+		wantGalacticLongitudeMinutes float64
+		wantGalacticLongitudeSeconds float64
+		wantGalacticLatitudeDegrees  float64
+		wantGalacticLatitudeMinutes  float64
+		wantGalacticLatitudeSeconds  float64
+	}{
+		{name: "EquatorialCoordinateToGalacticCoordinate", args: args{raHours: 10, raMinutes: 21, raSeconds: 0, decDegrees: 10, decMinutes: 3, decSeconds: 11}, wantGalacticLongitudeDegrees: 232, wantGalacticLongitudeMinutes: 14, wantGalacticLongitudeSeconds: 52.38, wantGalacticLatitudeDegrees: 51, wantGalacticLatitudeMinutes: 7, wantGalacticLatitudeSeconds: 20.16},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			galLongDeg, galLongMin, galLongSec, galLatDeg, galLatMin, galLatSec := EquatorialCoordinateToGalacticCoordinate(tt.args.raHours, tt.args.raMinutes, tt.args.raSeconds, tt.args.decDegrees, tt.args.decMinutes, tt.args.decSeconds)
+
+			if galLongDeg != tt.wantGalacticLongitudeDegrees || galLongMin != tt.wantGalacticLongitudeMinutes || galLongSec != tt.wantGalacticLongitudeSeconds || galLatDeg != tt.wantGalacticLatitudeDegrees || galLatMin != tt.wantGalacticLatitudeMinutes || galLatSec != tt.wantGalacticLatitudeSeconds {
+				t.Errorf("EquatorialCoordinateToGalacticCoordinate() got = [Galactic] [Longitude] %v degrees %v minutes %v seconds [Latitude] %v degrees %v minutes %v seconds, want [Galactic] [Longitude] %v degrees %v minutes %v seconds [Latitude] %v degrees %v minutes %v seconds", galLongDeg, galLongMin, galLongSec, galLatDeg, galLatMin, galLatSec, tt.wantGalacticLongitudeDegrees, tt.wantGalacticLongitudeMinutes, tt.wantGalacticLongitudeSeconds, tt.wantGalacticLatitudeDegrees, tt.wantGalacticLatitudeMinutes, tt.wantGalacticLatitudeSeconds)
+			} else {
+				fmt.Printf("Equatorial coordinate to galactic coordinate: [RA] %v hours %v minutes %v seconds [Dec] %v degrees %v minutes %v seconds = [Galactic] [Longitude] %v degrees %v minutes %v seconds [Latitude] %v degrees %v minutes %v seconds\n", tt.args.raHours, tt.args.raMinutes, tt.args.raSeconds, tt.args.decDegrees, tt.args.decMinutes, tt.args.decSeconds, galLongDeg, galLongMin, galLongSec, galLatDeg, galLatMin, galLatSec)
+			}
+		})
+	}
+}
+
+func TestGalacticCoordinateToEquatorialCoordinate(t *testing.T) {
+	type args struct {
+		galLongDeg float64
+		galLongMin float64
+		galLongSec float64
+		galLatDeg  float64
+		galLatMin  float64
+		galLatSec  float64
+	}
+	tests := []struct {
+		name           string
+		args           args
+		wantRAHours    float64
+		wantRAMinutes  float64
+		wantRASeconds  float64
+		wantDecDegrees float64
+		wantDecMinutes float64
+		wantDecSeconds float64
+	}{
+		{name: "GalacticCoordinateToEquatorialCoordinate", args: args{galLongDeg: 232, galLongMin: 14, galLongSec: 52.38, galLatDeg: 51, galLatMin: 7, galLatSec: 20.16}, wantRAHours: 10, wantRAMinutes: 21, wantRASeconds: 0, wantDecDegrees: 10, wantDecMinutes: 3, wantDecSeconds: 11},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			raHours, raMinutes, raSeconds, decDegrees, decMinutes, decSeconds := GalacticCoordinateToEquatorialCoordinate(tt.args.galLongDeg, tt.args.galLongMin, tt.args.galLongSec, tt.args.galLatDeg, tt.args.galLatMin, tt.args.galLatSec)
+
+			if raHours != tt.wantRAHours || raMinutes != tt.wantRAMinutes || raSeconds != tt.wantRASeconds || decDegrees != tt.wantDecDegrees || decMinutes != tt.wantDecMinutes || decSeconds != tt.wantDecSeconds {
+				t.Errorf("GalacticCoordinateToEquatorialCoordinate() got = [RA] %v hours %v minutes %v seconds [Dec] %v degrees %v minutes %v seconds, want [RA] %v hours %v minutes %v seconds [Dec] %v degrees %v minutes %v seconds", raHours, raMinutes, raSeconds, decDegrees, decMinutes, decSeconds, tt.wantRAHours, tt.wantRAMinutes, tt.wantRASeconds, tt.wantDecDegrees, tt.wantDecMinutes, tt.wantDecSeconds)
+			} else {
+				fmt.Printf("Galactic coordinate to equatorial coordinate: [Galactic] [Longitude] %v degrees %v minutes %v seconds [Latitude] %v degrees %v minutes %v seconds = [RA] %v hours %v minutes %v seconds [Dec] %v degrees %v minutes %v seconds\n", tt.args.galLongDeg, tt.args.galLongMin, tt.args.galLongSec, tt.args.galLatDeg, tt.args.galLatMin, tt.args.galLatSec, raHours, raMinutes, raSeconds, decDegrees, decMinutes, decSeconds)
+			}
+		})
+	}
+}

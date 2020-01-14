@@ -190,3 +190,54 @@ func EquatorialCoordinateToEclipticCoordinate(raHours float64, raMinutes float64
 
 	return outEclLongDeg, outEclLongMin, outEclLongSec, outEclLatDeg, outEclLatMin, outEclLatSec
 }
+
+// EquatorialCoordinateToGalacticCoordinate converts Equatorial Coordinates to Galactic Coordinates
+func EquatorialCoordinateToGalacticCoordinate(raHours float64, raMinutes float64, raSeconds float64, decDegrees float64, decMinutes float64, decSeconds float64) (float64, float64, float64, float64, float64, float64) {
+	raDeg := macros.DHToDD(macros.HMSToDH(raHours, raMinutes, raSeconds))
+	decDeg := macros.DMSToDD(decDegrees, decMinutes, decSeconds)
+	raRad := util.DegreesToRadians(raDeg)
+	decRad := util.DegreesToRadians(decDeg)
+	sinB := math.Cos(decRad)*math.Cos(util.DegreesToRadians(27.4))*math.Cos(raRad-util.DegreesToRadians(192.25)) + math.Sin(decRad)*math.Sin(util.DegreesToRadians(27.4))
+	bRadians := math.Asin(sinB)
+	bDeg := macros.Degrees(bRadians)
+	y := math.Sin(decRad) - sinB*math.Sin(util.DegreesToRadians(27.4))
+	x := math.Cos(decRad) * math.Sin(raRad-util.DegreesToRadians(192.25)) * math.Cos(util.DegreesToRadians(27.4))
+	longDeg1 := macros.Degrees(math.Atan2(y, x)) + 33.0
+	longDeg2 := longDeg1 - 360.0*math.Floor(longDeg1/360.0)
+
+	galLongDeg := macros.DDDeg(longDeg2)
+	galLongMin := macros.DDMin(longDeg2)
+	galLongSec := macros.DDSec(longDeg2)
+	galLatDeg := macros.DDDeg(bDeg)
+	galLatMin := macros.DDMin(bDeg)
+	galLatSec := macros.DDSec(bDeg)
+
+	return galLongDeg, galLongMin, galLongSec, galLatDeg, galLatMin, galLatSec
+}
+
+// GalacticCoordinateToEquatorialCoordinate converts Galactic Coordinates to Equatorial Coordinates
+func GalacticCoordinateToEquatorialCoordinate(galLongDeg float64, galLongMin float64, galLongSec float64, galLatDeg float64, galLatMin float64, galLatSec float64) (float64, float64, float64, float64, float64, float64) {
+	glongDeg := macros.DMSToDD(galLongDeg, galLongMin, galLongSec)
+	glatDeg := macros.DMSToDD(galLatDeg, galLatMin, galLatSec)
+	glongRad := util.DegreesToRadians(glongDeg)
+	glatRad := util.DegreesToRadians(glatDeg)
+	sinDec := math.Cos(glatRad)*math.Cos(util.DegreesToRadians(27.4))*math.Sin(glongRad-util.DegreesToRadians(33)) + math.Sin(glatRad)*math.Sin(util.DegreesToRadians(27.4))
+	decRadians := math.Asin(sinDec)
+	decDeg := macros.Degrees(decRadians)
+
+	y := math.Cos(glatRad) * math.Cos(glongRad-util.DegreesToRadians(33))
+	x := math.Sin(glatRad)*math.Cos(util.DegreesToRadians(27.4)) - math.Cos(glatRad)*math.Sin(util.DegreesToRadians(27.4))*math.Sin(glongRad-util.DegreesToRadians(33))
+
+	raDeg1 := macros.Degrees(math.Atan2(y, x)) + 192.25
+	raDeg2 := raDeg1 - 360.0*math.Floor(raDeg1/360.0)
+	raHours1 := macros.DDToDH(raDeg2)
+
+	raHours := macros.DHHour(raHours1)
+	raMinutes := macros.DHMin(raHours1)
+	raSeconds := macros.DHSec(raHours1)
+	decDegrees := macros.DDDeg(decDeg)
+	decMinutes := macros.DDMin(decDeg)
+	decSeconds := macros.DDSec(decDeg)
+
+	return float64(raHours), float64(raMinutes), raSeconds, decDegrees, decMinutes, decSeconds
+}

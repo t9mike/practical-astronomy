@@ -336,6 +336,21 @@ func LCTGreenwichYear(lctHours float64, lctMinutes float64, lctSeconds float64, 
 	return JDCYear(d)
 }
 
+// GSTToUT converts Greenwich Sidereal Time to Universal Time
+//
+// Original macro name: GSTUT
+func GSTToUT(greenwichSiderealHours float64, greenwichSiderealMinutes float64, greenwichSiderealSeconds float64, greenwichDay float64, greenwichMonth int, greenwichYear int) float64 {
+	a := CDToJD(greenwichDay, greenwichMonth, greenwichYear)
+	b := a - 2451545.0
+	c := b / 36525.0
+	d := 6.697374558 + (2400.051336 * c) + (0.000025862 * c * c)
+	e := d - (24.0 * math.Floor(d/24.0))
+	f := HMSToDH(greenwichSiderealHours, greenwichSiderealMinutes, greenwichSiderealSeconds)
+	g := f - e
+	h := g - (24.0 * math.Floor(g/24.0))
+	return h * 0.9972695663
+}
+
 // UTToGST converts Universal Time to Greenwich Sidereal Time
 //
 // Original macro name: UTGST
@@ -365,6 +380,16 @@ func GSTToLST(
 	b := geographicalLongitude / 15.0
 	c := a + b
 
+	return c - (24.0 * math.Floor(c/24.0))
+}
+
+// LSTToGST converts Local Sidereal Time to Greenwich Sidereal Time
+//
+// Original macro name: LSTGST
+func LSTToGST(localHours float64, localMinutes float64, localSeconds float64, longitude float64) float64 {
+	a := HMSToDH(localHours, localMinutes, localSeconds)
+	b := longitude / 15.0
+	c := a - b
 	return c - (24.0 * math.Floor(c/24.0))
 }
 

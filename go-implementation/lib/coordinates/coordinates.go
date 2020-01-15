@@ -291,3 +291,97 @@ func AngleBetweenTwoObjects(raLong1HourDeg float64, raLong1Min float64, raLong1S
 
 	return angleDeg, angleMin, angleSec
 }
+
+// RisingAndSetting calculates rising and setting times
+//
+// Arguments
+//	raHours -- Right Ascension, in hours.
+// 	raMinutes -- Right Ascension, in minutes.
+//	raSeconds -- Right Ascension, in seconds.
+//	decDeg -- Declination, in degrees.
+//	decMin -- Declination, in minutes.
+//	decSec -- Declination, in seconds.
+//	gwDateDay -- Greenwich Date, day part.
+//	gwDateMonth -- Greenwich Date, month part.
+//	gwDateYear -- Greenwich Date, year part.
+//	geogLongDeg -- Geographical Longitude, in degrees.
+//	geogLatDeg -- Geographical Latitude, in degrees.
+//	vertShiftDeg -- Vertical Shift, in degrees.
+//
+// Returns
+//	riseSetStatus -- "Never Rises", "Circumpolar", or "OK".
+//	utRiseHour -- Rise time, UT, hour part.
+//	utRiseMin -- Rise time, UT, minute part.
+//	utSetHour -- Set time, UT, hour part.
+//	utSetMin -- Set time, UT, minute part.
+//	azRise -- Azimuth angle, at rise.
+//	azSet -- Azimuth angle, at set.
+func RisingAndSetting(raHours float64, raMinutes float64, raSeconds float64, decDeg float64, decMin float64, decSec float64, gwDateDay float64, gwDateMonth int, gwDateYear int, geogLongDeg float64, geogLatDeg float64, vertShiftDeg float64) (string, float64, float64, float64, float64, float64, float64) {
+	raHours1 := macros.HMSToDH(raHours, raMinutes, raSeconds)
+	decRad := util.DegreesToRadians(macros.DMSToDD(decDeg, decMin, decSec))
+	verticalDisplRadians := util.DegreesToRadians(vertShiftDeg)
+	geoLatRadians := util.DegreesToRadians(geogLatDeg)
+	cosH := -(math.Sin(verticalDisplRadians) + math.Sin(geoLatRadians)*math.Sin(decRad)) / (math.Cos(geoLatRadians) * math.Cos(decRad))
+	hHours := macros.DDToDH(macros.Degrees(math.Acos(cosH)))
+	lstRiseHours := (raHours1 - hHours) - 24.0*math.Floor((raHours1-hHours)/24.0)
+	lstSetHours := (raHours1 + hHours) - 24.0*math.Floor((raHours1+hHours)/24.0)
+	aDeg := macros.Degrees(math.Acos((math.Sin(decRad) + math.Sin(verticalDisplRadians)*math.Sin(geoLatRadians)) / (math.Cos(verticalDisplRadians) * math.Cos(geoLatRadians))))
+	azRiseDeg := aDeg - 360.0*math.Floor(aDeg/360.0)
+	azSetDeg := (360.0 - aDeg) - 360.0*math.Floor((360.0-aDeg)/360.0)
+	utRiseHours1 := macros.GSTToUT(macros.LSTToGST(lstRiseHours, 0.0, 0.0, geogLongDeg), 0.0, 0.0, gwDateDay, gwDateMonth, gwDateYear)
+	utSetHours1 := macros.GSTToUT(macros.LSTToGST(lstSetHours, 0.0, 0.0, geogLongDeg), 0.0, 0.0, gwDateDay, gwDateMonth, gwDateYear)
+	utRiseAdjustedHours := utRiseHours1 + 0.008333
+	utSetAdjustedHours := utSetHours1 + 0.008333
+
+	riseSetStatus := "OK"
+	if cosH > 1.0 {
+		riseSetStatus = "never rises"
+	}
+	if cosH < -1.0 {
+		riseSetStatus = "circumpolar"
+	}
+
+	var utRiseHour float64
+	if riseSetStatus == "OK" {
+		utRiseHour = float64(macros.DHHour(utRiseAdjustedHours))
+	} else {
+		utRiseHour = 0.0
+	}
+
+	var utRiseMin float64
+	if riseSetStatus == "OK" {
+		utRiseMin = float64(macros.DHMin(utRiseAdjustedHours))
+	} else {
+		utRiseMin = 0.0
+	}
+
+	var utSetHour float64
+	if riseSetStatus == "OK" {
+		utSetHour = float64(macros.DHHour(utSetAdjustedHours))
+	} else {
+		utSetHour = 0.0
+	}
+
+	var utSetMin float64
+	if riseSetStatus == "OK" {
+		utSetMin = float64(macros.DHMin(utSetAdjustedHours))
+	} else {
+		utSetMin = 0.0
+	}
+
+	var azRise float64
+	if riseSetStatus == "OK" {
+		azRise = util.RoundFloat64(azRiseDeg, 2)
+	} else {
+		azRise = 0.0
+	}
+
+	var azSet float64
+	if riseSetStatus == "OK" {
+		azSet = util.RoundFloat64(azSetDeg, 2)
+	} else {
+		azSet = 0.0
+	}
+
+	return riseSetStatus, utRiseHour, utRiseMin, utSetHour, utSetMin, azRise, azSet
+}

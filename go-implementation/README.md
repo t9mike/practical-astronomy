@@ -20,7 +20,7 @@
 - [x] Convert -> Ecliptic Coordinates <-> Equatorial Coordinates
 - [x] Convert -> Equatorial Coordinates <-> Galactic Coordinates
 - [x] Calculate -> Angle between two objects
-- [ ] Calculate -> Rising and Setting times for an object
+- [x] Calculate -> Rising and Setting times for an object
 - [ ] Calculate -> Precession (corrected coordinates between two epochs)
 - [ ] Calculate -> Nutation (in ecliptic longitude and obliquity) for a Greenwich date
 - [ ] Calculate -> Effects of aberration for ecliptic coordinates

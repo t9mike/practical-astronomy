@@ -405,3 +405,44 @@ func TestAngleBetweenTwoObjects(t *testing.T) {
 		})
 	}
 }
+
+func TestRisingAndSetting(t *testing.T) {
+	type args struct {
+		raHours      float64
+		raMinutes    float64
+		raSeconds    float64
+		decDeg       float64
+		decMin       float64
+		decSec       float64
+		gwDateDay    float64
+		gwDateMonth  int
+		gwDateYear   int
+		geogLongDeg  float64
+		geogLatDeg   float64
+		vertShiftDeg float64
+	}
+	tests := []struct {
+		name              string
+		args              args
+		wantRiseSetStatus string
+		wantUTRiseHour    float64
+		wantUTRiseMinute  float64
+		wantUTSetHour     float64
+		wantUTSetMinute   float64
+		wantAzRise        float64
+		wantAzSet         float64
+	}{
+		{name: "Rising and Setting", args: args{raHours: 23, raMinutes: 39, raSeconds: 20, decDeg: 21, decMin: 42, decSec: 0, gwDateDay: 24, gwDateMonth: 8, gwDateYear: 2010, geogLongDeg: 64, geogLatDeg: 30, vertShiftDeg: 0.5667}, wantRiseSetStatus: "OK", wantUTRiseHour: 14, wantUTRiseMinute: 16, wantUTSetHour: 4, wantUTSetMinute: 10, wantAzRise: 64.36, wantAzSet: 295.64},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			riseSetStatus, utRiseHour, utRiseMin, utSetHour, utSetMin, azRise, azSet := RisingAndSetting(tt.args.raHours, tt.args.raMinutes, tt.args.raSeconds, tt.args.decDeg, tt.args.decMin, tt.args.decSec, tt.args.gwDateDay, tt.args.gwDateMonth, tt.args.gwDateYear, tt.args.geogLongDeg, tt.args.geogLatDeg, tt.args.vertShiftDeg)
+
+			if riseSetStatus != tt.wantRiseSetStatus || utRiseHour != tt.wantUTRiseHour || utRiseMin != tt.wantUTRiseMinute || utSetHour != tt.wantUTSetHour || utSetMin != tt.wantUTSetMinute || azRise != tt.wantAzRise || azSet != tt.wantAzSet {
+				t.Errorf("RisingAndSetting() got = [Status] %v [UT Rise] %v:%v [UT Set] %v:%v [Azimuth] [Rise] %v [Set] %v, want [Status] %v [UT Rise] %v:%v [UT Set] %v:%v [Azimuth] [Rise] %v [Set] %v", riseSetStatus, utRiseHour, utRiseMin, utSetHour, utSetMin, azRise, azSet, tt.wantRiseSetStatus, tt.wantUTRiseHour, tt.wantUTRiseMinute, tt.wantUTSetHour, tt.wantUTSetMinute, tt.wantAzRise, tt.wantAzSet)
+			} else {
+				fmt.Printf("Rising and setting: [RA] %v hours %v minutes %v seconds [Dec] %v degrees %v minutes %v seconds [GW Date] %v/%v/%v [Geog Long/Lat] %v/%v [Vert Shift] %v degrees = [Status] %v [UT] [Rise] %v:%v [Set] %v:%v [Azimuth Rise/Set] %v/%v\n", tt.args.raHours, tt.args.raMinutes, tt.args.raSeconds, tt.args.decDeg, tt.args.decMin, tt.args.decSec, tt.args.gwDateMonth, tt.args.gwDateDay, tt.args.gwDateYear, tt.args.geogLongDeg, tt.args.geogLatDeg, tt.args.vertShiftDeg, riseSetStatus, utRiseHour, utRiseMin, utSetHour, utSetMin, azRise, azSet)
+			}
+		})
+	}
+}

@@ -241,3 +241,53 @@ func GalacticCoordinateToEquatorialCoordinate(galLongDeg float64, galLongMin flo
 
 	return float64(raHours), float64(raMinutes), raSeconds, decDegrees, decMinutes, decSeconds
 }
+
+// AngleBetweenTwoObjects calculates the angle between two celestial objects
+func AngleBetweenTwoObjects(raLong1HourDeg float64, raLong1Min float64, raLong1Sec float64, decLat1Deg float64, decLat1Min float64, decLat1Sec float64, raLong2HourDeg float64, raLong2Min float64, raLong2Sec float64, decLat2Deg float64, decLat2Min float64, decLat2Sec float64, hourOrDegree string) (float64, float64, float64) {
+	var raLong1Decimal float64
+	if hourOrDegree == "H" {
+		raLong1Decimal = macros.HMSToDH(raLong1HourDeg, raLong1Min, raLong1Sec)
+	} else {
+		raLong1Decimal = macros.DMSToDD(raLong1HourDeg, raLong1Min, raLong1Sec)
+	}
+
+	var raLong1Deg float64
+	if hourOrDegree == "H" {
+		raLong1Deg = macros.DHToDD(raLong1Decimal)
+	} else {
+		raLong1Deg = raLong1Decimal
+	}
+
+	raLong1Rad := util.DegreesToRadians(raLong1Deg)
+	decLat1Deg1 := macros.DMSToDD(decLat1Deg, decLat1Min, decLat1Sec)
+	decLat1Rad := util.DegreesToRadians(decLat1Deg1)
+
+	var raLong2Decimal float64
+	if hourOrDegree == "H" {
+		raLong2Decimal = macros.HMSToDH(raLong2HourDeg, raLong2Min, raLong2Sec)
+	} else {
+		raLong2Decimal = macros.DMSToDD(raLong2HourDeg, raLong2Min, raLong2Sec)
+	}
+
+	var raLong2Deg float64
+	if hourOrDegree == "H" {
+		raLong2Deg = macros.DHToDD(raLong2Decimal)
+	} else {
+		raLong2Deg = raLong2Decimal
+	}
+
+	raLong2Rad := util.DegreesToRadians(raLong2Deg)
+	decLat2Deg1 := macros.DMSToDD(decLat2Deg, decLat2Min, decLat2Sec)
+	decLat2Rad := util.DegreesToRadians(decLat2Deg1)
+
+	cosD := math.Sin(decLat1Rad)*math.Sin(decLat2Rad) + math.Cos(decLat1Rad)*math.Cos(decLat2Rad)*math.Cos(raLong1Rad-raLong2Rad)
+
+	dRad := math.Acos(cosD)
+	dDeg := macros.Degrees(dRad)
+
+	angleDeg := macros.DDDeg(dDeg)
+	angleMin := macros.DDMin(dDeg)
+	angleSec := macros.DDSec(dDeg)
+
+	return angleDeg, angleMin, angleSec
+}

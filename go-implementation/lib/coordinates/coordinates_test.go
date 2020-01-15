@@ -367,3 +367,41 @@ func TestGalacticCoordinateToEquatorialCoordinate(t *testing.T) {
 		})
 	}
 }
+
+func TestAngleBetweenTwoObjects(t *testing.T) {
+	type args struct {
+		raLong1HourDeg float64
+		raLong1Min     float64
+		raLong1Sec     float64
+		decLat1Deg     float64
+		decLat1Min     float64
+		decLat1Sec     float64
+		raLong2HourDeg float64
+		raLong2Min     float64
+		raLong2Sec     float64
+		decLat2Deg     float64
+		decLat2Min     float64
+		decLat2Sec     float64
+		hourOrDegree   string
+	}
+	tests := []struct {
+		name             string
+		args             args
+		wantAngleDegrees float64
+		wantAngleMinutes float64
+		wantAngleSeconds float64
+	}{
+		{name: "AngleBetweenTwoObjects", args: args{raLong1HourDeg: 5, raLong1Min: 13, raLong1Sec: 31.7, decLat1Deg: -8, decLat1Min: 13, decLat1Sec: 30, raLong2HourDeg: 6, raLong2Min: 44, raLong2Sec: 13.4, decLat2Deg: -16, decLat2Min: 41, decLat2Sec: 11, hourOrDegree: "H"}, wantAngleDegrees: 23, wantAngleMinutes: 40, wantAngleSeconds: 25.86},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			angleDegrees, angleMinutes, angleSeconds := AngleBetweenTwoObjects(tt.args.raLong1HourDeg, tt.args.raLong1Min, tt.args.raLong1Sec, tt.args.decLat1Deg, tt.args.decLat1Min, tt.args.decLat1Sec, tt.args.raLong2HourDeg, tt.args.raLong2Min, tt.args.raLong2Sec, tt.args.decLat2Deg, tt.args.decLat2Min, tt.args.decLat2Sec, tt.args.hourOrDegree)
+
+			if angleDegrees != tt.wantAngleDegrees || angleMinutes != tt.wantAngleMinutes || angleSeconds != tt.wantAngleSeconds {
+				t.Errorf("AngleBetweenTwoObjects() got = [Angle] %v degrees %v minutes %v seconds, want [Angle] %v degrees %v minutes %v seconds", angleDegrees, angleMinutes, angleSeconds, tt.wantAngleDegrees, tt.wantAngleMinutes, tt.wantAngleSeconds)
+			} else {
+				fmt.Printf("Angle between two objects: [RA] [Long 1] %v hours/degrees %v minutes %v seconds [Dec] [Lat 1] %v degrees %v minutes %v seconds [RA] [Long 2] %v hours/degrees %v minutes %v seconds [Dec] [Lat 2] %v degrees %v minutes %v seconds [Hour or Degree] %v = [Angle] %v degrees %v minutes %v seconds\n", tt.args.raLong1HourDeg, tt.args.raLong1Min, tt.args.raLong1Sec, tt.args.decLat1Deg, tt.args.decLat1Min, tt.args.decLat1Sec, tt.args.raLong2HourDeg, tt.args.raLong2Min, tt.args.raLong2Sec, tt.args.decLat2Deg, tt.args.decLat2Min, tt.args.decLat2Sec, tt.args.hourOrDegree, angleDegrees, angleMinutes, angleSeconds)
+			}
+		})
+	}
+}

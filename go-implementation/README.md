@@ -22,7 +22,7 @@
 - [x] Calculate -> Angle between two objects
 - [x] Calculate -> Rising and Setting times for an object
 - [x] Calculate -> Precession (corrected coordinates between two epochs)
-- [ ] Calculate -> Nutation (in ecliptic longitude and obliquity) for a Greenwich date
+- [x] Calculate -> Nutation (in ecliptic longitude and obliquity) for a Greenwich date
 - [ ] Calculate -> Effects of aberration for ecliptic coordinates
 - [ ] Calculate -> RA and Declination values, corrected for atmospheric refraction
 - [ ] Calculate -> RA and Declination values, corrected for geocentric parallax

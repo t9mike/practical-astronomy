@@ -416,3 +416,30 @@ func CorrectForPrecession(raHour float64, raMinutes float64, raSeconds float64, 
 
 	return float64(correctedRAHour), float64(correctedRAMinutes), correctedRASeconds, correctedDecDeg, correctedDecMinutes, correctedDecSeconds
 }
+
+// NutationInEclipticLongitudeAndObliquity calculates nutation for two values: ecliptic longitude and obliquity,
+// for a Greenwich date.
+//
+// Returns
+//	nutation in ecliptic longitude (degrees)
+//	nutation in obliquity (degrees)
+func NutationInEclipticLongitudeAndObliquity(greenwichDay float64, greenwichMonth int, greenwichYear int) (float64, float64) {
+	jdDays := macros.CDToJD(greenwichDay, greenwichMonth, greenwichYear)
+	tCenturies := (jdDays - 2415020.0) / 36525.0
+	aDeg := 100.0021358 * tCenturies
+	l1Deg := 279.6967 + (0.000303 * tCenturies * tCenturies)
+	lDeg1 := l1Deg + 360.0*(aDeg-math.Floor(aDeg))
+	lDeg2 := lDeg1 - 360.0*math.Floor(lDeg1/360.0)
+	lRad := util.DegreesToRadians(lDeg2)
+	bDeg := 5.372617 * tCenturies
+	nDeg1 := 259.1833 - 360.0*(bDeg-math.Floor(bDeg))
+	nDeg2 := nDeg1 - 360.0*(math.Floor(nDeg1/360.0))
+	nRad := util.DegreesToRadians(nDeg2)
+	nutInLongArcsec := -17.2*math.Sin(nRad) - 1.3*math.Sin(2.0*lRad)
+	nutInOblArcsec := 9.2*math.Cos(nRad) + 0.5*math.Cos(2.0*lRad)
+
+	nutInLongDeg := nutInLongArcsec / 3600.0
+	nutInOblDeg := nutInOblArcsec / 3600.0
+
+	return nutInLongDeg, nutInOblDeg
+}

@@ -486,3 +486,33 @@ func TestCorrectForPrecession(t *testing.T) {
 		})
 	}
 }
+
+func TestNutationInEclipticLongitudeAndObliquity(t *testing.T) {
+	type args struct {
+		greenwichDay   float64
+		greenwichMonth int
+		greenwichYear  int
+	}
+	tests := []struct {
+		name                           string
+		args                           args
+		wantNutationInLongitudeDegrees float64
+		wantNutationInObliquityDegrees float64
+	}{
+		{name: "NutationInEclipticLongitudeAndObliquity", args: args{greenwichDay: 1, greenwichMonth: 9, greenwichYear: 1988}, wantNutationInLongitudeDegrees: 0.001525808, wantNutationInObliquityDegrees: 0.0025671},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			nutInLongDeg, nutInOblDeg := NutationInEclipticLongitudeAndObliquity(tt.args.greenwichDay, tt.args.greenwichMonth, tt.args.greenwichYear)
+
+			nutInLongDeg = util.RoundFloat64(nutInLongDeg, 9)
+			nutInOblDeg = util.RoundFloat64(nutInOblDeg, 7)
+
+			if nutInLongDeg != tt.wantNutationInLongitudeDegrees || nutInOblDeg != tt.wantNutationInObliquityDegrees {
+				t.Errorf("NutationInEclipticLongitudeAndObliquity() got = [Nutation in Longitude] %v degrees [Nutation in Obliquity] %v degrees, want [Nutation in Longitude] %v degrees [Nutation in Obliquity] %v degrees", nutInLongDeg, nutInOblDeg, tt.wantNutationInLongitudeDegrees, tt.wantNutationInObliquityDegrees)
+			} else {
+				fmt.Printf("Nutation in ecliptic longitude and obliquity: [Greenwich Date] %v/%v/%v = [Nutation in Longitude] %v degrees [Nutation in Obliquity] %v degrees\n", tt.args.greenwichMonth, tt.args.greenwichDay, tt.args.greenwichYear, nutInLongDeg, nutInOblDeg)
+			}
+		})
+	}
+}

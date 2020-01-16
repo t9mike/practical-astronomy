@@ -385,3 +385,34 @@ func RisingAndSetting(raHours float64, raMinutes float64, raSeconds float64, dec
 
 	return riseSetStatus, utRiseHour, utRiseMin, utSetHour, utSetMin, azRise, azSet
 }
+
+// CorrectForPrecession calculates precession (corrected coordinates between two epochs)
+//
+// Returns
+//	corrected RA hour
+//	corrected RA minutes
+//	corrected RA seconds
+//	corrected Declination degrees
+//	corrected Declination minutes
+//	corrected Declination seconds
+func CorrectForPrecession(raHour float64, raMinutes float64, raSeconds float64, decDeg float64, decMinutes float64, decSeconds float64, epoch1Day float64, epoch1Month int, epoch1Year int, epoch2Day float64, epoch2Month int, epoch2Year int) (float64, float64, float64, float64, float64, float64) {
+	ra1Rad := util.DegreesToRadians(macros.DHToDD(macros.HMSToDH(raHour, raMinutes, raSeconds)))
+	dec1Rad := util.DegreesToRadians(macros.DMSToDD(decDeg, decMinutes, decSeconds))
+	tCenturies := (macros.CDToJD(epoch1Day, epoch1Month, epoch1Year) - 2415020.0) / 36525.0
+	mSec := 3.07234 + (0.00186 * tCenturies)
+	nArcsec := 20.0468 - (0.0085 * tCenturies)
+	nYears := (macros.CDToJD(epoch2Day, epoch2Month, epoch2Year) - macros.CDToJD(epoch1Day, epoch1Month, epoch1Year)) / 365.25
+	s1Hours := ((mSec + (nArcsec * math.Sin(ra1Rad) * math.Tan(dec1Rad) / 15.0)) * nYears) / 3600.0
+	ra2Hours := macros.HMSToDH(raHour, raMinutes, raSeconds) + s1Hours
+	s2Deg := (nArcsec * math.Cos(ra1Rad) * nYears) / 3600.0
+	dec2Deg := macros.DMSToDD(decDeg, decMinutes, decSeconds) + s2Deg
+
+	correctedRAHour := macros.DHHour(ra2Hours)
+	correctedRAMinutes := macros.DHMin(ra2Hours)
+	correctedRASeconds := macros.DHSec(ra2Hours)
+	correctedDecDeg := macros.DDDeg(dec2Deg)
+	correctedDecMinutes := macros.DDMin(dec2Deg)
+	correctedDecSeconds := macros.DDSec(dec2Deg)
+
+	return float64(correctedRAHour), float64(correctedRAMinutes), correctedRASeconds, correctedDecDeg, correctedDecMinutes, correctedDecSeconds
+}

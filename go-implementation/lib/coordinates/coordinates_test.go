@@ -446,3 +446,43 @@ func TestRisingAndSetting(t *testing.T) {
 		})
 	}
 }
+
+func TestCorrectForPrecession(t *testing.T) {
+	type args struct {
+		raHour      float64
+		raMinutes   float64
+		raSeconds   float64
+		decDeg      float64
+		decMinutes  float64
+		decSeconds  float64
+		epoch1Day   float64
+		epoch1Month int
+		epoch1Year  int
+		epoch2Day   float64
+		epoch2Month int
+		epoch2Year  int
+	}
+	tests := []struct {
+		name                    string
+		args                    args
+		wantCorrectedRAHour     float64
+		wantCorrectedRAMinutes  float64
+		wantCorrectedRASeconds  float64
+		wantCorrectedDecDeg     float64
+		wantCorrectedDecMinutes float64
+		wantCorrectedDecSeconds float64
+	}{
+		{name: "Correct for precession", args: args{raHour: 9, raMinutes: 10, raSeconds: 43, decDeg: 14, decMinutes: 23, decSeconds: 25, epoch1Day: 0.923, epoch1Month: 1, epoch1Year: 1950, epoch2Day: 1, epoch2Month: 6, epoch2Year: 1979}, wantCorrectedRAHour: 9, wantCorrectedRAMinutes: 12, wantCorrectedRASeconds: 20.18, wantCorrectedDecDeg: 14, wantCorrectedDecMinutes: 16, wantCorrectedDecSeconds: 9.12},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			correctedRAHour, correctedRAMinutes, correctedRASeconds, correctedDecDeg, correctedDecMinutes, correctedDecSeconds := CorrectForPrecession(tt.args.raHour, tt.args.raMinutes, tt.args.raSeconds, tt.args.decDeg, tt.args.decMinutes, tt.args.decSeconds, tt.args.epoch1Day, tt.args.epoch1Month, tt.args.epoch1Year, tt.args.epoch2Day, tt.args.epoch2Month, tt.args.epoch2Year)
+
+			if correctedRAHour != tt.wantCorrectedRAHour || correctedRAMinutes != tt.wantCorrectedRAMinutes || correctedRASeconds != tt.wantCorrectedRASeconds || correctedDecDeg != tt.wantCorrectedDecDeg || correctedDecMinutes != tt.wantCorrectedDecMinutes || correctedDecSeconds != tt.wantCorrectedDecSeconds {
+				t.Errorf("CorrectForPrecession() got = [RA] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds, want [RA] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds", correctedRAHour, correctedRAMinutes, correctedRASeconds, correctedDecDeg, correctedDecMinutes, correctedDecSeconds, tt.wantCorrectedRAHour, tt.wantCorrectedRAMinutes, tt.wantCorrectedRASeconds, tt.wantCorrectedDecDeg, tt.wantCorrectedDecMinutes, tt.wantCorrectedDecSeconds)
+			} else {
+				fmt.Printf("Correct for precession: [RA] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds [Epoch 1] %v/%v/%v [Epoch 2] %v/%v/%v = [Corrected RA] %v hours %v minutes %v seconds [Corrected Declination] %v degrees %v minutes %v seconds\n", tt.args.raHour, tt.args.raMinutes, tt.args.raSeconds, tt.args.decDeg, tt.args.decMinutes, tt.args.decSeconds, tt.args.epoch1Month, tt.args.epoch1Day, tt.args.epoch1Year, tt.args.epoch2Month, tt.args.epoch2Day, tt.args.epoch2Year, correctedRAHour, correctedRAMinutes, correctedRASeconds, correctedDecDeg, correctedDecMinutes, correctedDecSeconds)
+			}
+		})
+	}
+}

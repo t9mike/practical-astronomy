@@ -516,3 +516,43 @@ func TestNutationInEclipticLongitudeAndObliquity(t *testing.T) {
 		})
 	}
 }
+
+func TestCorrectForAberration(t *testing.T) {
+	type args struct {
+		utHour         float64
+		utMinutes      float64
+		utSeconds      float64
+		gwDay          float64
+		gwMonth        int
+		gwYear         int
+		trueEclLongDeg float64
+		trueEclLongMin float64
+		trueEclLongSec float64
+		trueEclLatDeg  float64
+		trueEclLatMin  float64
+		trueEclLatSec  float64
+	}
+	tests := []struct {
+		name                                 string
+		args                                 args
+		wantApparentEclipticLongitudeDegrees float64
+		wantApparentEclipticLongitudeMinutes float64
+		wantApparentEclipticLongitudeSeconds float64
+		wantApparentEclipticLatitudeDegrees  float64
+		wantApparentEclipticLatitudeMinutes  float64
+		wantApparentEclipticLatitudeSeconds  float64
+	}{
+		{name: "CorrectForAberration", args: args{utHour: 0, utMinutes: 0, utSeconds: 0, gwDay: 8, gwMonth: 9, gwYear: 1988, trueEclLongDeg: 352, trueEclLongMin: 37, trueEclLongSec: 10.1, trueEclLatDeg: -1, trueEclLatMin: 32, trueEclLatSec: 56.4}, wantApparentEclipticLongitudeDegrees: 352, wantApparentEclipticLongitudeMinutes: 37, wantApparentEclipticLongitudeSeconds: 30.45, wantApparentEclipticLatitudeDegrees: -1, wantApparentEclipticLatitudeMinutes: 32, wantApparentEclipticLatitudeSeconds: 56.33},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apparentEclLongDeg, apparentEclLongMin, apparentEclLongSec, apparentEclLatDeg, apparentEclLatMin, apparentEclLatSec := CorrectForAberration(tt.args.utHour, tt.args.utMinutes, tt.args.utSeconds, tt.args.gwDay, tt.args.gwMonth, tt.args.gwYear, tt.args.trueEclLongDeg, tt.args.trueEclLongMin, tt.args.trueEclLongSec, tt.args.trueEclLatDeg, tt.args.trueEclLatMin, tt.args.trueEclLatSec)
+
+			if apparentEclLongDeg != tt.wantApparentEclipticLongitudeDegrees || apparentEclLongMin != tt.wantApparentEclipticLongitudeMinutes || apparentEclLongSec != tt.wantApparentEclipticLongitudeSeconds || apparentEclLatDeg != tt.wantApparentEclipticLatitudeDegrees || apparentEclLatMin != tt.wantApparentEclipticLatitudeMinutes || apparentEclLatSec != tt.wantApparentEclipticLatitudeSeconds {
+				t.Errorf("CorrectForAberration() got = [Apparent Ecliptic Longitude] %v degrees %v minutes %v seconds [Apparent Ecliptic Latitude] %v degrees %v minutes %v seconds, want [Apparent Ecliptic Longitude] %v degrees %v minutes %v seconds [Apparent Ecliptic Latitude] %v degrees %v minutes %v seconds", apparentEclLongDeg, apparentEclLongMin, apparentEclLongSec, apparentEclLatDeg, apparentEclLatMin, apparentEclLatSec, tt.wantApparentEclipticLongitudeDegrees, tt.wantApparentEclipticLongitudeMinutes, tt.wantApparentEclipticLongitudeSeconds, tt.wantApparentEclipticLatitudeDegrees, tt.wantApparentEclipticLatitudeMinutes, tt.wantApparentEclipticLatitudeSeconds)
+			} else {
+				fmt.Printf("Correct for aberration: [UT] %v:%v:%v [Greenwich Date] %v/%v/%v [True Ecliptic Longitude] %v degrees %v minutes %v seconds [True Ecliptic Latitude] %v degrees %v minutes %v seconds = [Apparent Ecliptic Longitude] %v degrees %v minutes %v seconds [Apparent Ecliptic Latitude] %v degrees %v minutes %v seconds\n", tt.args.utHour, tt.args.utMinutes, tt.args.utSeconds, tt.args.gwMonth, tt.args.gwDay, tt.args.gwYear, tt.args.trueEclLongDeg, tt.args.trueEclLongMin, tt.args.trueEclLongSec, tt.args.trueEclLatDeg, tt.args.trueEclLatMin, tt.args.trueEclLatSec, apparentEclLongDeg, apparentEclLongMin, apparentEclLongSec, apparentEclLatDeg, apparentEclLatMin, apparentEclLatSec)
+			}
+		})
+	}
+}

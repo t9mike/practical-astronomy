@@ -443,3 +443,27 @@ func NutationInEclipticLongitudeAndObliquity(greenwichDay float64, greenwichMont
 
 	return nutInLongDeg, nutInOblDeg
 }
+
+// CorrectForAberration corrects ecliptic coordinates for the effects of aberration.
+//
+// Returns
+//	apparent ecliptic longitude (degrees, minutes, seconds)
+//	apparent ecliptic latitude (degrees, minutes, seconds)
+func CorrectForAberration(utHour float64, utMinutes float64, utSeconds float64, gwDay float64, gwMonth int, gwYear int, trueEclLongDeg float64, trueEclLongMin float64, trueEclLongSec float64, trueEclLatDeg float64, trueEclLatMin float64, trueEclLatSec float64) (float64, float64, float64, float64, float64, float64) {
+	trueLongDeg := macros.DMSToDD(trueEclLongDeg, trueEclLongMin, trueEclLongSec)
+	trueLatDeg := macros.DMSToDD(trueEclLatDeg, trueEclLatMin, trueEclLatSec)
+	sunTrueLongDeg := macros.SunEclipticLongitude(utHour, utMinutes, utSeconds, 0, 0, gwDay, gwMonth, gwYear)
+	dlongArcsec := -20.5 * math.Cos(util.DegreesToRadians(sunTrueLongDeg-trueLongDeg)) / math.Cos(util.DegreesToRadians(trueLatDeg))
+	dlatArcsec := -20.5 * math.Sin(util.DegreesToRadians(sunTrueLongDeg-trueLongDeg)) * math.Sin(util.DegreesToRadians(trueLatDeg))
+	apparentLongDeg := trueLongDeg + (dlongArcsec / 3600.0)
+	apparentLatDeg := trueLatDeg + (dlatArcsec / 3600.0)
+
+	apparentEclLongDeg := macros.DDDeg(apparentLongDeg)
+	apparentEclLongMin := macros.DDMin(apparentLongDeg)
+	apparentEclLongSec := macros.DDSec(apparentLongDeg)
+	apparentEclLatDeg := macros.DDDeg(apparentLatDeg)
+	apparentEclLatMin := macros.DDMin(apparentLatDeg)
+	apparentEclLatSec := macros.DDSec(apparentLatDeg)
+
+	return apparentEclLongDeg, apparentEclLongMin, apparentEclLongSec, apparentEclLatDeg, apparentEclLatMin, apparentEclLatSec
+}

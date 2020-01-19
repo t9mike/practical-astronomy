@@ -1,6 +1,7 @@
 package macros
 
 import "math"
+import "strings"
 import "../util"
 
 // HMSToDH converts a Civil Time (hours,minutes,seconds) to Decimal Hours
@@ -710,4 +711,67 @@ func EccentricAnomaly(am float64, ec float64) float64 {
 	}
 
 	return ae
+}
+
+// Refraction calculates effects of refraction.
+//
+// Original macro name: Refract
+func Refraction(y2 float64, sw string, pr float64, tr float64) float64 {
+	y := util.DegreesToRadians(y2)
+
+	var d float64
+	if strings.ToLower(sw[0:1]) == "t" {
+		d = -1.0
+	} else {
+		d = 1.0
+	}
+
+	if d == -1.0 {
+		y3 := y
+		y1 := y
+		r1 := 0.0
+
+		for true {
+			y := y1 + r1
+			rf := RefractL3035(pr, tr, y, d)
+			if y < -0.087 {
+				return 0.0
+			}
+			r2 := rf
+
+			if (r2 == 0.0) || (math.Abs(r2-r1) < 0.000001) {
+				q := y3
+				return Degrees(q + rf)
+			}
+
+			r1 = r2
+		}
+	}
+
+	rf := RefractL3035(pr, tr, y, d)
+
+	if y < -0.087 {
+		return 0.0
+	}
+
+	q := y
+
+	return Degrees(q + rf)
+}
+
+// RefractL3035 is a helper function for Refraction()
+func RefractL3035(pr float64, tr float64, y float64, d float64) float64 {
+	if y < 0.2617994 {
+		if y < -0.087 {
+			return 0.0
+		}
+
+		yd := Degrees(y)
+		a := ((0.00002*yd+0.0196)*yd + 0.1594) * pr
+		b := (273.0 + tr) * ((0.0845*yd+0.505)*yd + 1.0)
+
+		return util.DegreesToRadians(-(a / b) * d)
+	}
+
+	return -d * 0.00007888888 * pr / ((273.0 + tr) * math.Tan(y))
 }

@@ -467,3 +467,30 @@ func CorrectForAberration(utHour float64, utMinutes float64, utSeconds float64, 
 
 	return apparentEclLongDeg, apparentEclLongMin, apparentEclLongSec, apparentEclLatDeg, apparentEclLatMin, apparentEclLatSec
 }
+
+// AtmosphericRefraction calculates corrected RA/Dec, accounting for atmospheric refraction.
+//
+// NOTE: Valid values for coordinate_type are "TRUE" and "APPARENT".
+//
+// Returns
+//	corrected RA hours,minutes,seconds
+//	corrected Declination degrees,minutes,seconds
+func AtmosphericRefraction(trueRAHour float64, trueRAMin float64, trueRASec float64, trueDecDeg float64, trueDecMin float64, trueDecSec float64, coordinateType string, geogLongDeg float64, geogLatDeg float64, daylightSavingHours int, timezoneHours int, lcdDay float64, lcdMonth int, lcdYear int, lctHour float64, lctMin float64, lctSec float64, atmosphericPressureMbar float64, atmosphericTemperatureCelsius float64) (float64, float64, float64, float64, float64, float64) {
+	haHour := macros.RAToHA(trueRAHour, trueRAMin, trueRASec, lctHour, lctMin, lctSec, daylightSavingHours, timezoneHours, lcdDay, lcdMonth, lcdYear, geogLongDeg)
+	azimuthDeg := macros.EqToAz(haHour, 0.0, 0.0, trueDecDeg, trueDecMin, trueDecSec, geogLatDeg)
+	altitudeDeg := macros.EqToAlt(haHour, 0.0, 0.0, trueDecDeg, trueDecMin, trueDecSec, geogLatDeg)
+	correctedAltitudeDeg := macros.Refraction(altitudeDeg, coordinateType, atmosphericPressureMbar, atmosphericTemperatureCelsius)
+
+	correctedHaHour := macros.HorToHA(azimuthDeg, 0.0, 0.0, correctedAltitudeDeg, 0.0, 0.0, geogLatDeg)
+	correctedRAHour1 := macros.HAToRA(correctedHaHour, 0.0, 0.0, lctHour, lctMin, lctSec, daylightSavingHours, timezoneHours, lcdDay, lcdMonth, lcdYear, geogLongDeg)
+	correctedDecDeg1 := macros.HorToDec(azimuthDeg, 0.0, 0.0, correctedAltitudeDeg, 0.0, 0.0, geogLatDeg)
+
+	correctedRAHour := macros.DHHour(correctedRAHour1)
+	correctedRAMin := macros.DHMin(correctedRAHour1)
+	correctedRASec := macros.DHSec(correctedRAHour1)
+	correctedDecDeg := macros.DDDeg(correctedDecDeg1)
+	correctedDecMin := macros.DDMin(correctedDecDeg1)
+	correctedDecSec := macros.DDSec(correctedDecDeg1)
+
+	return float64(correctedRAHour), float64(correctedRAMin), correctedRASec, correctedDecDeg, correctedDecMin, correctedDecSec
+}

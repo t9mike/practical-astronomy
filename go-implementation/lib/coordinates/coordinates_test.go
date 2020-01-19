@@ -556,3 +556,50 @@ func TestCorrectForAberration(t *testing.T) {
 		})
 	}
 }
+
+func TestAtmosphericRefraction(t *testing.T) {
+	type args struct {
+		trueRAHour                    float64
+		trueRAMin                     float64
+		trueRASec                     float64
+		trueDecDeg                    float64
+		trueDecMin                    float64
+		trueDecSec                    float64
+		coordinateType                string
+		geogLongDeg                   float64
+		geogLatDeg                    float64
+		daylightSavingHours           int
+		timezoneHours                 int
+		lcdDay                        float64
+		lcdMonth                      int
+		lcdYear                       int
+		lctHour                       float64
+		lctMin                        float64
+		lctSec                        float64
+		atmosphericPressureMbar       float64
+		atmosphericTemperatureCelsius float64
+	}
+	tests := []struct {
+		name                    string
+		args                    args
+		wantCorrectedRAHour     float64
+		wantCorrectedRAMinutes  float64
+		wantCorrectedRASeconds  float64
+		wantCorrectedDecDeg     float64
+		wantCorrectedDecMinutes float64
+		wantCorrectedDecSeconds float64
+	}{
+		{name: "AtmosphericRefraction", args: args{trueRAHour: 23, trueRAMin: 14, trueRASec: 0, trueDecDeg: 40, trueDecMin: 10, trueDecSec: 0, coordinateType: "TRUE", geogLongDeg: 0.17, geogLatDeg: 51.2036110, daylightSavingHours: 0, timezoneHours: 0, lcdDay: 23, lcdMonth: 3, lcdYear: 1987, lctHour: 1, lctMin: 1, lctSec: 24, atmosphericPressureMbar: 1012, atmosphericTemperatureCelsius: 21.7}, wantCorrectedRAHour: 23, wantCorrectedRAMinutes: 13, wantCorrectedRASeconds: 44.74, wantCorrectedDecDeg: 40, wantCorrectedDecMinutes: 19, wantCorrectedDecSeconds: 45.76},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			correctedRAHour, correctedRAMin, correctedRASec, correctedDecDeg, correctedDecMin, correctedDecSec := AtmosphericRefraction(tt.args.trueRAHour, tt.args.trueRAMin, tt.args.trueRASec, tt.args.trueDecDeg, tt.args.trueDecMin, tt.args.trueDecSec, tt.args.coordinateType, tt.args.geogLongDeg, tt.args.geogLatDeg, tt.args.daylightSavingHours, tt.args.timezoneHours, tt.args.lcdDay, tt.args.lcdMonth, tt.args.lcdYear, tt.args.lctHour, tt.args.lctMin, tt.args.lctSec, tt.args.atmosphericPressureMbar, tt.args.atmosphericTemperatureCelsius)
+
+			if correctedRAHour != tt.wantCorrectedRAHour || correctedRAMin != tt.wantCorrectedRAMinutes || correctedRASec != tt.wantCorrectedRASeconds || correctedDecDeg != tt.wantCorrectedDecDeg || correctedDecMin != tt.wantCorrectedDecMinutes || correctedDecSec != tt.wantCorrectedDecSeconds {
+				t.Errorf("AtmosphericRefraction() got = [RA] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds, want [RA] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds", correctedRAHour, correctedRAMin, correctedRASec, correctedDecDeg, correctedDecMin, correctedDecSec, tt.wantCorrectedRAHour, tt.wantCorrectedRAMinutes, tt.wantCorrectedRASeconds, tt.wantCorrectedDecDeg, tt.wantCorrectedDecMinutes, tt.wantCorrectedDecSeconds)
+			} else {
+				fmt.Printf("Atmospheric refraction: [True RA] %v hours %v minutes %v seconds [True Dec] %v degrees %v minutes %v seconds [Coordinate Type] %v [Geographical Long/Lat] %v/%v degrees [DST] %v hours [TZ] %v hours [Local Civil Date] %v/%v/%v [Local Civil Time] %v:%v:%v [Atmospheric Pressure] %v mbar [Atmospheric Temperature] %v C = [Corrected RA] %v hours %v minutes %v seconds [Corrected Dec] %v degrees %v minutes %v seconds\n", tt.args.trueRAHour, tt.args.trueRAMin, tt.args.trueRASec, tt.args.trueDecDeg, tt.args.trueDecMin, tt.args.trueDecSec, tt.args.coordinateType, tt.args.geogLongDeg, tt.args.geogLatDeg, tt.args.daylightSavingHours, tt.args.timezoneHours, tt.args.lcdMonth, tt.args.lcdDay, tt.args.lcdYear, tt.args.lctHour, tt.args.lctMin, tt.args.lctSec, tt.args.atmosphericPressureMbar, tt.args.atmosphericTemperatureCelsius, correctedRAHour, correctedRAMin, correctedRASec, correctedDecDeg, correctedDecMin, correctedDecSec)
+			}
+		})
+	}
+}

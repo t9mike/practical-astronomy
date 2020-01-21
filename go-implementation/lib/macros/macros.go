@@ -775,3 +775,160 @@ func RefractL3035(pr float64, tr float64, y float64, d float64) float64 {
 
 	return -d * 0.00007888888 * pr / ((273.0 + tr) * math.Tan(y))
 }
+
+// ParallaxHA calculates corrected hour angle in decimal hours.
+//
+// Original macro name: ParallaxHA
+func ParallaxHA(hh float64, hm float64, hs float64, dd float64, dm float64, ds float64, sw string, gp float64, ht float64, hp float64) float64 {
+	a := util.DegreesToRadians(gp)
+	c1 := math.Cos(a)
+	s1 := math.Sin(a)
+
+	u := math.Atan(0.996647 * s1 / c1)
+	c2 := math.Cos(u)
+	s2 := math.Sin(u)
+	b := ht / 6378160.0
+
+	rs := (0.996647 * s2) + (b * s1)
+
+	rc := c2 + (b * c1)
+	tp := 6.283185308
+
+	rp := 1.0 / math.Sin(util.DegreesToRadians(hp))
+
+	x := util.DegreesToRadians(DHToDD(HMSToDH(hh, hm, hs)))
+	x1 := x
+	y := util.DegreesToRadians(DMSToDD(dd, dm, ds))
+	y1 := y
+
+	var d float64
+	if strings.ToLower(sw[0:1]) == "t" {
+		d = 1.0
+	} else {
+		d = -1.0
+	}
+
+	if d == 1.0 {
+		p, _ := ParallaxHAL2870(x, y, rc, rp, rs, tp)
+		return DDToDH(Degrees(p))
+	}
+
+	p1 := 0.0
+	q1 := 0.0
+	xLoop := x
+	yLoop := y
+	for true {
+		p, q := ParallaxHAL2870(xLoop, yLoop, rc, rp, rs, tp)
+		p2 := p - xLoop
+		q2 := q - yLoop
+
+		aa := math.Abs(p2 - p1)
+		bb := math.Abs(q2 - q1)
+
+		if (aa < 0.000001) && (bb < 0.000001) {
+			p = x1 - p2
+
+			return DDToDH(Degrees(p))
+		}
+		xLoop = x1 - p2
+		yLoop = y1 - q2
+		p1 = p2
+		q1 = q2
+	}
+
+	return DDToDH(Degrees(0.0))
+}
+
+// ParallaxHAL2870 is a helper function for ParallaxHA
+func ParallaxHAL2870(x float64, y float64, rc float64, rp float64, rs float64, tp float64) (float64, float64) {
+	cx := math.Cos(x)
+	sy := math.Sin(y)
+	cy := math.Cos(y)
+
+	aa := (rc * math.Sin(x)) / ((rp * cy) - (rc * cx))
+
+	dx := math.Atan(aa)
+	p := x + dx
+	cp := math.Cos(p)
+
+	p = p - tp*math.Floor(p/tp)
+	q := math.Atan(cp * (rp*sy - rs) / (rp*cy*cx - rc))
+
+	return p, q
+}
+
+// ParallaxDec calculates corrected declination in decimal degrees.
+//
+// Original macro name: ParallaxDec
+func ParallaxDec(hh float64, hm float64, hs float64, dd float64, dm float64, ds float64, sw string, gp float64, ht float64, hp float64) float64 {
+	a := util.DegreesToRadians(gp)
+	c1 := math.Cos(a)
+	s1 := math.Sin(a)
+
+	u := math.Atan(0.996647 * s1 / c1)
+
+	c2 := math.Cos(u)
+	s2 := math.Sin(u)
+	b := ht / 6378160.0
+	rs := (0.996647 * s2) + (b * s1)
+
+	rc := c2 + (b * c1)
+	tp := 6.283185308
+
+	rp := 1.0 / math.Sin(util.DegreesToRadians(hp))
+
+	x := util.DegreesToRadians(DHToDD(HMSToDH(hh, hm, hs)))
+	x1 := x
+
+	y := util.DegreesToRadians(DMSToDD(dd, dm, ds))
+	y1 := y
+
+	var d float64
+	if strings.ToLower(sw[0:1]) == "t" {
+		d = 1.0
+	} else {
+		d = -1.0
+	}
+
+	if d == 1.0 {
+		_, q := ParallaxDecL2870(x, y, rc, rp, rs, tp)
+		return Degrees(q)
+	}
+
+	p1 := 0.0
+
+	xLoop := x
+	yLoop := y
+	for true {
+		p, q := ParallaxDecL2870(xLoop, yLoop, rc, rp, rs, tp)
+		p2 := p - xLoop
+		q2 := q - yLoop
+		aa := math.Abs(p2 - p1)
+		if (aa < 0.000001) && (b < 0.000001) {
+			q := y1 - q2
+			return Degrees(q)
+		}
+		xLoop = x1 - p2
+		yLoop = y1 - q2
+		p1 = p2
+	}
+
+	return Degrees(0.0)
+}
+
+// ParallaxDecL2870 is a helper function for ParallaxDec.
+func ParallaxDecL2870(x float64, y float64, rc float64, rp float64, rs float64, tp float64) (float64, float64) {
+	cx := math.Cos(x)
+	sy := math.Sin(y)
+	cy := math.Cos(y)
+
+	aa := (rc * math.Sin(x)) / ((rp * cy) - (rc * cx))
+	dx := math.Atan(aa)
+	p := x + dx
+	cp := math.Cos(p)
+
+	p = p - tp*math.Floor(p/tp)
+	q := math.Atan(cp * (rp*sy - rs) / (rp*cy*cx - rc))
+
+	return p, q
+}

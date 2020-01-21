@@ -603,3 +603,50 @@ func TestAtmosphericRefraction(t *testing.T) {
 		})
 	}
 }
+
+func TestCorrectionsForGeocentricParallax(t *testing.T) {
+	type args struct {
+		raHour                   float64
+		raMin                    float64
+		raSec                    float64
+		decDeg                   float64
+		decMin                   float64
+		decSec                   float64
+		coordinateType           string
+		equatorialHorParallaxDeg float64
+		geogLongDeg              float64
+		geogLatDeg               float64
+		heightM                  float64
+		daylightSaving           int
+		timezoneHours            int
+		lcdDay                   float64
+		lcdMonth                 int
+		lcdYear                  int
+		lctHour                  float64
+		lctMin                   float64
+		lctSec                   float64
+	}
+	tests := []struct {
+		name                    string
+		args                    args
+		wantCorrectedRAHour     float64
+		wantCorrectedRAMinutes  float64
+		wantCorrectedRASeconds  float64
+		wantCorrectedDecDeg     float64
+		wantCorrectedDecMinutes float64
+		wantCorrectedDecSeconds float64
+	}{
+		{name: "CorrectionsForGeocentricParallax", args: args{raHour: 22, raMin: 35, raSec: 19, decDeg: -7, decMin: 41, decSec: 13, coordinateType: "TRUE", equatorialHorParallaxDeg: 1.019167, geogLongDeg: -100, geogLatDeg: 50, heightM: 60, daylightSaving: 0, timezoneHours: -6, lcdDay: 26, lcdMonth: 2, lcdYear: 1979, lctHour: 10, lctMin: 45, lctSec: 0}, wantCorrectedRAHour: 22, wantCorrectedRAMinutes: 36, wantCorrectedRASeconds: 43.22, wantCorrectedDecDeg: -8, wantCorrectedDecMinutes: 32, wantCorrectedDecSeconds: 17.4},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			correctedRAHour, correctedRAMin, correctedRASec, correctedDecDeg, correctedDecMin, correctedDecSec := CorrectionsForGeocentricParallax(tt.args.raHour, tt.args.raMin, tt.args.raSec, tt.args.decDeg, tt.args.decMin, tt.args.decSec, tt.args.coordinateType, tt.args.equatorialHorParallaxDeg, tt.args.geogLongDeg, tt.args.geogLatDeg, tt.args.heightM, tt.args.daylightSaving, tt.args.timezoneHours, tt.args.lcdDay, tt.args.lcdMonth, tt.args.lcdYear, tt.args.lctHour, tt.args.lctMin, tt.args.lctSec)
+
+			if correctedRAHour != tt.wantCorrectedRAHour || correctedRAMin != tt.wantCorrectedRAMinutes || correctedRASec != tt.wantCorrectedRASeconds || correctedDecDeg != tt.wantCorrectedDecDeg || correctedDecMin != tt.wantCorrectedDecMinutes || correctedDecSec != tt.wantCorrectedDecSeconds {
+				t.Errorf("CorrectionsForGeocentricParallax() got = [RA] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds, want [RA] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds", correctedRAHour, correctedRAMin, correctedRASec, correctedDecDeg, correctedDecMin, correctedDecSec, tt.wantCorrectedRAHour, tt.wantCorrectedRAMinutes, tt.wantCorrectedRASeconds, tt.wantCorrectedDecDeg, tt.wantCorrectedDecMinutes, tt.wantCorrectedDecSeconds)
+			} else {
+				fmt.Printf("Corrections for geocentric parallax: [RA] %v hours %v minutes %v seconds [Declination] %v degrees %v minutes %v seconds [Coordinate Type] %v [Equatorial Horizon Parallax] %v degrees [Geographical Longitude/Latitude] %v/%v degrees [Height] %v M [Daylight Savings] %v hours [Timezone Correction] %v hours [Local Civil Date] %v/%v/%v [Local Civil Time] %v:%v:%v = [Corrected RA] %v hours %v minutes %v seconds [Corrected Declination] %v degrees %v minutes %v seconds\n", tt.args.raHour, tt.args.raMin, tt.args.raSec, tt.args.decDeg, tt.args.decMin, tt.args.decSec, tt.args.coordinateType, tt.args.equatorialHorParallaxDeg, tt.args.geogLongDeg, tt.args.geogLatDeg, tt.args.heightM, tt.args.daylightSaving, tt.args.timezoneHours, tt.args.lcdMonth, tt.args.lcdDay, tt.args.lcdYear, tt.args.lctHour, tt.args.lctMin, tt.args.lctSec, correctedRAHour, correctedRAMin, correctedRASec, correctedDecDeg, correctedDecMin, correctedDecSec)
+			}
+		})
+	}
+}

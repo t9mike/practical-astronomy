@@ -470,7 +470,7 @@ func CorrectForAberration(utHour float64, utMinutes float64, utSeconds float64, 
 
 // AtmosphericRefraction calculates corrected RA/Dec, accounting for atmospheric refraction.
 //
-// NOTE: Valid values for coordinate_type are "TRUE" and "APPARENT".
+// NOTE: Valid values for coordinateType are "TRUE" and "APPARENT".
 //
 // Returns
 //	corrected RA hours,minutes,seconds
@@ -488,6 +488,32 @@ func AtmosphericRefraction(trueRAHour float64, trueRAMin float64, trueRASec floa
 	correctedRAHour := macros.DHHour(correctedRAHour1)
 	correctedRAMin := macros.DHMin(correctedRAHour1)
 	correctedRASec := macros.DHSec(correctedRAHour1)
+	correctedDecDeg := macros.DDDeg(correctedDecDeg1)
+	correctedDecMin := macros.DDMin(correctedDecDeg1)
+	correctedDecSec := macros.DDSec(correctedDecDeg1)
+
+	return float64(correctedRAHour), float64(correctedRAMin), correctedRASec, correctedDecDeg, correctedDecMin, correctedDecSec
+}
+
+// CorrectionsForGeocentricParallax calculates corrected RA/Dec, accounting for geocentric parallax.
+//
+// NOTE: Valid values for coordinateType are "TRUE" and "APPARENT".
+//
+// Returns
+//	corrected RA hours,minutes,seconds
+//	corrected Declination degrees,minutes,seconds
+func CorrectionsForGeocentricParallax(raHour float64, raMin float64, raSec float64, decDeg float64, decMin float64, decSec float64, coordinateType string, equatorialHorParallaxDeg float64, geogLongDeg float64, geogLatDeg float64, heightM float64, daylightSaving int, timezoneHours int, lcdDay float64, lcdMonth int, lcdYear int, lctHour float64, lctMin float64, lctSec float64) (float64, float64, float64, float64, float64, float64) {
+	haHours := macros.RAToHA(raHour, raMin, raSec, lctHour, lctMin, lctSec, daylightSaving, timezoneHours, lcdDay, lcdMonth, lcdYear, geogLongDeg)
+
+	correctedHAHours := macros.ParallaxHA(haHours, 0.0, 0.0, decDeg, decMin, decSec, coordinateType, geogLatDeg, heightM, equatorialHorParallaxDeg)
+
+	correctedRAHours := macros.HAToRA(correctedHAHours, 0.0, 0.0, lctHour, lctMin, lctSec, daylightSaving, timezoneHours, lcdDay, lcdMonth, lcdYear, geogLongDeg)
+
+	correctedDecDeg1 := macros.ParallaxDec(haHours, 0.0, 0.0, decDeg, decMin, decSec, coordinateType, geogLatDeg, heightM, equatorialHorParallaxDeg)
+
+	correctedRAHour := macros.DHHour(correctedRAHours)
+	correctedRAMin := macros.DHMin(correctedRAHours)
+	correctedRASec := macros.DHSec(correctedRAHours)
 	correctedDecDeg := macros.DDDeg(correctedDecDeg1)
 	correctedDecMin := macros.DDMin(correctedDecDeg1)
 	correctedDecSec := macros.DDSec(correctedDecDeg1)

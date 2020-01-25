@@ -665,7 +665,7 @@ func TestHeliographicCoordinates(t *testing.T) {
 		wantHelioLongDeg float64
 		wantHelioLatDeg  float64
 	}{
-		{name: "Heliographic Coordinates", args: args{helioPositionAngleDeg: 220, helioDisplacementArcmin: 10.5, gwdateDay: 1, gwdateMonth: 5, gwdateYear: 1988}, wantHelioLongDeg: 142.59, wantHelioLatDeg: -19.94},
+		{name: "HeliographicCoordinates", args: args{helioPositionAngleDeg: 220, helioDisplacementArcmin: 10.5, gwdateDay: 1, gwdateMonth: 5, gwdateYear: 1988}, wantHelioLongDeg: 142.59, wantHelioLatDeg: -19.94},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -675,6 +675,32 @@ func TestHeliographicCoordinates(t *testing.T) {
 				t.Errorf("HeliographicCoordinates() got = [Helio] %v long deg, %v lat deg, want [Helio] %v long deg, %v lat deg", helioLongDeg, helioLatDeg, tt.wantHelioLongDeg, tt.wantHelioLatDeg)
 			} else {
 				fmt.Printf("Heliographic coordinates: [Helio Position Angle] %v degrees [Helio Displacement] %v arcmin [Greenwich Date] %v/%v/%v = [Heliographic Coordinates] %v long deg, %v lat deg\n", tt.args.helioPositionAngleDeg, tt.args.helioDisplacementArcmin, tt.args.gwdateMonth, tt.args.gwdateDay, tt.args.gwdateYear, helioLongDeg, helioLatDeg)
+			}
+		})
+	}
+}
+
+func TestCarringtonRotationNumber(t *testing.T) {
+	type args struct {
+		gwdateDay   float64
+		gwdateMonth int
+		gwdateYear  int
+	}
+	tests := []struct {
+		name                         string
+		args                         args
+		wantCarringtonRotationNumber int
+	}{
+		{name: "CarringtonRotationNumber", args: args{gwdateDay: 27, gwdateMonth: 1, gwdateYear: 1975}, wantCarringtonRotationNumber: 1624},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			carringtonRotationNumber := CarringtonRotationNumber(tt.args.gwdateDay, tt.args.gwdateMonth, tt.args.gwdateYear)
+
+			if carringtonRotationNumber != tt.wantCarringtonRotationNumber {
+				t.Errorf("CarringtonRotationNumber() = %v, want %v", carringtonRotationNumber, tt.wantCarringtonRotationNumber)
+			} else {
+				fmt.Printf("Carrington rotation number: [Greenwich Date] %v/%v/%v = [CRN] %v\n", tt.args.gwdateMonth, tt.args.gwdateDay, tt.args.gwdateYear, carringtonRotationNumber)
 			}
 		})
 	}

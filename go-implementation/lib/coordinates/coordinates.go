@@ -551,3 +551,14 @@ func HeliographicCoordinates(helioPositionAngleDeg float64, helioDisplacementArc
 
 	return helioLongDeg, helioLatDeg
 }
+
+// CarringtonRotationNumber calculates carrington rotation number for a Greenwich date
+//
+// Returns carrington rotation number
+func CarringtonRotationNumber(gwdateDay float64, gwdateMonth int, gwdateYear int) int {
+	julianDateDays := macros.CDToJD(gwdateDay, gwdateMonth, gwdateYear)
+
+	crn := 1690 + util.RoundFloat64((julianDateDays-2444235.34)/27.2753, 0)
+
+	return int(crn)
+}

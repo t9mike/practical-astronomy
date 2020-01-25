@@ -650,3 +650,32 @@ func TestCorrectionsForGeocentricParallax(t *testing.T) {
 		})
 	}
 }
+
+func TestHeliographicCoordinates(t *testing.T) {
+	type args struct {
+		helioPositionAngleDeg   float64
+		helioDisplacementArcmin float64
+		gwdateDay               float64
+		gwdateMonth             int
+		gwdateYear              int
+	}
+	tests := []struct {
+		name             string
+		args             args
+		wantHelioLongDeg float64
+		wantHelioLatDeg  float64
+	}{
+		{name: "Heliographic Coordinates", args: args{helioPositionAngleDeg: 220, helioDisplacementArcmin: 10.5, gwdateDay: 1, gwdateMonth: 5, gwdateYear: 1988}, wantHelioLongDeg: 142.59, wantHelioLatDeg: -19.94},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			helioLongDeg, helioLatDeg := HeliographicCoordinates(tt.args.helioPositionAngleDeg, tt.args.helioDisplacementArcmin, tt.args.gwdateDay, tt.args.gwdateMonth, tt.args.gwdateYear)
+
+			if helioLongDeg != tt.wantHelioLongDeg || helioLatDeg != tt.wantHelioLatDeg {
+				t.Errorf("HeliographicCoordinates() got = [Helio] %v long deg, %v lat deg, want [Helio] %v long deg, %v lat deg", helioLongDeg, helioLatDeg, tt.wantHelioLongDeg, tt.wantHelioLatDeg)
+			} else {
+				fmt.Printf("Heliographic coordinates: [Helio Position Angle] %v degrees [Helio Displacement] %v arcmin [Greenwich Date] %v/%v/%v = [Heliographic Coordinates] %v long deg, %v lat deg\n", tt.args.helioPositionAngleDeg, tt.args.helioDisplacementArcmin, tt.args.gwdateMonth, tt.args.gwdateDay, tt.args.gwdateYear, helioLongDeg, helioLatDeg)
+			}
+		})
+	}
+}

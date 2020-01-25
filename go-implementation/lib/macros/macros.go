@@ -666,6 +666,59 @@ func SunEclipticLongitude(lch float64, lcm float64, lcs float64, ds int, zc int,
 	return Degrees(sr)
 }
 
+// SunAngularDiameter calculates Sun's angular diameter in decimal degrees
+//
+// Original macro name: SunDia
+func SunAngularDiameter(lch float64, lcm float64, lcs float64, ds int, zc int, ld float64, lm int, ly int) float64 {
+	a := SunDistance(lch, lcm, lcs, ds, zc, ld, lm, ly)
+
+	return 0.533128 / a
+}
+
+// SunDistance calculates Sun's distance from the Earth in astronomical units
+//
+// Original macro name: SunDist
+func SunDistance(lch float64, lcm float64, lcs float64, ds int, zc int, ld float64, lm int, ly int) float64 {
+	aa := LCTGreenwichDay(lch, lcm, lcs, ds, zc, ld, lm, ly)
+	bb := LCTGreenwichMonth(lch, lcm, lcs, ds, zc, ld, lm, ly)
+	cc := LCTGreenwichYear(lch, lcm, lcs, ds, zc, ld, lm, ly)
+	ut := LCTToUT(lch, lcm, lcs, ds, zc, ld, lm, ly)
+	dj := CDToJD(aa, bb, cc) - 2415020.0
+
+	t := (dj / 36525.0) + (ut / 876600.0)
+	t2 := t * t
+
+	a := 100.0021359 * t
+	b := 360.0 * (a - math.Floor(a))
+	a = 99.99736042 * t
+	b = 360.0 * (a - math.Floor(a))
+	m1 := 358.47583 - (0.00015+0.0000033*t)*t2 + b
+	ec := 0.01675104 - 0.0000418*t - 0.000000126*t2
+
+	am := util.DegreesToRadians(m1)
+	ae := EccentricAnomaly(am, ec)
+
+	a = 62.55209472 * t
+	b = 360.0 * (a - math.Floor(a))
+	a1 := util.DegreesToRadians(153.23 + b)
+	a = 125.1041894 * t
+	b = 360.0 * (a - math.Floor(a))
+	b1 := util.DegreesToRadians(216.57 + b)
+	a = 91.56766028 * t
+	b = 360.0 * (a - math.Floor(a))
+	c1 := util.DegreesToRadians(312.69 + b)
+	a = 1236.853095 * t
+	b = 360.0 * (a - math.Floor(a))
+	d1 := util.DegreesToRadians(350.74 - 0.00144*t2 + b)
+	a = 183.1353208 * t
+	b = 360.0 * (a - math.Floor(a))
+	h1 := util.DegreesToRadians(353.4 + b)
+
+	d3 := (0.00000543*math.Sin(a1) + 0.00001575*math.Sin(b1)) + (0.00001627*math.Sin(c1) + 0.00003076*math.Cos(d1)) + (0.00000927 * math.Sin(h1))
+
+	return 1.0000002*(1.0-ec*math.Cos(ae)) + d3
+}
+
 // TrueAnomaly solves Kepler's equation, and returns the value of the true anomaly in radians.
 //
 // Original macro name: TrueAnomaly

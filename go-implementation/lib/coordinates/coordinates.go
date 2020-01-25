@@ -520,3 +520,34 @@ func CorrectionsForGeocentricParallax(raHour float64, raMin float64, raSec float
 
 	return float64(correctedRAHour), float64(correctedRAMin), correctedRASec, correctedDecDeg, correctedDecMin, correctedDecSec
 }
+
+// HeliographicCoordinates calculates heliographic coordinates for a given Greenwich date, with a given heliographic position angle and heliographic displacement in arc minutes.
+//
+// Returns heliographic longitude and heliographic latitude, in degrees
+func HeliographicCoordinates(helioPositionAngleDeg float64, helioDisplacementArcmin float64, gwdateDay float64, gwdateMonth int, gwdateYear int) (float64, float64) {
+	julianDateDays := macros.CDToJD(gwdateDay, gwdateMonth, gwdateYear)
+	tCenturies := (julianDateDays - 2415020.0) / 36525.0
+	longAscNodeDeg := macros.DMSToDD(74.0, 22.0, 0.0) + (84.0 * tCenturies / 60.0)
+	sunLongDeg := macros.SunEclipticLongitude(0.0, 0.0, 0.0, 0, 0, gwdateDay, gwdateMonth, gwdateYear)
+	y := math.Sin(util.DegreesToRadians(longAscNodeDeg-sunLongDeg)) * math.Cos(util.DegreesToRadians(macros.DMSToDD(7.0, 15.0, 0.0)))
+	x := -(math.Cos(util.DegreesToRadians(longAscNodeDeg - sunLongDeg)))
+	aDeg := macros.Degrees(math.Atan2(y, x))
+	mDeg1 := 360.0 - (360.0 * (julianDateDays - 2398220.0) / 25.38)
+	mDeg2 := mDeg1 - 360.0*math.Floor(mDeg1/360.0)
+	l0Deg1 := mDeg2 + aDeg
+	b0Rad := math.Asin(math.Sin(util.DegreesToRadians(sunLongDeg-longAscNodeDeg)) * math.Sin(util.DegreesToRadians(macros.DMSToDD(7.0, 15.0, 0.0))))
+	theta1Rad := math.Atan(-math.Cos(util.DegreesToRadians(sunLongDeg)) * math.Tan(util.DegreesToRadians(macros.Obliq(gwdateDay, gwdateMonth, gwdateYear))))
+	theta2Rad := math.Atan(-math.Cos(util.DegreesToRadians(longAscNodeDeg-sunLongDeg)) * math.Tan(util.DegreesToRadians(macros.DMSToDD(7.0, 15.0, 0.0))))
+	pDeg := macros.Degrees(theta1Rad + theta2Rad)
+	rho1Deg := helioDisplacementArcmin / 60.0
+	rhoRad := math.Asin(2.0*rho1Deg/macros.SunAngularDiameter(0.0, 0.0, 0.0, 0, 0, gwdateDay, gwdateMonth, gwdateYear)) - util.DegreesToRadians(rho1Deg)
+	bRad := math.Asin(math.Sin(b0Rad)*math.Cos(rhoRad) + math.Cos(b0Rad)*math.Sin(rhoRad)*math.Cos(util.DegreesToRadians(pDeg-helioPositionAngleDeg)))
+	bDeg := macros.Degrees(bRad)
+	lDeg1 := macros.Degrees(math.Asin(math.Sin(rhoRad)*math.Sin(util.DegreesToRadians(pDeg-helioPositionAngleDeg))/math.Cos(bRad))) + l0Deg1
+	lDeg2 := lDeg1 - 360.0*math.Floor(lDeg1/360.0)
+
+	helioLongDeg := util.RoundFloat64(lDeg2, 2)
+	helioLatDeg := util.RoundFloat64(bDeg, 2)
+
+	return helioLongDeg, helioLatDeg
+}

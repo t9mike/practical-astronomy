@@ -562,3 +562,89 @@ func CarringtonRotationNumber(gwdateDay float64, gwdateMonth int, gwdateYear int
 
 	return int(crn)
 }
+
+// SelenographicCoordinates1 calculates selenographic (lunar) coordinates (sub-Earth)
+//
+// Returns
+//	sub-earth longitude
+//	sub-earth latitude
+//	position angle of pole
+func SelenographicCoordinates1(gwdateDay float64, gwdateMonth int, gwdateYear int) (float64, float64, float64) {
+	julianDateDays := macros.CDToJD(gwdateDay, gwdateMonth, gwdateYear)
+	tCenturies := (julianDateDays - 2451545.0) / 36525.0
+	longAscNodeDeg := 125.044522 - 1934.136261*tCenturies
+	f1 := 93.27191 + 483202.0175*tCenturies
+	f2 := f1 - 360.0*math.Floor(f1/360.0)
+	geocentricMoonLongDeg := macros.MoonGeocentricEclipticLongitude(0.0, 0.0, 0.0, 0, 0, gwdateDay, gwdateMonth, gwdateYear)
+	geocentricMoonLatRad := util.DegreesToRadians(macros.MoonGeocentricEclipticLatitude(0.0, 0.0, 0.0, 0, 0, gwdateDay, gwdateMonth, gwdateYear))
+	inclinationRad := util.DegreesToRadians(macros.DMSToDD(1.0, 32.0, 32.7))
+	nodeLongRad := util.DegreesToRadians(longAscNodeDeg - geocentricMoonLongDeg)
+	sinBe := -math.Cos(inclinationRad)*math.Sin(geocentricMoonLatRad) + math.Sin(inclinationRad)*math.Cos(geocentricMoonLatRad)*math.Sin(nodeLongRad)
+	subEarthLatDeg := macros.Degrees(math.Asin(sinBe))
+	aRad := math.Atan2(-math.Sin(geocentricMoonLatRad)*math.Sin(inclinationRad)-math.Cos(geocentricMoonLatRad)*math.Cos(inclinationRad)*math.Sin(nodeLongRad), (math.Cos(geocentricMoonLatRad) * math.Cos(nodeLongRad)))
+	aDeg := macros.Degrees(aRad)
+	subEarthLongDeg1 := aDeg - f2
+	subEarthLongDeg2 := subEarthLongDeg1 - 360.0*math.Floor(subEarthLongDeg1/360.0)
+
+	var subEarthLongDeg3 float64
+	if subEarthLongDeg2 > 180.0 {
+		subEarthLongDeg3 = subEarthLongDeg2 - 360.0
+	} else {
+		subEarthLongDeg3 = subEarthLongDeg2
+	}
+
+	c1Rad := math.Atan(math.Cos(nodeLongRad) * math.Sin(inclinationRad) / (math.Cos(geocentricMoonLatRad)*math.Cos(inclinationRad) + math.Sin(geocentricMoonLatRad)*math.Sin(inclinationRad)*math.Sin(nodeLongRad)))
+	obliquityRad := util.DegreesToRadians(macros.Obliq(gwdateDay, gwdateMonth, gwdateYear))
+	c2Rad := math.Atan(math.Sin(obliquityRad) * math.Cos(util.DegreesToRadians(geocentricMoonLongDeg)) / (math.Sin(obliquityRad)*math.Sin(geocentricMoonLatRad)*math.Sin(util.DegreesToRadians(geocentricMoonLongDeg)) - math.Cos(obliquityRad)*math.Cos(geocentricMoonLatRad)))
+	cDeg := macros.Degrees(c1Rad + c2Rad)
+
+	subEarthLongitude := util.RoundFloat64(subEarthLongDeg3, 2)
+	subEarthLatitude := util.RoundFloat64(subEarthLatDeg, 2)
+	positionAngleOfPole := util.RoundFloat64(cDeg, 2)
+
+	return subEarthLongitude, subEarthLatitude, positionAngleOfPole
+}
+
+// SelenographicCoordinates2 calculates selenographic (lunar) coordinates (sub-Solar)
+//
+// Returns
+//	sub-solar longitude
+//	sub-solar colongitude
+//	sub-solar latitude
+func SelenographicCoordinates2(gwdateDay float64, gwdateMonth int, gwdateYear int) (float64, float64, float64) {
+	julianDateDays := macros.CDToJD(gwdateDay, gwdateMonth, gwdateYear)
+	tCenturies := (julianDateDays - 2451545.0) / 36525.0
+	longAscNodeDeg := 125.044522 - 1934.136261*tCenturies
+	f1 := 93.27191 + 483202.0175*tCenturies
+	f2 := f1 - 360.0*math.Floor(f1/360.0)
+	sunGeocentricLongDeg := macros.SunEclipticLongitude(0.0, 0.0, 0.0, 0, 0, gwdateDay, gwdateMonth, gwdateYear)
+	moonEquHorParallaxArcMin := macros.MoonHorizontalParallax(0.0, 0.0, 0.0, 0, 0, gwdateDay, gwdateMonth, gwdateYear) * 60.0
+	sunEarthDistAU := macros.SunDistance(0.0, 0.0, 0.0, 0, 0, gwdateDay, gwdateMonth, gwdateYear)
+	geocentricMoonLatRad := util.DegreesToRadians(macros.MoonGeocentricEclipticLatitude(0.0, 0.0, 0.0, 0, 0, gwdateDay, gwdateMonth, gwdateYear))
+	geocentricMoonLongDeg := macros.MoonGeocentricEclipticLongitude(0.0, 0.0, 0.0, 0, 0, gwdateDay, gwdateMonth, gwdateYear)
+	adjustedMoonLongDeg := sunGeocentricLongDeg + 180.0 + (26.4 * math.Cos(geocentricMoonLatRad) * math.Sin(util.DegreesToRadians(sunGeocentricLongDeg-geocentricMoonLongDeg)) / (moonEquHorParallaxArcMin * sunEarthDistAU))
+	adjustedMoonLatRad := 0.14666 * geocentricMoonLatRad / (moonEquHorParallaxArcMin * sunEarthDistAU)
+	inclinationRad := util.DegreesToRadians(macros.DMSToDD(1.0, 32.0, 32.7))
+	nodeLongRad := util.DegreesToRadians(longAscNodeDeg - adjustedMoonLongDeg)
+	sinBs := -math.Cos(inclinationRad)*math.Sin(adjustedMoonLatRad) + math.Sin(inclinationRad)*math.Cos(adjustedMoonLatRad)*math.Sin(nodeLongRad)
+	subSolarLatDeg := macros.Degrees(math.Asin(sinBs))
+	aRad := math.Atan2(-math.Sin(adjustedMoonLatRad)*math.Sin(inclinationRad)-math.Cos(adjustedMoonLatRad)*math.Cos(inclinationRad)*math.Sin(nodeLongRad), (math.Cos(adjustedMoonLatRad) * math.Cos(nodeLongRad)))
+	aDeg := macros.Degrees(aRad)
+	subSolarLongDeg1 := aDeg - f2
+	subSolarLongDeg2 := subSolarLongDeg1 - 360.0*math.Floor(subSolarLongDeg1/360.0)
+
+	var subSolarLongDeg3 float64
+	if subSolarLongDeg2 > 180.0 {
+		subSolarLongDeg3 = subSolarLongDeg2 - 360.0
+	} else {
+		subSolarLongDeg3 = subSolarLongDeg2
+	}
+
+	subSolarColongDeg := 90.0 - subSolarLongDeg3
+
+	subSolarLongitude := util.RoundFloat64(subSolarLongDeg3, 2)
+	subSolarColongitude := util.RoundFloat64(subSolarColongDeg, 2)
+	subSolarLatitude := util.RoundFloat64(subSolarLatDeg, 2)
+
+	return subSolarLongitude, subSolarColongitude, subSolarLatitude
+}

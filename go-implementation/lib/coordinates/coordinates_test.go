@@ -705,3 +705,59 @@ func TestCarringtonRotationNumber(t *testing.T) {
 		})
 	}
 }
+
+func TestSelenographicCoordinates1(t *testing.T) {
+	type args struct {
+		gwdateDay   float64
+		gwdateMonth int
+		gwdateYear  int
+	}
+	tests := []struct {
+		name                    string
+		args                    args
+		wantSubEarthLongitude   float64
+		wantSubEarthLatitude    float64
+		wantPositionAngleOfPole float64
+	}{
+		{name: "SelenographicCoordinates1", args: args{gwdateDay: 1, gwdateMonth: 5, gwdateYear: 1988}, wantSubEarthLongitude: -4.88, wantSubEarthLatitude: 4.04, wantPositionAngleOfPole: 19.78},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			subEarthLongitude, subEarthLatitude, positionAngleOfPole := SelenographicCoordinates1(tt.args.gwdateDay, tt.args.gwdateMonth, tt.args.gwdateYear)
+
+			if subEarthLongitude != tt.wantSubEarthLongitude || subEarthLatitude != tt.wantSubEarthLatitude || positionAngleOfPole != tt.wantPositionAngleOfPole {
+				t.Errorf("SelenographicCoordinates1() got = [Sub-Earth] %v longitude, %v latitude [Position Angle of Pole] %v, want [Sub-Earth] %v longitude, %v latitude [Position Angle of Pole] %v", subEarthLongitude, subEarthLatitude, positionAngleOfPole, tt.wantSubEarthLongitude, tt.wantSubEarthLatitude, tt.wantPositionAngleOfPole)
+			} else {
+				fmt.Printf("Selenographic Coordinates 1: [Greenwich Date] %v/%v/%v = [Sub-Earth] %v longitude, %v latitude [Position Angle of Pole] %v\n", tt.args.gwdateMonth, tt.args.gwdateDay, tt.args.gwdateYear, subEarthLongitude, subEarthLatitude, positionAngleOfPole)
+			}
+		})
+	}
+}
+
+func TestSelenographicCoordinates2(t *testing.T) {
+	type args struct {
+		gwdateDay   float64
+		gwdateMonth int
+		gwdateYear  int
+	}
+	tests := []struct {
+		name                    string
+		args                    args
+		wantSubSolarLongitude   float64
+		wantSubSolarColongitude float64
+		wantSubSolarLatitude    float64
+	}{
+		{name: "SelenographicCoordinates2", args: args{gwdateDay: 1, gwdateMonth: 5, gwdateYear: 1988}, wantSubSolarLongitude: 6.81, wantSubSolarColongitude: 83.19, wantSubSolarLatitude: 1.19},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			subSolarLongitude, subSolarColongitude, subSolarLatitude := SelenographicCoordinates2(tt.args.gwdateDay, tt.args.gwdateMonth, tt.args.gwdateYear)
+
+			if subSolarLongitude != tt.wantSubSolarLongitude || subSolarColongitude != tt.wantSubSolarColongitude || subSolarLatitude != tt.wantSubSolarLatitude {
+				t.Errorf("SelenographicCoordinates2() got = [Sub-Solar Longitude] %v [Sub-Solar Colongitude] %v [Sub-Solar Latitude] %v, want [Sub-Solar Longitude] %v [Sub-Solar Colongitude] %v [Sub-Solar Latitude] %v", subSolarLongitude, subSolarColongitude, subSolarLatitude, tt.wantSubSolarLongitude, tt.wantSubSolarColongitude, tt.wantSubSolarLatitude)
+			} else {
+				fmt.Printf("Selenographic Coordinates 2: [Greenwich Date] %v/%v/%v = [Sub-Solar Longitude] %v [Sub-Solar Colongitude] %v [Sub-Solar Latitude] %v\n", tt.args.gwdateMonth, tt.args.gwdateDay, tt.args.gwdateYear, subSolarLongitude, subSolarColongitude, subSolarLatitude)
+			}
+		})
+	}
+}

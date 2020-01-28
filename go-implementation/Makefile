@@ -10,4 +10,5 @@ tests:
 	@./run_macro_tests.sh
 	@./run_datetime_tests.sh
 	@./run_coordinate_tests.sh
+	@./run_sun_tests.sh
 	@./run_util_tests.sh

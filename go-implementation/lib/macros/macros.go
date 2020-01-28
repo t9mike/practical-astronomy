@@ -1261,3 +1261,61 @@ func UnwindDeg(w float64) float64 {
 func UnwindRad(w float64) float64 {
 	return w - 6.283185308*math.Floor(w/6.283185308)
 }
+
+// EclipticRightAscension calculates right ascension (in degrees) for the ecliptic.
+//
+// Original macro name: ECRA
+func EclipticRightAscension(eld float64, elm float64, els float64, bd float64, bm float64, bs float64, gd float64, gm int, gy int) float64 {
+	a := util.DegreesToRadians(DMSToDD(eld, elm, els))
+	b := util.DegreesToRadians(DMSToDD(bd, bm, bs))
+	c := util.DegreesToRadians(Obliq(gd, gm, gy))
+	d := math.Sin(a)*math.Cos(c) - math.Tan(b)*math.Sin(c)
+	e := math.Cos(a)
+	f := Degrees(math.Atan2(d, e))
+
+	return f - 360.0*math.Floor(f/360.0)
+}
+
+// EclipticDeclination calculates declination (in degrees) for the ecliptic.
+//
+// Original macro name: ECDec
+func EclipticDeclination(eld float64, elm float64, els float64, bd float64, bm float64, bs float64, gd float64, gm int, gy int) float64 {
+	a := util.DegreesToRadians(DMSToDD(eld, elm, els))
+	b := util.DegreesToRadians(DMSToDD(bd, bm, bs))
+	c := util.DegreesToRadians(Obliq(gd, gm, gy))
+	d := math.Sin(b)*math.Cos(c) + math.Cos(b)*math.Sin(c)*math.Sin(a)
+
+	return Degrees(math.Asin(d))
+}
+
+// SunMeanEclipticLongitude calculates mean ecliptic longitude of the Sun at the epoch
+//
+// Original macro name: SunElong
+func SunMeanEclipticLongitude(gd float64, gm int, gy int) float64 {
+	t := (CDToJD(gd, gm, gy) - 2415020.0) / 36525.0
+	t2 := t * t
+	x := 279.6966778 + 36000.76892*t + 0.0003025*t2
+
+	return x - 360.0*math.Floor(x/360.0)
+}
+
+// SunPerigee calculates longitude of the Sun at perigee
+//
+// Original macro name: SunPeri
+func SunPerigee(gd float64, gm int, gy int) float64 {
+	t := (CDToJD(gd, gm, gy) - 2415020.0) / 36525.0
+	t2 := t * t
+	x := 281.2208444 + 1.719175*t + 0.000452778*t2
+
+	return x - 360.0*math.Floor(x/360.0)
+}
+
+// SunEccentricity calculates eccentricity of the Sun-Earth orbit
+//
+// Original macro name: SunEcc
+func SunEccentricity(gd float64, gm int, gy int) float64 {
+	t := (CDToJD(gd, gm, gy) - 2415020.0) / 36525.0
+	t2 := t * t
+
+	return 0.01675104 - 0.0000418*t - 0.000000126*t2
+}

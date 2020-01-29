@@ -104,3 +104,46 @@ func PrecisePositionOfSun(lctHours float64, lctMinutes float64, lctSeconds float
 
 	return float64(sunRAHour), float64(sunRAMin), sunRASec, sunDecDeg, sunDecMin, sunDecSec
 }
+
+// DistanceAndAngularSize calculates distance to the Sun (in km), and angular size.
+//
+// Arguments
+//	lctHours -- Local civil time, in hours.
+//	lctMinutes -- Local civil time, in minutes.
+//	lctSeconds -- Local civil time, in seconds.
+//	localDay -- Local date, day part.
+//	localMonth -- Local date, month part.
+//	localYear -- Local date, year part.
+//	isDaylightSaving -- Is daylight savings in effect?
+//	zoneZorrection -- Time zone correction, in hours.
+//
+// Returns
+//	sunDistKm -- Sun's distance, in kilometers
+//	sunAngSizeDeg -- Sun's angular size (degrees part)
+//	sunAngSizeMin -- Sun's angular size (minutes part)
+//	sunAngSizeSec -- Sun's angular size (seconds part)
+func DistanceAndAngularSize(lctHours float64, lctMinutes float64, lctSeconds float64, localDay float64, localMonth int, localYear int, isDaylightSaving bool, zoneCorrection int) (float64, float64, float64, float64) {
+	var daylightSaving int
+	if isDaylightSaving == true {
+		daylightSaving = 1
+	} else {
+		daylightSaving = 0
+	}
+
+	gDay := macros.LCTGreenwichDay(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	gMonth := macros.LCTGreenwichMonth(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	gYear := macros.LCTGreenwichYear(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	trueAnomalyDeg := macros.SunTrueAnomaly(lctHours, lctMinutes, lctSeconds, daylightSaving, zoneCorrection, localDay, localMonth, localYear)
+	trueAnomalyRad := util.DegreesToRadians(trueAnomalyDeg)
+	eccentricity := macros.SunEccentricity(gDay, gMonth, gYear)
+	f := (1.0 + eccentricity*math.Cos(trueAnomalyRad)) / (1.0 - eccentricity*eccentricity)
+	rKm := 149598500.0 / f
+	thetaDeg := f * 0.533128
+
+	sunDistKm := util.RoundFloat64(rKm, 0)
+	sunAngSizeDeg := macros.DDDeg(thetaDeg)
+	sunAngSizeMin := macros.DDMin(thetaDeg)
+	sunAngSizeSec := macros.DDSec(thetaDeg)
+
+	return sunDistKm, sunAngSizeDeg, sunAngSizeMin, sunAngSizeSec
+}

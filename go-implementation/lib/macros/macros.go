@@ -1288,6 +1288,33 @@ func EclipticDeclination(eld float64, elm float64, els float64, bd float64, bm f
 	return Degrees(math.Asin(d))
 }
 
+// SunTrueAnomaly calculates Sun's true anomaly, i.e., how much its orbit deviates from a true circle to an ellipse.
+//
+// Original macro name: SunTrueAnomaly
+func SunTrueAnomaly(lch float64, lcm float64, lcs float64, ds int, zc int, ld float64, lm int, ly int) float64 {
+	aa := LCTGreenwichDay(lch, lcm, lcs, ds, zc, ld, lm, ly)
+	bb := LCTGreenwichMonth(lch, lcm, lcs, ds, zc, ld, lm, ly)
+	cc := LCTGreenwichYear(lch, lcm, lcs, ds, zc, ld, lm, ly)
+	ut := LCTToUT(lch, lcm, lcs, ds, zc, ld, lm, ly)
+	dj := CDToJD(aa, bb, cc) - 2415020.0
+
+	t := (dj / 36525.0) + (ut / 876600.0)
+	t2 := t * t
+
+	a := 100.0021359 * t
+	b := 360.0 * (a - math.Floor(a))
+
+	a = 99.99736042 * t
+	b = 360.0 * (a - math.Floor(a))
+
+	m1 := 358.47583 - (0.00015+0.0000033*t)*t2 + b
+	ec := 0.01675104 - 0.0000418*t - 0.000000126*t2
+
+	am := util.DegreesToRadians(m1)
+
+	return Degrees(TrueAnomaly(am, ec))
+}
+
 // SunMeanEclipticLongitude calculates mean ecliptic longitude of the Sun at the epoch
 //
 // Original macro name: SunElong

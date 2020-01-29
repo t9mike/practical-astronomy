@@ -76,3 +76,37 @@ func TestPrecisePositionOfSun(t *testing.T) {
 		})
 	}
 }
+
+func TestDistanceAndAngularSize(t *testing.T) {
+	type args struct {
+		lctHours         float64
+		lctMinutes       float64
+		lctSeconds       float64
+		localDay         float64
+		localMonth       int
+		localYear        int
+		isDaylightSaving bool
+		zoneCorrection   int
+	}
+	tests := []struct {
+		name              string
+		args              args
+		wantSunDistKm     float64
+		wantSunAngSizeDeg float64
+		wantSunAngSizeMin float64
+		wantSunAngSizeSec float64
+	}{
+		{name: "(Sun) DistanceAndAngularSize", args: args{lctHours: 0, lctMinutes: 0, lctSeconds: 0, localDay: 27, localMonth: 7, localYear: 1988, isDaylightSaving: false, zoneCorrection: 0}, wantSunDistKm: 151920130, wantSunAngSizeDeg: 0, wantSunAngSizeMin: 31, wantSunAngSizeSec: 29.93},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sunDistKm, sunAngSizeDeg, sunAngSizeMin, sunAngSizeSec := DistanceAndAngularSize(tt.args.lctHours, tt.args.lctMinutes, tt.args.lctSeconds, tt.args.localDay, tt.args.localMonth, tt.args.localYear, tt.args.isDaylightSaving, tt.args.zoneCorrection)
+
+			if sunDistKm != tt.wantSunDistKm || sunAngSizeDeg != tt.wantSunAngSizeDeg || sunAngSizeMin != tt.wantSunAngSizeMin || sunAngSizeSec != tt.wantSunAngSizeSec {
+				t.Errorf("DistanceAndAngularSize() got = [Sun] [Dist] %v km [Angular Size] %v degrees %v minutes %v seconds, want [Sun] [Dist] %v km [Angular Size] %v degrees %v minutes %v seconds", sunDistKm, sunAngSizeDeg, sunAngSizeMin, sunAngSizeSec, tt.wantSunDistKm, tt.wantSunAngSizeDeg, tt.wantSunAngSizeMin, tt.wantSunAngSizeSec)
+			} else {
+				fmt.Printf("Sun distance and angular size: [Local Civil Time] %v:%v:%v [Local Date] %v/%v/%v [DST?] %v [Zone Correction] %v = [Dist] %v km [Angular Size] %v degrees %v minutes %v seconds\n", tt.args.lctHours, tt.args.lctMinutes, tt.args.lctSeconds, tt.args.localMonth, tt.args.localDay, tt.args.localYear, tt.args.isDaylightSaving, tt.args.zoneCorrection, sunDistKm, sunAngSizeDeg, sunAngSizeMin, sunAngSizeSec)
+			}
+		})
+	}
+}
